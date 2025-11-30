@@ -15,6 +15,11 @@ authors = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+fmt = [
+    "ruff>=0.14.7",
+]
+
 [tool.hatch.version]
 source = "code"
 path = "src/app/__meta__.py"
@@ -22,3 +27,69 @@ attribute = "__version__"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/app"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",      # pycodestyle: basic errors
+  "W",      # pycodestyle: style warnings
+  "F",      # Pyflakes: logical errors
+  "I",      # import sorting
+  "B",      # flake8-bugbear: likely bugs
+  "UP",     # pyupgrade: modern syntax
+  "N",      # pep8-naming: identifier naming
+  "C4",     # flake8-comprehensions: comprehension best practices
+  "ARG",    # flake8-unused-arguments: unused arguments
+  "ANN",    # flake8-annotations: type annotations
+  "S",      # flake8-bandit: baseline security
+  "SIM",    # flake8-simplify: simplify control flow
+  "PLC",    # pylint convention-level rules
+  "PLE",    # pylint errors
+  "PLR",    # pylint refactors
+  "PLW",    # pylint warnings
+  "RUF",    # Ruff-native rules
+  "TC",     # flake8-type-checking: type-checking blocks
+  "TRY",    # tryceratops: exception handling best practices
+  "D",      # pydocstyle: docstring requirements
+  "ERA",    # eradicate: commented-out code
+  "DTZ",    # flake8-datetimez: timezone awareness
+  "T20",    # flake8-print: forbid print/debug
+  "RSE",    # flake8-raise: raise style
+  "PGH",    # pygrep-hooks: logging best practices
+]
+ignore = [
+"E203",     # conflicts with formatter
+"D100",     # missing docstring in public package
+"D104",     # missing docstring in public package (__init__.py)
+"D105",     # missing docstring in magic method
+"D107",     # missing docstring in __init__
+"A003",     # attribute name shadows a builtin
+"E501",     # formatter enforces line length
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = [
+    "F401", # allow unused re-exports
+]
+"tests/**.py" = [
+    "S101", # allow assert statements in tests (Bandit S101)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-single-line = false
+known-first-party = ["app"]
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
