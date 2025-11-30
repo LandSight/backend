@@ -19,6 +19,9 @@ dependencies = []
 fmt = [
     "ruff>=0.14.7",
 ]
+lint = [
+    "ty>=0.0.1a29",
+]
 
 [tool.hatch.version]
 source = "code"
@@ -93,3 +96,7 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
 docstring-code-format = true
+
+[tool.ty.environment]
+root = ["src", "tests"]
+python-version = "3.14"
