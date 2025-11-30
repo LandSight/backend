@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "land-sight-backend"
+dynamic = ["version"]
+description = "LandSight backend."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14"
+authors = [
+    { name = "Aleksei Shavrin", email = "apshavrinwork@gmail.com" },
+    { name = "Vlad Korneev", email = "veenrok@veenrok.com" },
+]
+dependencies = []
+
+[tool.hatch.version]
+source = "code"
+path = "src/app/__meta__.py"
+attribute = "__version__"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
