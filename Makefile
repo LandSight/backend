@@ -3,8 +3,8 @@ PRE-COMMIT ?= pre-commit
 
 
 .PHONY: install
-install:          ## install deps (prod + dev)
-	$(UV) sync --all-extras
+install:
+	$(UV) sync
 
 .PHONY: install-dev
 install-dev: install
@@ -12,10 +12,6 @@ install-dev: install
 
 .PHONY: setup-dev
 setup-dev: install-dev
-	$(PRE-COMMIT) install
-
-.PHONY: env
-env: install      ## init repo extras (e.g. hooks)
 	$(PRE-COMMIT) install
 
 .PHONY: check-fmt
