@@ -10,18 +10,6 @@ install:          ## install deps (prod + dev)
 env: install      ## init repo extras (e.g. hooks)
 	$(PRE-COMMIT) install
 
-UV ?= uv
-PRE-COMMIT ?= pre-commit
-
-
-.PHONY: install
-install:          ## install deps (prod + dev)
-	$(UV) sync --all-extras
-
-.PHONY: env
-env: install      ## init repo extras (e.g. hooks)
-	$(PRE-COMMIT) install
-
 .PHONY: check-fmt
 check-fmt:
 	$(UV) run --extra=fmt ruff format --preview --check
