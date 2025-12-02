@@ -14,8 +14,12 @@ make install    # sync all dependencies (including extras)
 make env        # install git hooks via pre-commit
 ```
 
-## Linting and formatting
+## Run checks
 ```bash
-make lint       # ty + ruff check
-make fmt        # ruff format
+make check      # check-lint + check-fmt
+```
+
+## Formatting
+```bash
+make fmt        # auto formatting
 ```
