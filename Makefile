@@ -34,11 +34,6 @@ check-lint:
 .PHONY: check
 check: check-lint check-fmt
 
-.PHONY: lint
-lint:             ## run linters
-	$(UV) run --extra=lint ty check
-	$(UV) run --extra=fmt ruff check --show-fixes --preview
-
 .PHONY: fmt
 fmt:              ## run formatter
 	$(UV) run --extra=fmt ruff format --preview
