@@ -10,8 +10,11 @@ Backend for land parcel analysis: geometry validation, legal constraints, natura
 
 ## Setup
 ```bash
-make install    # sync all dependencies (including extras)
-make env        # install git hooks via pre-commit
+make install         # install dependencies for prod
+
+make install-dev     # install dependencies for development
+
+make setup-dev       # install dev deps and setup dev environment
 ```
 
 ## Run checks
