@@ -6,6 +6,14 @@ PRE-COMMIT ?= pre-commit
 install:          ## install deps (prod + dev)
 	$(UV) sync --all-extras
 
+.PHONY: install-dev
+install-dev: install
+	$(UV) sync --all-extras
+
+.PHONY: install-dev
+install-dev-env: install-dev
+	$(PRE-COMMIT) install
+
 .PHONY: env
 env: install      ## init repo extras (e.g. hooks)
 	$(PRE-COMMIT) install
