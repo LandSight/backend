@@ -27,5 +27,5 @@ check-lint:
 check: check-lint check-fmt
 
 .PHONY: fmt
-fmt:              ## run formatter
+fmt:
 	$(UV) run --extra=fmt ruff format --preview
