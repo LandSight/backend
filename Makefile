@@ -10,8 +10,8 @@ install:          ## install deps (prod + dev)
 install-dev: install
 	$(UV) sync --all-extras
 
-.PHONY: install-dev
-install-dev-env: install-dev
+.PHONY: setup-dev
+setup-dev: install-dev
 	$(PRE-COMMIT) install
 
 .PHONY: env
