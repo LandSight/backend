@@ -3,6 +3,14 @@ Contributing to the LandSight backend
 
 Welcome! This document explains how to set up your environment and which conventions to follow before submitting changes.
 
+Requirements
+------------
+
+- Python ≥ 3.14 (managed via uv) 
+- `uv <https://docs.astral.sh/uv/>`_ ≥ 0.9
+- `make <https://www.gnu.org/software/make/>`_ ≥ 4.4
+- `pre-commit <https://pre-commit.com/>`_ ≥ 4.4
+
 Quick start
 -----------
 
@@ -11,6 +19,9 @@ Quick start
 
        make setup-dev
 
+   Optional commands:
+   - ``make install`` — install prod dependencies only.
+   - ``make install-dev`` — install prod + dev extras without installing hooks.
 3. Make sure `uv <https://docs.astral.sh/uv/>`_ is installed.
 
 Workflow
@@ -58,6 +69,7 @@ Quality checks
 - **Lint/typing/format** — ``make check`` (runs ``ty`` and ``ruff``).
 - **Tests** — ``make test`` (``uv run --extra=test pytest``). Ensure the suite is green before opening a PR.
 - **Logging** — initialize logging via ``app.logging.configure_logging()`` and ``get_logger()`` in your entry points.
+- **Formatting** — ``make fmt``.
 - **Documentation** — write docstrings in reStructuredText (PEP 257). Ruff enforces ``lint.pydocstyle.convention = "pep257"``.
 
 Versioning
