@@ -22,6 +22,11 @@ make setup-dev       # install dev deps and setup dev environment
 make check      # check-lint + check-fmt
 ```
 
+## Run tests
+```bash
+make test       # run tests
+```
+
 ## Formatting
 ```bash
 make fmt        # auto formatting
