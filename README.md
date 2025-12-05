@@ -3,9 +3,9 @@
 Backend for land parcel analysis: geometry validation, legal constraints, natural and infrastructure profiles, suitability scoring, background workflows. Stores domain logic, DTO/contracts, migrations, API and worker entrypoints.
 
 ## Requirements
-- [uv](https://docs.astral.sh/uv/)
-- make
-- pre-commit
+- [uv](https://docs.astral.sh/uv/) ≥ 0.9
+- make ≥ 4.4
+- pre-commit ≥ 4.4
 
 ## Setup
 ```bash
