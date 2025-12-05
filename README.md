@@ -4,8 +4,8 @@ Backend for land parcel analysis: geometry validation, legal constraints, natura
 
 ## Requirements
 - [uv](https://docs.astral.sh/uv/) ≥ 0.9
-- make ≥ 4.4
-- pre-commit ≥ 4.4
+- [make](https://www.gnu.org/software/make/) ≥ 4.4
+- [pre-commit](https://pre-commit.com/) ≥ 4.4
 
 ## Setup
 ```bash
