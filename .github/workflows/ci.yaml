@@ -5,8 +5,9 @@ on:
       - develop
       - hotfix/*
   pull_request:
-
-
+    branches:
+      - main
+      - develop
 jobs:
   checks:
     name: checks
