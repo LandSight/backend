@@ -91,6 +91,22 @@ lint.isort.known-first-party = [ "app" ]
 lint.isort.lines-after-imports = 2
 lint.pydocstyle.convention = "pep257"
 
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+testpaths = [ "tests" ]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+  "--disable-warnings",
+]
+xfail_strict = true
+log_cli = true
+log_cli_level = "INFO"
+filterwarnings = [
+  "error",
+]
+
 [tool.ty.environment]
 root = [ "src", "tests" ]
 python-version = "3.14"
