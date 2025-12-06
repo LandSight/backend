@@ -27,3 +27,6 @@ jobs:
 
       - name: Run format checks
         run: make check-fmt
+
+      - name: Run tests
+        run: make test
