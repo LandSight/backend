@@ -22,6 +22,9 @@ optional-dependencies.fmt = [
 optional-dependencies.lint = [
   "ty>=0.0.1a29",
 ]
+optional-dependencies.test = [
+  "pytest>=9.0.1",
+]
 
 [tool.hatch.version]
 source = "code"
