@@ -83,7 +83,8 @@ lint.per-file-ignores."**/__init__.py" = [
   "F401", # allow unused re-exports
 ]
 lint.per-file-ignores."tests/**.py" = [
-  "S101", # allow assert statements in tests (Bandit S101)
+  "PLR2004", # magic value comparison
+  "S101",    # allow assert statements in tests (Bandit S101)
 ]
 lint.isort.combine-as-imports = true
 lint.isort.force-single-line = false
