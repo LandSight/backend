@@ -22,6 +22,9 @@ optional-dependencies.fmt = [
 optional-dependencies.lint = [
   "ty>=0.0.1a29",
 ]
+optional-dependencies.test = [
+  "pytest>=9.0.1",
+]
 
 [tool.hatch.version]
 source = "code"
@@ -80,13 +83,30 @@ lint.per-file-ignores."**/__init__.py" = [
   "F401", # allow unused re-exports
 ]
 lint.per-file-ignores."tests/**.py" = [
-  "S101", # allow assert statements in tests (Bandit S101)
+  "PLR2004", # magic value comparison
+  "S101",    # allow assert statements in tests (Bandit S101)
 ]
 lint.isort.combine-as-imports = true
 lint.isort.force-single-line = false
 lint.isort.known-first-party = [ "app" ]
 lint.isort.lines-after-imports = 2
 lint.pydocstyle.convention = "pep257"
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+testpaths = [ "tests" ]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+  "--disable-warnings",
+]
+xfail_strict = true
+log_cli = true
+log_cli_level = "INFO"
+filterwarnings = [
+  "error",
+]
 
 [tool.ty.environment]
 root = [ "src", "tests" ]

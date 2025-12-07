@@ -14,6 +14,10 @@ install-dev: install
 setup-dev: install-dev
 	$(PRE-COMMIT) install
 
+.PHONY: test
+test:
+	$(UV) run --extra=test pytest
+
 .PHONY: check-fmt
 check-fmt:
 	$(UV) run --extra=fmt ruff format --preview --check

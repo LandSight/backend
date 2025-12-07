@@ -9,8 +9,8 @@ on:
       - main
       - develop
 jobs:
-  checks:
-    name: checks
+  ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,3 +27,6 @@ jobs:
 
       - name: Run format checks
         run: make check-fmt
+
+      - name: Run tests
+        run: make test
