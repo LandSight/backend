@@ -193,10 +193,10 @@ The following commit types are used in the project:
 - ``style`` — changes that do not affect behavior (formatting, whitespace, import order, etc.) when they are not handled by auto-formatting.
 - ``refactor`` — code refactoring without changing external behavior.
 - ``test`` — adding or modifying tests.
-- ``chore`` — maintenance changes that do not affect application code (updating dependencies, CI configs, build scripts, etc.).
-- ``build`` — changes that affect the build system or external dependencies.
-- ``release`` — release preparation: version bumps, changelog updates, blocking fixes in the release branch.
-- ``ci`` — changes to CI/CD configuration.
+- ``chore`` — maintenance changes that do not affect application code (e.g. updating linters configs, editor settings, .gitignore, etc.).
+- ``build`` — changes that affect the build system or external dependencies (build scripts, package manifests, lockfiles, tooling for packaging, etc.).
+- ``release`` — release preparation: version bumps, changelog updates, and blocking fixes in the release branch.
+- ``ci`` — changes to CI/CD configuration (workflows, pipelines, jobs, triggers).
 - ``revert`` — reverting a previous commit.
 
 
