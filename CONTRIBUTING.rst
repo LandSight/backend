@@ -267,24 +267,6 @@ Rules:
 - The ``develop`` branch may contain work-in-progress functionality but must remain in a working state.
 
 
-Temporary Branches
-------------------
-
-Temporary branches are used for feature development, bug fixes, and release preparation:
-
-- ``feature/<name>`` — new feature development.
-- ``bugfix/<name>`` — fixing issues that do not require an immediate release.
-- ``hotfix/<name>`` — urgent fixes for critical problems in a released version.
-- ``release/<version>`` — release preparation.
-
-Rules:
-
-- ``feature/<name>`` and ``bugfix/<name>`` branches are created from ``develop`` and merged back into ``develop`` via pull requests.
-- ``hotfix/<name>`` branches are created from ``main`` and merged into both ``main`` and ``develop`` via separate pull requests.
-- ``release/<version>`` branches are created from ``develop`` and merged into both ``main`` and ``develop`` via separate pull requests.
-- Temporary branches are deleted after they are merged.
-
-
 Branch Naming
 -------------
 
@@ -304,6 +286,24 @@ Examples:
    bugfix/<issue-number>-<short-summary>
    hotfix/<short-summary>
    release/<version>
+
+
+Temporary Branches
+------------------
+
+Temporary branches are used for feature development, bug fixes, and release preparation:
+
+- ``feature/<name>`` — new feature development.
+- ``bugfix/<name>`` — fixing issues that do not require an immediate release.
+- ``hotfix/<name>`` — urgent fixes for critical problems in a released version.
+- ``release/<version>`` — release preparation.
+
+Rules:
+
+- ``feature/<name>`` and ``bugfix/<name>`` branches are created from ``develop`` and merged back into ``develop`` via pull requests.
+- ``hotfix/<name>`` branches are created from ``main`` and merged into both ``main`` and ``develop`` via separate pull requests.
+- ``release/<version>`` branches are created from ``develop`` and merged into both ``main`` and ``develop`` via separate pull requests.
+- Temporary branches are deleted after they are merged.
 
 
 Creating and Maintaining Pull Requests
