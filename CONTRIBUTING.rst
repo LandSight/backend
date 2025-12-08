@@ -405,4 +405,4 @@ Working with Issues
 - Before starting work on a task, make sure the issue is still relevant.
 - If you plan to work on an issue, explicitly state this in a comment.
 - Pull requests are linked to issues via references in the pull request description.
-- Issues are closed after the corresponding pull request is merged or at the maintainers’ discretion.
+- Issues are closed after the corresponding pull request is merged or at the maintainers discretion.
