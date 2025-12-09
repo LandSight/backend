@@ -348,7 +348,7 @@ Working with Pull Requests
 When working with a pull request, you must:
 
 - Respond to review comments within the pull request discussion.
-- Push follow-up changes to the same branch from which the pull request was opened.
+- Make changes and push them to the same branch from which the pull request was opened.
 - After making changes, ensure that all checks pass again.
 - After editing based on the review, request a re-review from the reviewer or clearly indicate in the PR that the changes have been made and it is ready for re-review.
 
