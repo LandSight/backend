@@ -16,6 +16,11 @@ classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Lang
 dynamic = [ "version" ]
 dependencies = [  ]
 
+optional-dependencies.docs = [
+  "furo>=2025.9.25",
+  "sphinx>=8.2.3",
+  "sphinx-autobuild>=2025.8.25",
+]
 optional-dependencies.fmt = [
   "ruff>=0.14.7",
 ]
