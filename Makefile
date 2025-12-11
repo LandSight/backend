@@ -36,6 +36,10 @@ check: check-lint check-fmt
 fmt:
 	$(UV) run --extra=fmt ruff format --preview
 
+.PHONY: docs-clean
+docs-clean:
+	rm -rf $(DOCS_BUILD_DIR)
+
 .PHONY: docs-build
 docs-build: docs-clean
 	$(UV) run --extra=docs sphinx-build -b html $(DOCS_DIR) $(DOCS_BUILD_DIR)
@@ -43,7 +47,3 @@ docs-build: docs-clean
 .PHONY: docs-serve
 docs-serve:
 	$(UV) run --extra=docs sphinx-autobuild $(DOCS_DIR) $(DOCS_BUILD_DIR)
-
-.PHONY: docs-clean
-docs-clean:
-	rm -rf $(DOCS_BUILD_DIR)
