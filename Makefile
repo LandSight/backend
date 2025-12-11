@@ -1,8 +1,8 @@
 UV ?= uv
 PRE-COMMIT ?= pre-commit
 
-DOCS_BUILD_DIR = docs/_build
-DOCS_DIR = docs/
+DOCS_DIR = docs
+DOCS_BUILD_DIR = $(DOCS_DIR)/_build
 
 .PHONY: install
 install:
