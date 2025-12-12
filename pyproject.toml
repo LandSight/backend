@@ -14,7 +14,9 @@ authors = [
 requires-python = ">=3.14"
 classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.14" ]
 dynamic = [ "version" ]
-dependencies = [  ]
+dependencies = [
+  "pydantic-settings>=2.12",
+]
 
 optional-dependencies.fmt = [
   "ruff>=0.14.7",
