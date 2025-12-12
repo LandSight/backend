@@ -1,4 +1,7 @@
-from .models import BaseConfig
+from .models import BaseConfig, LoggingConfig
 
 
-__all__ = ("BaseConfig",)
+__all__ = (
+    "BaseConfig",
+    "LoggingConfig",
+)
