@@ -42,4 +42,23 @@ def configure_logging(config: LoggingConfig) -> None:
     logging.config.dictConfig(dict_config)
 
 
-__all__ = ("configure_logging",)
+def get_logger(logger: str | None = None) -> logging.Logger:
+    """Return a configured logger.
+
+    Parameters
+    ----------
+    logger : str | None, optional
+        Logger name to retrieve. If ``None``, the root logger is returned.
+
+    Returns
+    -------
+    logging.Logger
+        The requested logger instance.
+    """
+    return logging.getLogger(logger)
+
+
+__all__ = (
+    "configure_logging",
+    "get_logger",
+)
