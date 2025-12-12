@@ -28,7 +28,7 @@ Setup steps:
 
    .. code-block:: bash
 
-      make setup-dev
+      make install
 
 
 .. _code-quality:

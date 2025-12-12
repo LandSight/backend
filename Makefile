@@ -6,14 +6,8 @@ DOCS_BUILD_DIR = $(DOCS_DIR)/_build
 
 .PHONY: install
 install:
-	$(UV) sync
-
-.PHONY: install-dev
-install-dev: install
-	$(UV) sync --all-extras
-
-.PHONY: setup-dev
-setup-dev: install-dev
+	$(UV) venv
+	$(UV) sync --all-extras --all-groups
 	$(PRE-COMMIT) install
 
 .PHONY: test
