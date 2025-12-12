@@ -1,4 +1,7 @@
-from . import constants
+from . import config, constants
 
 
-__all__ = ("constants",)
+__all__ = (
+    "config",
+    "constants",
+)
