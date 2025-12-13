@@ -17,7 +17,6 @@ dynamic = [ "version" ]
 dependencies = [
   "pydantic-settings>=2.12",
 ]
-
 optional-dependencies.docs = [
   "furo>=2025.9.25",
   "sphinx>=8.2.3",
@@ -31,6 +30,23 @@ optional-dependencies.lint = [
 ]
 optional-dependencies.test = [
   "pytest>=9.0.1",
+]
+
+[dependency-groups]
+dev = [
+  "land-sight-backend[docs,lint,test]",
+  "sphinx-autobuild",
+]
+test = [
+  "pytest>=9.0.1",
+]
+docs = [
+  "furo>=2025.9.25",
+  "sphinx>=8.2.3",
+]
+lint = [
+  "ruff>=0.14.7",
+  "ty>=0.0.1a29",
 ]
 
 [tool.hatch.version]
