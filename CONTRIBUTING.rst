@@ -46,9 +46,7 @@ Auxiliary Commands
 
 .. code-block:: bash
 
-   make check-lint  # Run static analysis.
-   make check-fmt   # Check code style and formatting.
-   make checks      # Run all checks.
+   make lint        # Run static analysis.
    make fmt         # Format the code.
 
 
