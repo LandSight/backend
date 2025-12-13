@@ -26,6 +26,12 @@ check-lint:
 .PHONY: check
 check: check-lint check-fmt
 
+.PHONY: lint
+lint:
+	$(UV) run --group=lint ty check
+	$(UV) run --group=lint ruff format --preview --check
+	$(UV) run --group=lint ruff check --show-fixes --preview
+
 .PHONY: fmt
 fmt:
 	$(UV) run --group=lint ruff format --preview
