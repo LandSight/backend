@@ -17,20 +17,6 @@ dynamic = [ "version" ]
 dependencies = [
   "pydantic-settings>=2.12",
 ]
-optional-dependencies.docs = [
-  "furo>=2025.9.25",
-  "sphinx>=8.2.3",
-  "sphinx-autobuild>=2025.8.25",
-]
-optional-dependencies.fmt = [
-  "ruff>=0.14.7",
-]
-optional-dependencies.lint = [
-  "ty>=0.0.1a29",
-]
-optional-dependencies.test = [
-  "pytest>=9.0.1",
-]
 
 [dependency-groups]
 dev = [
