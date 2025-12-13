@@ -22,11 +22,8 @@ jobs:
       - name: Install Python 3.14
         run: uv python install 3.14
 
-      - name: Run linter checks
-        run: make check-lint
-
-      - name: Run format checks
-        run: make check-fmt
+      - name: Run lint checks
+        run: make lint
 
       - name: Run tests
         run: make test
