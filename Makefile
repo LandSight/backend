@@ -7,28 +7,28 @@ DOCS_BUILD_DIR = $(DOCS_DIR)/_build
 .PHONY: install
 install:
 	$(UV) venv
-	$(UV) sync --all-extras --all-groups
+	$(UV) sync --all-groups
 	$(PRE-COMMIT) install
 
 .PHONY: test
 test:
-	$(UV) run --extra=test pytest
+	$(UV) run --group=test pytest
 
 .PHONY: check-fmt
 check-fmt:
-	$(UV) run --extra=fmt ruff format --preview --check
+	$(UV) run --group=lint ruff format --preview --check
 
 .PHONY: check-lint
 check-lint:
-	$(UV) run --extra=lint ty check
-	$(UV) run --extra=fmt ruff check --show-fixes --preview
+	$(UV) run --group=lint ty check
+	$(UV) run --group=lint ruff check --show-fixes --preview
 
 .PHONY: check
 check: check-lint check-fmt
 
 .PHONY: fmt
 fmt:
-	$(UV) run --extra=fmt ruff format --preview
+	$(UV) run --group=lint ruff format --preview
 
 .PHONY: docs-clean
 docs-clean:
@@ -36,8 +36,8 @@ docs-clean:
 
 .PHONY: docs-build
 docs-build: docs-clean
-	$(UV) run --extra=docs sphinx-build -b html $(DOCS_DIR) $(DOCS_BUILD_DIR)
+	$(UV) run --group=docs sphinx-build -b html $(DOCS_DIR) $(DOCS_BUILD_DIR)
 
 .PHONY: docs-serve
 docs-serve:
-	$(UV) run --extra=docs sphinx-autobuild $(DOCS_DIR) $(DOCS_BUILD_DIR)
+	$(UV) run --group=dev sphinx-autobuild $(DOCS_DIR) $(DOCS_BUILD_DIR)
