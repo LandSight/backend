@@ -16,13 +16,6 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: make check-lint
+        entry: make lint
         language: system
         pass_filenames: true
-        types: [python]
-      - id: fmt
-        name: fmt
-        entry: make check-fmt
-        language: system
-        pass_filenames: true
-        types: [python]
