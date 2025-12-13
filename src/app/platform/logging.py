@@ -6,7 +6,7 @@ import typing
 
 
 if typing.TYPE_CHECKING:
-    from app.platform.config import LoggingConfig
+    from app.platform.config.models import LoggingConfig
 
 
 def configure_logging(config: LoggingConfig) -> None:
