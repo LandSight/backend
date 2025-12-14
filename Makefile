@@ -14,17 +14,11 @@ install:
 test:
 	$(UV) run --group=test pytest
 
-.PHONY: check-fmt
-check-fmt:
-	$(UV) run --group=lint ruff format --preview --check
-
-.PHONY: check-lint
-check-lint:
+.PHONY: lint
+lint:
 	$(UV) run --group=lint ty check
+	$(UV) run --group=lint ruff format --preview --check
 	$(UV) run --group=lint ruff check --show-fixes --preview
-
-.PHONY: check
-check: check-lint check-fmt
 
 .PHONY: fmt
 fmt:
