@@ -99,7 +99,7 @@ lint.isort.combine-as-imports = true
 lint.isort.force-single-line = false
 lint.isort.known-first-party = [ "app" ]
 lint.isort.lines-after-imports = 2
-lint.pydocstyle.convention = "pep257"
+lint.pydocstyle.convention = "numpy"
 
 [tool.pytest.ini_options]
 pythonpath = [ "src" ]
