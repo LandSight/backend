@@ -5,13 +5,19 @@ on:
       - main
       - develop
     paths:
-      - "**/*.py"
+      - ".github/workflows/test.yaml"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
   pull_request:
     branches:
       - main
       - develop
     paths:
-      - "**/*.py"
+      - ".github/workflows/test.yaml"
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
 
 permissions:
   contents: read
