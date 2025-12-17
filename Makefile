@@ -12,7 +12,7 @@ install:
 
 .PHONY: test
 test:
-	$(UV) run --group=test pytest
+	$(UV) run --group=test pytest --cov=src/app --cov-report=term-missing --cov-append
 
 .PHONY: lint
 lint:
