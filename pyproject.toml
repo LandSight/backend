@@ -25,6 +25,7 @@ dev = [
 ]
 test = [
   "pytest>=9.0.1",
+  "pytest-cov>=7",
 ]
 docs = [
   "furo>=2025.9.25",
@@ -115,6 +116,15 @@ log_cli = true
 log_cli_level = "INFO"
 filterwarnings = [
   "error",
+]
+
+[tool.coverage.run]
+source = [ "src/app" ]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: not covered",
 ]
 
 [tool.ty.environment]
