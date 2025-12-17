@@ -20,8 +20,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "land-sight-backend[docs,lint,test]",
   "sphinx-autobuild",
+  { include-group = "docs" },
+  { include-group = "lint" },
+  { include-group = "test" },
 ]
 test = [
   "pytest>=9.0.1",
