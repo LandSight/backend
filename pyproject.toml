@@ -118,6 +118,15 @@ filterwarnings = [
   "error",
 ]
 
+[tool.coverage.run]
+source = [ "src/app" ]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: not covered",
+]
+
 [tool.ty.environment]
 root = [ "src", "tests" ]
 python-version = "3.14"
