@@ -25,6 +25,7 @@ dev = [
 ]
 test = [
   "pytest>=9.0.1",
+  "pytest-cov>=7",
 ]
 docs = [
   "furo>=2025.9.25",
