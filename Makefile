@@ -16,9 +16,9 @@ test:
 
 .PHONY: lint
 lint:
-	$(UV) run --group=lint ty check
-	$(UV) run --group=lint ruff format --preview --check
-	$(UV) run --group=lint ruff check --show-fixes --preview
+	$(UV) run --group=dev ty check
+	$(UV) run --group=dev ruff format --preview --check
+	$(UV) run --group=dev ruff check --show-fixes --preview
 
 .PHONY: fmt
 fmt:
