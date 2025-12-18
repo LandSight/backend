@@ -32,6 +32,7 @@ test = [
 docs = [
   "furo>=2025.9.25",
   "sphinx>=8.2.3",
+  "towncrier>=25.8",
 ]
 lint = [
   "ruff>=0.14.7",
