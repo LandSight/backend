@@ -35,3 +35,11 @@ docs-build: docs-clean
 .PHONY: docs-serve
 docs-serve:
 	$(UV) run --group=dev sphinx-autobuild $(DOCS_DIR) $(DOCS_BUILD_DIR)
+
+.PHONY: changelog-build
+changelog-build:
+	$(UV) run --group=docs towncrier build
+
+.PHONY: changelog-fragment
+changelog-fragment:
+	$(UV) run --group=docs towncrier create
