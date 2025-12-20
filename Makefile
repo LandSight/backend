@@ -1,8 +1,11 @@
 UV ?= uv
 PRE-COMMIT ?= pre-commit
 
-DOCS_DIR = docs
-DOCS_BUILD_DIR = $(DOCS_DIR)/_build
+BUILD_DIR = build
+DOCS_BUILD_DIR = $(BUILD_DIR)/docs
+
+DOCS_HOST ?= 127.0.0.1
+DOCS_PORT ?= 8008
 
 .PHONY: install
 install:
@@ -30,11 +33,11 @@ docs-clean:
 
 .PHONY: docs-build
 docs-build: docs-clean
-	$(UV) run --group=docs sphinx-build -b html $(DOCS_DIR) $(DOCS_BUILD_DIR)
+	$(UV) run --group=docs mkdocs build
 
 .PHONY: docs-serve
 docs-serve:
-	$(UV) run --group=dev sphinx-autobuild $(DOCS_DIR) $(DOCS_BUILD_DIR)
+	$(UV) run --group=docs mkdocs serve --dev-addr $(DOCS_HOST):$(DOCS_PORT) --no-livereload
 
 .PHONY: changelog-build
 changelog-build:

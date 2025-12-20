@@ -1,0 +1,24 @@
+site_name: "Land Sight"
+site_description: "Technical documentation for Land Sight"
+site_author: "Land Sight"
+site_dir: "build/docs"
+copyright: "© 2025 LandSight"
+remote_name: "origin"
+repo_url: "https://github.com/LandSight/backend"
+theme:
+  name: "material"
+  favicon: "assets/images/favicon.ico"
+  logo: "assets/images/logo.png"
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+nav:
+  - Home: "index.md"
+plugins:
+  - "search"
+  - "optimize"
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
