@@ -9,15 +9,15 @@ if typing.TYPE_CHECKING:
     from app.platform.config.models import LoggingConfig
 
 
-def configure_logging(config: LoggingConfig) -> None:
-    """Configure logging based on the provided settings.
+def _build_dict_config(config: LoggingConfig) -> dict[str, typing.Any]:
+    """Convert LoggingConfig into the dictionary expected by logging.config.dictConfig.
 
     Parameters
     ----------
     config : LoggingConfig
         Logging configuration.
     """
-    dict_config = {
+    return {
         "version": 1,
         "disable_existing_loggers": True,
         "filters": {},
@@ -41,7 +41,17 @@ def configure_logging(config: LoggingConfig) -> None:
         },
         "loggers": {},
     }
-    logging.config.dictConfig(dict_config)
+
+
+def configure_logging(config: LoggingConfig) -> None:
+    """Configure logging based on the provided settings.
+
+    Parameters
+    ----------
+    config : LoggingConfig
+        Logging configuration.
+    """
+    logging.config.dictConfig(_build_dict_config(config))
 
 
 def get_logger(logger: str | None = None) -> logging.Logger:
