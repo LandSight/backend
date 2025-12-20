@@ -11,6 +11,7 @@ theme:
   logo: "assets/images/logo.png"
   features:
     - search.suggest
+    - search.highlight
 nav:
   - Home: "index.md"
 plugins:
