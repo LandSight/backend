@@ -9,6 +9,8 @@ theme:
   name: "material"
   favicon: "assets/images/favicon.ico"
   logo: "assets/images/logo.png"
+  features:
+    - search.suggest
 nav:
   - Home: "index.md"
 plugins:
