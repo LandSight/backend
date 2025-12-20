@@ -1,28 +1,30 @@
 ## Summary
-<!-- 1–2 sentences about the task and outcome -->
+<!-- 1–2 sentences about the task and outcome. -->
 
 ## Type
+- [ ] Release
 - [ ] Feature
 - [ ] Fix
-- [ ] Refactor
+- [ ] Security
 - [ ] Docs
-- [ ] Chore
-- [ ] CI
-- [ ] Build
-- [ ] Release
-- [ ] Other: ...
+- [ ] Ops
+- [ ] Internal
+- [ ] Breaking change
 
 ## Changes
-- ...
+<!-- Write down exactly what you changed. -->
+-
 
 ## Verification
 - [ ] `make test`
 - [ ] `make lint`
-- [ ] other: ...
+- [ ] `make docs-build`
 
-## Checklist
-- [ ] Linked tasks/issues: None
-- [ ] Scope noted: None
-- [ ] Tests added or updated where needed
-- [ ] Manual check done or not needed
-- [ ] User-facing docs updated if needed
+## Docs
+- [ ] Docs updated (if needed)
+
+## Tests
+- [ ] Tests added/updated (if needed)
+
+## Changelog
+- [ ] Added changelog fragment in `changelog.d/`
