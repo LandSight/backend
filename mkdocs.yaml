@@ -5,7 +5,10 @@ site_dir: "build/docs"
 copyright: "© 2025 LandSight"
 remote_name: "origin"
 repo_url: "https://github.com/LandSight/backend"
-theme: "material"
+theme: 
+  name: "material"
+  favicon: "assets/images/favicon.ico"
+  logo: "assets/images/logo.png"
 nav:
   - Home: "index.md"
 plugins:
