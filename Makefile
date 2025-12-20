@@ -37,7 +37,7 @@ docs-build: docs-clean
 
 .PHONY: docs-serve
 docs-serve:
-	$(UV) run --group=dev mkdocs serve --dev-addr $(DOCS_HOST):$(DOCS_PORT) --no-livereload
+	$(UV) run --group=docs mkdocs serve --dev-addr $(DOCS_HOST):$(DOCS_PORT) --no-livereload
 
 .PHONY: changelog-build
 changelog-build:
