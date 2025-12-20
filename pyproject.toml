@@ -136,6 +136,41 @@ filename = "CHANGELOG.md"
 title_format = "## [{version}](https://github.com/LandSight/backend/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/LandSight/backend/issues/{issue})"
 
+[[tool.towncrier.type]]
+name = "Feature"
+directory = "feature"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Bugfix"
+directory = "bugfix"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Security"
+directory = "security"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Deprecation"
+directory = "deprecation"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Removal"
+directory = "removal"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Docs"
+directory = "docs"
+showcontent = true
+
+[[tool.towncrier.type]]
+name = "Ops"
+directory = "ops"
+showcontent = true
+
 [tool.ty.environment]
 root = [ "src", "tests" ]
 python-version = "3.14"
