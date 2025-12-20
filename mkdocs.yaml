@@ -1,0 +1,12 @@
+site_name: "Land Sight"
+site_description: "Technical documentation for Land Sight"
+site_author: "Land Sight"
+site_dir: "build/docs"
+copyright: "© 2025 LandSight"
+remote_name: "origin"
+repo_url: "https://github.com/LandSight/backend"
+theme: "material"
+nav:
+  - Home: "index.md"
+plugins:
+  - "search"
