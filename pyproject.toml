@@ -114,6 +114,7 @@ lint.isort.lines-after-imports = 2
 lint.pydocstyle.convention = "numpy"
 
 [tool.pytest.ini_options]
+cache_dir = ".cache/pytest"
 pythonpath = [ "src" ]
 testpaths = [ "tests" ]
 addopts = [
