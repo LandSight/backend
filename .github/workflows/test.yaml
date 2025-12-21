@@ -44,7 +44,4 @@ jobs:
         run: uv python install
 
       - name: "Run tests"
-        run: make test
-
-      - name: "Run tests"
         run: uv run --group=test pytest --cov
