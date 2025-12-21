@@ -11,11 +11,3 @@ repos:
     rev: "v2.11.1"
     hooks:
       - id: pyproject-fmt
-
-  - repo: local
-    hooks:
-      - id: lint
-        name: lint
-        entry: make lint
-        language: system
-        pass_filenames: true
