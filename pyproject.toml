@@ -60,6 +60,7 @@ target-version = "py314"
 line-length = 120
 src = [ "src", "tests" ]
 
+cache-dir = ".cache/ruff"
 format.indent-style = "space"
 format.quote-style = "double"
 format.line-ending = "lf"
