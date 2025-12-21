@@ -34,7 +34,7 @@ lock:
     @uv lock
 
 test:
-    @uv run --group=test pytest --cov=src/app --cov-report=term-missing --cov-append
+    @uv run --group=test pytest --cov
 
 lint:
     @uv run --group=lint ty check
