@@ -20,8 +20,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  { include-group = "changelog" },
   { include-group = "docs" },
   { include-group = "lint" },
+  { include-group = "pre-commit" },
   { include-group = "test" },
 ]
 test = [
