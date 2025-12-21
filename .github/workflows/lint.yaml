@@ -44,9 +44,6 @@ jobs:
       - name: "Install Python"
         run: uv python install
 
-      - name: "Run lint checks"
-        run: make lint
-
       - name: "Run ruff checks"
         run: |
           uv run ruff check --preview --output-format=github
