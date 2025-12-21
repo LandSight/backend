@@ -46,3 +46,11 @@ jobs:
 
       - name: "Run lint checks"
         run: make lint
+
+      - name: "Run ruff checks"
+        run: |
+          uv run ruff check --preview --output-format=github
+          uv run ruff format --check --preview --output-format=github
+
+      - name: "Run ty checks"
+        run: uv run ty check --output-format=github
