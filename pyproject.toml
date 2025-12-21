@@ -38,6 +38,9 @@ lint = [
   "ruff>=0.14.7",
   "ty>=0.0.1a29",
 ]
+pre-commit = [
+  "pre-commit>=4.5.1",
+]
 
 [tool.hatch.version]
 source = "code"
