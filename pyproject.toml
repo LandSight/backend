@@ -41,6 +41,9 @@ lint = [
 pre-commit = [
   "pre-commit>=4.5.1",
 ]
+changelog = [
+  "towncrier>=25.8",
+]
 
 [tool.hatch.version]
 source = "code"
