@@ -404,3 +404,14 @@ Working with Issues
 - If you plan to work on an issue, explicitly state this in a comment.
 - Pull requests are linked to issues via references in the pull request description.
 - Issues are closed after the corresponding pull request is merged or at the maintainers discretion.
+
+
+Changelog Policy
+----------------
+This project maintains a curated, user-facing changelog.
+
+All pull requests that introduce **user-visible changes** must include
+a changelog entry in the form of a Towncrier fragment.
+
+The detailed changelog rules, supported change types, and writing guidelines
+are documented here: `CHANGELOG_POLICY.md <CHANGELOG_POLICY.md>`_
