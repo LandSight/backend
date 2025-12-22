@@ -22,8 +22,8 @@ jobs:
       - name: Install pngquant
         run: sudo apt install -y pngquant
 
-      - name: Docs build
-        run: make docs-build
+      - name: Build docs
+        run: uv run --group=docs mkdocs build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
