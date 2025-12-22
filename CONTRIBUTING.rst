@@ -13,7 +13,7 @@ Development Environment Setup
 Before you start, make sure the following tools are installed on your system:
 
 - ``uv >= 0.9.0`` — for dependency and virtual environment management.
-- ``make >= 4.0.0`` — for running commands defined in the ``Makefile``.
+- ``just >= 1.45.0`` — for running commands defined in the ``justfile``.
 
 Setup steps:
 
@@ -28,7 +28,7 @@ Setup steps:
 
    .. code-block:: bash
 
-      make install
+      just install
 
 
 .. _code-quality:
@@ -46,8 +46,8 @@ Auxiliary Commands
 
 .. code-block:: bash
 
-   make lint        # Run static analysis.
-   make fmt         # Format the code.
+   just lint        # Run static analysis.
+   just fmt         # Format the code.
 
 
 Code Style
@@ -100,7 +100,7 @@ To run the test suite, use:
 
 .. code-block:: bash
 
-   make test
+   just test
 
 
 Test Layout

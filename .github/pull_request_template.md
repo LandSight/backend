@@ -16,9 +16,7 @@
 -
 
 ## Verification
-- [ ] `make test`
-- [ ] `make lint`
-- [ ] `make docs-build`
+- [ ] `just check`
 
 ## Docs
 - [ ] Docs updated (if needed)
