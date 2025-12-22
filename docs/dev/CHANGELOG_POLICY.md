@@ -9,11 +9,6 @@ The goal of the changelog is to:
 - Highlight **breaking changes, security fixes, and behavioral changes**
 - Avoid noise from internal refactoring and maintenance work
 
-Inspired by:
-- [Keep a Changelog](https://keepachangelog.com/)
-- [Common Changelog](https://common-changelog.org/)
-- [Towncrier](https://towncrier.readthedocs.io/)
-
 ---
 
 ## Scope
