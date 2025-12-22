@@ -414,4 +414,4 @@ All pull requests that introduce **user-visible changes** must include
 a changelog entry in the form of a Towncrier fragment.
 
 The detailed changelog rules, supported change types, and writing guidelines
-are documented here: `CHANGELOG_POLICY.md <CHANGELOG_POLICY.md>`_
+are documented here: `CHANGELOG_POLICY.md <docs/dev/CHANGELOG_POLICY.md>`_
