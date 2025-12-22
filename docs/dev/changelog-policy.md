@@ -5,6 +5,7 @@
 This project maintains a structured, curated changelog intended for **end users, integrators, and operators**.
 
 The goal of the changelog is to:
+
 - Clearly communicate **meaningful, user-visible changes**
 - Highlight **breaking changes, security fixes, and behavioral changes**
 - Avoid noise from internal refactoring and maintenance work
@@ -14,6 +15,7 @@ The goal of the changelog is to:
 ## Scope
 
 The changelog includes changes that affect:
+
 - Runtime behavior
 - Public APIs
 - Configuration, deployment, or operations
