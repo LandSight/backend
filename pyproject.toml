@@ -54,6 +54,9 @@ attribute = "__version__"
 [tool.hatch.build.targets.wheel]
 packages = [ "src/app" ]
 
+[tool.uv]
+required-version = ">=0.9"
+
 [tool.ruff]
 target-version = "py314"
 line-length = 120
