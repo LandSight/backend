@@ -33,15 +33,15 @@ Each pull request that introduces a user-visible change **must include**
 
 The following change types are supported.
 
-| Type        | Directory     | Description                              | Example                                                      |
-|-------------|---------------|------------------------------------------|--------------------------------------------------------------|
-| **Feature** | `feature`     | New user-facing functionality             | Added a new endpoint for bulk user import                    |
-| **Bugfix**  | `bugfix`      | Fix for incorrect existing behavior       | Fixed crash when submitting an empty form                    |
-| **Security**| `security`    | Security-related fixes or mitigations     | Fixed privilege escalation in admin API                      |
-| **Deprecation** | `deprecation` | Functionality marked for future removal | Deprecated legacy authentication method                     |
-| **Removal** | `removal`     | Removed previously deprecated feature    | Removed legacy authentication method                         |
-| **Docs**    | `docs`        | User-facing documentation changes         | Updated configuration reference for caching                  |
-| **Ops**     | `ops`         | Operational or deployment changes         | Changed default worker concurrency settings                  |
+| Type        | Description                               | Example                                                      |
+|-------------|-------------------------------------------|--------------------------------------------------------------|
+| **Feature** | New user-facing functionality             | Added a new endpoint for bulk user import                    |
+| **Bugfix**  | Fix for incorrect existing behavior       | Fixed crash when submitting an empty form                    |
+| **Security**| Security-related fixes or mitigations     | Fixed privilege escalation in admin API                      |
+| **Deprecation** | Functionality marked for future removal | Deprecated legacy authentication method                     |
+| **Removal** | Removed previously deprecated feature    | Removed legacy authentication method                         |
+| **Docs**    |  User-facing documentation changes         | Updated configuration reference for caching                  |
+| **Ops**     | Operational or deployment changes         | Changed default worker concurrency settings                  |
 
 ---
 
