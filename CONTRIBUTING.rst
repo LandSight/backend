@@ -414,4 +414,4 @@ All pull requests that introduce **user-visible changes** must include
 a changelog entry in the form of a Towncrier fragment.
 
 The detailed changelog rules, supported change types, and writing guidelines
-are documented here: `changelog-policy.md <docs/dev/changelog-policy.md>`_
+are documented here: `changelog-policy <https://landsight.github.io/backend/dev/changelog-policy/>`_
