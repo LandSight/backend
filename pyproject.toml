@@ -58,6 +58,7 @@ packages = [ "src/app" ]
 required-version = ">=0.9"
 
 [tool.ruff]
+required-version = ">=0.14"
 target-version = "py314"
 line-length = 120
 src = [ "src", "tests" ]
