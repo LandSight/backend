@@ -406,12 +406,56 @@ Working with Issues
 - Issues are closed after the corresponding pull request is merged or at the maintainers discretion.
 
 
-Changelog Policy
-----------------
+Changelog
+=========
+
 This project maintains a curated, user-facing changelog.
 
-All pull requests that introduce **user-visible changes** must include
-a changelog entry in the form of a Towncrier fragment.
+All pull requests that introduce **user-visible changes** are required to
+include a changelog entry. The purpose of the changelog is to clearly
+communicate meaningful changes to users and downstream consumers.
 
-The detailed changelog rules, supported change types, and writing guidelines
-are documented here: `changelog-policy <https://landsight.github.io/backend/dev/changelog-policy/>`_
+The detailed changelog policy - including supported change types, writing
+guidelines, and examples - is documented here:
+`Changelog Policy <https://landsight.github.io/backend/dev/changelog-policy/>`_
+
+
+Changelog Tooling
+-----------------
+
+This project uses **Towncrier** to manage changelog entries.
+
+Instead of editing the changelog file directly, contributors add small
+fragment files that are later assembled during the release process.
+
+Common commands:
+
+- **Creating a changelog fragment**
+  Run:
+  ``just changelog-fragment``
+
+- **Building the changelog locally**
+  Run:
+  ``just changelog-build``
+
+These commands ensure consistent formatting and structure of the changelog.
+
+
+Responsibility
+--------------
+
+- **Contributors** are responsible for adding changelog fragments for
+  user-visible changes.
+- **Reviewers** verify that changelog entries are accurate, complete,
+  and correctly categorized.
+- **Maintainers** finalize and curate changelog entries during the
+  release process.
+
+
+Enforcement
+-----------
+
+Pull requests that introduce **user-visible changes** **must not be merged**
+without an appropriate changelog fragment.
+
+Exceptions are allowed only with explicit approval from a maintainer.
