@@ -27,9 +27,11 @@
 - `logging`: Logging and monitoring
 
 ## Rules
-- **Summary line**: Maximum 72 characters, imperative mood ("Add" not "Added")
+- **Summary line**: Maximum 72 characters, imperative mood, no trailing period
 - **Body**: Optional, explains why not how, maximum 72 characters per line
 - **Issue reference**: Include `#<issue-number>` in body for tracking
+- **Atomicity**: One logical change per commit. Prefer small, meaningful commits
+- **Working state**: Each commit must leave the project in a working state (build and checks pass)
 - **Breaking changes**:
   - Add `!` before colon in commit header
   - Prefix body with `BREAKING CHANGE:` with description of changes
