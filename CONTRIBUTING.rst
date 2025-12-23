@@ -430,13 +430,17 @@ fragment files that are later assembled during the release process.
 
 Common commands:
 
-- **Creating a changelog fragment**
-  Run:
-  ``just changelog-fragment``
+- **Creating a changelog fragment**\
+
+  .. code-block:: bash
+
+     just changelog-fragment
 
 - **Building the changelog locally**
-  Run:
-  ``just changelog-build``
+
+  .. code-block:: bash
+
+     just changelog-build
 
 These commands ensure consistent formatting and structure of the changelog.
 
