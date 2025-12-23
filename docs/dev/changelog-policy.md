@@ -10,6 +10,10 @@ The goal of the changelog is to:
 - Highlight **breaking changes, security fixes, and behavioral changes**
 - Avoid noise from internal refactoring and maintenance work
 
+The changelog is a communication tool, not a development log.
+
+> **If a user might notice or care about the change - it belongs in the changelog.**
+
 ---
 
 ## Scope
@@ -68,11 +72,3 @@ Changelog entries should:
 ### Bad Example
 
 > Refactored `OrderValidator` to handle edge cases.
-
----
-
-## Summary
-
-The changelog is a communication tool, not a development log.
-
-> **If a user might notice or care about the change — it belongs in the changelog.**
