@@ -23,14 +23,6 @@ The changelog includes changes that affect:
 
 ---
 
-## Tooling
-
-The project uses **Towncrier** to generate the changelog.
-
-Each pull request that introduces a user-visible change **must include**
-
----
-
 ## Change Types
 
 The following change types are supported.
@@ -76,24 +68,6 @@ Changelog entries should:
 ### Bad Example
 
 > Refactored `OrderValidator` to handle edge cases.
-
----
-
-
-## Responsibility
-
-- Contributors add changelog fragments
-- Reviewers verify correctness
-- Maintainers finalize entries during release
-
----
-
-## Enforcement
-
-Pull requests introducing user-visible changes **must not be merged**
-without an appropriate changelog fragment.
-
-Exceptions require explicit maintainer approval.
 
 ---
 
