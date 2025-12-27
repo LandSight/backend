@@ -1,5 +1,6 @@
 from litestar import get
-from src.app.interface.http.schema.system import HealthResponse
+
+from app.interface.http.schema.system import HealthResponse
 
 
 @get("/health")
