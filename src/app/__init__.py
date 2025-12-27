@@ -1,4 +1,7 @@
-from .__meta__ import __version__
+from .__meta__ import __api_version__, __version__
 
 
-__all__ = ("__version__",)
+__all__ = (
+    "__api_version__",
+    "__version__",
+)
