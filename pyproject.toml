@@ -15,6 +15,9 @@ requires-python = ">=3.14"
 classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.14" ]
 dynamic = [ "version" ]
 dependencies = [
+  "granian>=2.6",
+  "litestar>=2.19",
+  "msgspec>=0.20",
   "pydantic-settings>=2.12",
 ]
 
