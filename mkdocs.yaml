@@ -25,6 +25,7 @@ nav:
     - "Issues": "dev/issues.md"
     - "Pull Requests": "dev/pull-request.md"
     - "Testing": "dev/testing.md"
+  - Changelog: "changelog.md"
 plugins:
   - "search"
   - "optimize"
