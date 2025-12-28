@@ -5,7 +5,7 @@ requires = [ "hatchling" ]
 [project]
 name = "land-sight-backend"
 description = "LandSight backend."
-readme = "README.rst"
+readme = "README.md"
 license = "MIT"
 authors = [
   { name = "Aleksei Shavrin", email = "apshavrinwork@gmail.com" },
