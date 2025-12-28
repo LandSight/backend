@@ -15,7 +15,6 @@ theme:
     - search.share
 nav:
   - Home: "index.md"
-  - Contributing: "contributing.md"
   - Standarts:
     - Branching: "dev/branching.md"
     - Breaking Changes: "dev/breaking-change.md"
@@ -25,6 +24,7 @@ nav:
     - "Issues": "dev/issues.md"
     - "Pull Requests": "dev/pull-request.md"
     - "Testing": "dev/testing.md"
+  - Contributing: "contributing.md"
   - Changelog: "changelog.md"
 plugins:
   - "search"
