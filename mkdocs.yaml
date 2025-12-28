@@ -18,12 +18,12 @@ nav:
   - Standarts:
     - Branching: "dev/branching.md"
     - Breaking Changes: "dev/breaking-change.md"
-    - "Changelog Policy": "dev/changelog-policy.md"
-    - "Code Style": "dev/code-style.md"
-    - "Commit Style": "dev/commit-style.md"
-    - "Issues": "dev/issues.md"
-    - "Pull Requests": "dev/pull-request.md"
-    - "Testing": "dev/testing.md"
+    - Changelog Policy: "dev/changelog-policy.md"
+    - Code Style: "dev/code-style.md"
+    - Commit Style: "dev/commit-style.md"
+    - Issues": "dev/issues.md"
+    - Pull Requests: "dev/pull-request.md"
+    - Testing": "dev/testing.md"
   - Contributing: "contributing.md"
   - Changelog: "changelog.md"
 plugins:
