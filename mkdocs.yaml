@@ -16,14 +16,14 @@ theme:
 nav:
   - Home: "index.md"
   - Standarts:
-    - Branching: "dev/branching.md"
-    - Breaking Changes: "dev/breaking-change.md"
-    - Changelog Policy: "dev/changelog-policy.md"
-    - Code Style: "dev/code-style.md"
-    - Commit Style: "dev/commit-style.md"
-    - Issues": "dev/issues.md"
-    - Pull Requests: "dev/pull-request.md"
-    - Testing": "dev/testing.md"
+    - Branching: "standarts/branching.md"
+    - Breaking Changes: "standarts/breaking-change.md"
+    - Changelog Policy: "standarts/changelog-policy.md"
+    - Code Style: "standarts/code-style.md"
+    - Commit Style: "standarts/commit-style.md"
+    - Issues": "standarts/issues.md"
+    - Pull Requests: "standarts/pull-request.md"
+    - Testing": "standarts/testing.md"
   - Contributing: "contributing.md"
   - Changelog: "changelog.md"
 plugins:

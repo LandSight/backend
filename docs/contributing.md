@@ -28,7 +28,7 @@ just install
 
 This project follows strict rules for code style and structure.
 
-More information on [code style](dev/code-style.md) page.
+More information on [code style](standarts/code-style.md) page.
 
 To run static analysis and auto formatter, use commands:
 ```bash
@@ -45,7 +45,7 @@ All tests are located in the `tests` directory at the repository root.
 The `tests` directory is organized by test type and, where possible, mirrors the structure of the source code
 in the `src` directory.
 
-More information on the [testing](dev/testing.md) page.
+More information on the [testing](standarts/testing.md) page.
 
 To run the test suites, use command:
 ```bash
@@ -57,7 +57,7 @@ just test
 This project uses the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 All commits must follow this format.
 
-More information on the [commit style](dev/commit-style.md) page.
+More information on the [commit style](standarts/commit-style.md) page.
 
 ## Branching
 
@@ -74,7 +74,7 @@ Rules:
 - The `main` branch must always be in a releasable state
 - The `develop` branch may contain work-in-progress functionality but must remain in a working state
 
-More information on the [branching](dev/branching.md) page.
+More information on the [branching](standarts/branching.md) page.
 
 ## Pull Requests
 
@@ -91,7 +91,7 @@ Before opening a pull request, you must:
 - Bring the changes into compliance with the \"Code Style\" section.
 - Run the tests as described in the \"Testing\" section and ensure they pass successfully.
 
-More information about creating and maintaining pull requests on [pull request](dev/pull-request.md) page.
+More information about creating and maintaining pull requests on [pull request](standarts/pull-request.md) page.
 
 ## Issues
 
@@ -99,7 +99,7 @@ More information about creating and maintaining pull requests on [pull request](
 - Before creating a new issue, make sure a similar one does not already exist.
 - Each issue must describe exactly one idea or one problem.
 
-More information about discussing ideas and reporting issues on the [issues](dev/issues.md) page.
+More information about discussing ideas and reporting issues on the [issues](standarts/issues.md) page.
 
 ## Changelog
 
@@ -110,7 +110,7 @@ include a changelog entry. The purpose of the changelog is to clearly
 communicate meaningful changes to users and downstream consumers.
 
 The detailed information - including supported change types, writing
-guidelines, and examples - is documented on the [changelog policy](dev/changelog-policy.md) page.
+guidelines, and examples - is documented on the [changelog policy](standarts/changelog-policy.md) page.
 
 ### Tooling
 
