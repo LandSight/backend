@@ -16,9 +16,9 @@ theme:
 nav:
   - Home: "index.md"
   - Contributing: "contributing.md"
-  - Contributing Docs:
-    - "Branching": "dev/branching.md"
-    - "Breaking Changes": "dev/breaking-change.md"
+  - Standarts:
+    - Branching: "dev/branching.md"
+    - Breaking Changes: "dev/breaking-change.md"
     - "Changelog Policy": "dev/changelog-policy.md"
     - "Code Style": "dev/code-style.md"
     - "Commit Style": "dev/commit-style.md"
