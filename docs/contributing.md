@@ -4,7 +4,6 @@ Thank you for your interest in contributing to the LandSight.
 We welcome community participation and appreciate improvements of any size — from small fixes to new features
 and documentation enhancements.
 
-
 ## Development Environment Setup
 
 Before you start, make sure the following tools are installed on your system:
@@ -48,7 +47,6 @@ in the `src` directory.
 
 More information on the [testing](dev/testing.md) page.
 
-
 To run the test suites, use command:
 ```bash
 just test
@@ -78,7 +76,6 @@ Rules:
 
 More information on the [branching](dev/branching.md) page.
 
-
 ## Pull Requests
 
 ### General Principles
@@ -96,15 +93,13 @@ Before opening a pull request, you must:
 
 More information about creating and maintaining pull requests on [pull request](dev/pull-request.md) page.
 
-
-# Issues
+## Issues
 
 - The repository issue tracker is used for feature ideas and bug reports.
 - Before creating a new issue, make sure a similar one does not already exist.
 - Each issue must describe exactly one idea or one problem.
 
 More information about discussing ideas and reporting issues on the [issues](dev/issues.md) page.
-
 
 ## Changelog
 
@@ -116,7 +111,6 @@ communicate meaningful changes to users and downstream consumers.
 
 The detailed information - including supported change types, writing
 guidelines, and examples - is documented on the [changelog policy](dev/changelog-policy.md) page.
-
 
 ### Tooling
 
@@ -132,7 +126,6 @@ just changelog-build      # Build the changelog.
 ```
 
 These commands ensure consistent formatting and structure of the changelog.
-
 
 ### Responsibility
 
