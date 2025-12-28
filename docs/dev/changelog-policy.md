@@ -72,3 +72,10 @@ Changelog entries should:
 ### Bad Example
 
 > Refactored `OrderValidator` to handle edge cases.
+
+## Enforcement
+
+Pull requests that introduce **user-visible changes** **must not be merged**
+without an appropriate changelog fragment.
+
+Exceptions are allowed only with explicit approval from a maintainer.
