@@ -4,6 +4,9 @@ set dotenv-load := true
 VENV_DIR := ".venv"
 BUILD_DIR := "build"
 CACHE_DIR := ".cache"
+
+APP_HOST := env_var_or_default("APP_HOST", "127.0.0.1")
+APP_PORT := env_var_or_default("APP_PORT", "8000")
 DOCS_HOST := env_var_or_default("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env_var_or_default("DOCS_PORT", "8008")
 
@@ -60,3 +63,12 @@ changelog-build:
 
 changelog-fragment:
     @uv run --group=changelog towncrier create
+
+app-dev-serve:
+    @uv run --group=dev granian \
+        --host="{{ APP_HOST }}" \
+        --port="{{ APP_PORT }}" \
+        --interface="asgi" \
+        --factory \
+        --reload \
+        app.interface.http.asgi:create_asgi_application
