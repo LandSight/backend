@@ -21,9 +21,9 @@ nav:
     - Changelog Policy: "standarts/changelog-policy.md"
     - Code Style: "standarts/code-style.md"
     - Commit Style: "standarts/commit-style.md"
-    - Issues": "standarts/issues.md"
+    - Issues: "standarts/issues.md"
     - Pull Requests: "standarts/pull-request.md"
-    - Testing": "standarts/testing.md"
+    - Testing: "standarts/testing.md"
   - Contributing: "contributing.md"
   - Changelog: "changelog.md"
 plugins:
