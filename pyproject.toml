@@ -36,7 +36,7 @@ docs = [
   "mkdocs-minify-plugin>=0.8",
 ]
 lint = [
-  "ruff>=0.14.7",
+  "ruff>=0.14.10",
   "ty>=0.0.7",
 ]
 pre-commit = [
