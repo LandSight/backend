@@ -37,7 +37,7 @@ docs = [
 ]
 lint = [
   "ruff>=0.14.7",
-  "ty>=0.0.1a29",
+  "ty>=0.0.7",
 ]
 pre-commit = [
   "pre-commit>=4.5.1",
