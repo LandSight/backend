@@ -23,6 +23,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+  "granian[reload]>=2.6",
   { include-group = "changelog" },
   { include-group = "docs" },
   { include-group = "lint" },
