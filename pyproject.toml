@@ -5,7 +5,7 @@ requires = [ "hatchling" ]
 [project]
 name = "land-sight-backend"
 description = "LandSight backend."
-readme = "README.rst"
+readme = "README.md"
 license = "MIT"
 authors = [
   { name = "Aleksei Shavrin", email = "apshavrinwork@gmail.com" },
@@ -145,7 +145,7 @@ exclude_lines = [
 
 [tool.towncrier]
 directory = "changelog.d"
-filename = "CHANGELOG.md"
+filename = "docs/changelog.md"
 title_format = "## [{version}](https://github.com/LandSight/backend/releases/tag/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/LandSight/backend/issues/{issue})"
 

@@ -15,8 +15,17 @@ theme:
     - search.share
 nav:
   - Home: "index.md"
-  - Contributing:
-    - "Changelog Policy": "dev/changelog-policy.md"
+  - Standarts:
+    - Branching: "standarts/branching.md"
+    - Breaking Changes: "standarts/breaking-change.md"
+    - Changelog Policy: "standarts/changelog-policy.md"
+    - Code Style: "standarts/code-style.md"
+    - Commit Style: "standarts/commit-style.md"
+    - Issues: "standarts/issues.md"
+    - Pull Requests: "standarts/pull-request.md"
+    - Testing: "standarts/testing.md"
+  - Contributing: "contributing.md"
+  - Changelog: "changelog.md"
 plugins:
   - "search"
   - "optimize"
