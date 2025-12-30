@@ -157,7 +157,7 @@ issue_format = "[#{issue}](https://github.com/LandSight/backend/issues/{issue})"
 
 [[tool.towncrier.type]]
 name = "Feature"
-directory = "feature"
+directory = "feat"
 showcontent = true
 
 [[tool.towncrier.type]]
