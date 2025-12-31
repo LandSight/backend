@@ -24,6 +24,7 @@ nav:
     - Issues: "standarts/issues.md"
     - Pull Requests: "standarts/pull-request.md"
     - Testing: "standarts/testing.md"
+    - Versioning: "standarts/versioning.md"
   - Contributing: "contributing.md"
   - Changelog: "changelog.md"
 plugins:
