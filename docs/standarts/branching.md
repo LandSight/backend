@@ -16,7 +16,7 @@ and release workflows.
 
 Supporting branches are used for implementing changes and preparing releases.
 
-- `feature/<name>` — development of new functionality.
+- `feat/<name>` — development of new functionality.
 - `bugfix/<issue>-<name>` — fixes for non-critical bugs.
 - `hotfix/<name>` — urgent fixes for critical issues in released versions.
 - `release/<version>` — release preparation and stabilization.
@@ -31,7 +31,7 @@ Supporting branches are used for implementing changes and preparing releases.
 - The `develop` branch may contain work-in-progress functionality
   but must remain in a working state.
 
-- `feature/*` and `bugfix/*` branches:
+- `feat/*` and `bugfix/*` branches:
   - are created from `develop`
   - are merged back into `develop` via pull requests
 
@@ -58,7 +58,7 @@ General rules:
 
 Examples:
 ```text
-feature/<short-summary>
+feat/<short-summary>
 bugfix/<issue-number>-<short-summary>
 hotfix/<short-summary>
 release/<version>
