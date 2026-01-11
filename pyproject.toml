@@ -61,66 +61,6 @@ packages = [ "src/app" ]
 [tool.uv]
 required-version = ">=0.9"
 
-[tool.ruff]
-required-version = ">=0.14"
-target-version = "py314"
-line-length = 120
-src = [ "src", "tests" ]
-
-cache-dir = ".cache/ruff"
-format.indent-style = "space"
-format.quote-style = "double"
-format.line-ending = "lf"
-format.docstring-code-format = true
-lint.select = [
-  "ANN", # flake8-annotations: type annotations
-  "ARG", # flake8-unused-arguments: unused arguments
-  "B",   # flake8-bugbear: likely bugs
-  "C4",  # flake8-comprehensions: comprehension best practices
-  "D",   # pydocstyle: docstring requirements
-  "DTZ", # flake8-datetimez: timezone awareness
-  "E",   # pycodestyle: basic errors
-  "ERA", # eradicate: commented-out code
-  "F",   # Pyflakes: logical errors
-  "I",   # import sorting
-  "N",   # pep8-naming: identifier naming
-  "PGH", # pygrep-hooks: logging best practices
-  "PLC", # pylint convention-level rules
-  "PLE", # pylint errors
-  "PLR", # pylint refactors
-  "PLW", # pylint warnings
-  "RSE", # flake8-raise: raise style
-  "RUF", # Ruff-native rules
-  "S",   # flake8-bandit: baseline security
-  "SIM", # flake8-simplify: simplify control flow
-  "T20", # flake8-print: forbid print/debug
-  "TC",  # flake8-type-checking: type-checking blocks
-  "TRY", # tryceratops: exception handling best practices
-  "UP",  # pyupgrade: modern syntax
-  "W",   # pycodestyle: style warnings
-]
-lint.ignore = [
-  "A003", # attribute name shadows a builtin
-  "D100", # missing docstring in public package
-  "D104", # missing docstring in public package (__init__.py)
-  "D105", # missing docstring in magic method
-  "D107", # missing docstring in __init__
-  "E203", # conflicts with formatter
-  "E501", # formatter enforces line length
-]
-lint.per-file-ignores."**/__init__.py" = [
-  "F401", # allow unused re-exports
-]
-lint.per-file-ignores."tests/**.py" = [
-  "PLR2004", # magic value comparison
-  "S101",    # allow assert statements in tests (Bandit S101)
-]
-lint.isort.combine-as-imports = true
-lint.isort.force-single-line = false
-lint.isort.known-first-party = [ "app" ]
-lint.isort.lines-after-imports = 2
-lint.pydocstyle.convention = "numpy"
-
 [tool.pytest.ini_options]
 anyio_mode = "auto"
 cache_dir = ".cache/pytest"
