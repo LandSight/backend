@@ -4,8 +4,8 @@ set dotenv-load := true
 VENV_DIR := ".venv"
 BUILD_DIR := "build"
 CACHE_DIR := ".cache"
-DOCS_HOST := env_var_or_default("DOCS_HOST", "127.0.0.1")
-DOCS_PORT := env_var_or_default("DOCS_PORT", "8008")
+DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
+DOCS_PORT := env("DOCS_PORT", "8008")
 
 default:
     @just --list
