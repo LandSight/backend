@@ -58,9 +58,6 @@ attribute = "__version__"
 [tool.hatch.build.targets.wheel]
 packages = [ "src/app" ]
 
-[tool.uv]
-required-version = ">=0.9"
-
 [tool.pytest.ini_options]
 anyio_mode = "auto"
 cache_dir = ".cache/pytest"
