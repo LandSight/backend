@@ -76,12 +76,3 @@ filterwarnings = [
   "error",
   "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.:UserWarning",
 ]
-
-[tool.coverage.run]
-source = [ "src/app" ]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: not covered",
-]
