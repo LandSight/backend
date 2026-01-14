@@ -1,0 +1,10 @@
+[run]
+branch = true
+
+[paths]
+source =
+    "src/app",
+
+[report]
+exclude_lines =
+  "pragma: not covered",
