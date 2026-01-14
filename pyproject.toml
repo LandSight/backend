@@ -70,12 +70,3 @@ log_cli_level = "INFO"
 filterwarnings = [
   "error",
 ]
-
-[tool.coverage.run]
-source = [ "src/app" ]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-  "pragma: not covered",
-]
