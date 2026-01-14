@@ -120,7 +120,3 @@ showcontent = true
 name = "Ops"
 directory = "ops"
 showcontent = true
-
-[tool.ty.environment]
-root = [ "src", "tests" ]
-python-version = "3.14"
