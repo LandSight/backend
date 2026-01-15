@@ -3,8 +3,8 @@ branch = true
 
 [paths]
 source =
-    "src/app",
+    src/app
 
 [report]
 exclude_lines =
-  "pragma: not covered",
+  pragma: not covered
