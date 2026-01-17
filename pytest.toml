@@ -1,0 +1,18 @@
+[pytest]
+minversion = "9"
+cache_dir = ".cache/pytest"
+pythonpath = ["src",]
+testpaths = ["tests",]
+python_files = ["test_*.py",]
+python_classes = ["Test*",]
+python_functions = ["test_*",]
+addopts = [
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+  "--disable-warnings",
+  "--cov",
+]
+xfail_strict = true
+log_cli = true
+log_cli_level = "INFO"
