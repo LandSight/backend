@@ -2,7 +2,7 @@ import uuid
 from typing import Final
 
 from app.shared.domain.errors import InvalidUUIDTypeError, InvalidUUIDVersionError
-from app.shared.domain.value_objects.base import BaseValueObject
+from app.shared.domain.value_object.base import BaseValueObject
 
 
 class EntityIdValueObject(BaseValueObject[uuid.UUID]):
