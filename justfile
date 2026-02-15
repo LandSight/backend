@@ -16,7 +16,7 @@ default:
 install:
     @uv venv {{ VENV_DIR }}
     @uv sync
-    @uv run --group=git-hooks prek install
+    @uv run --group="git-hooks" prek install
 
 clean:
     @find -type d -name "dist" -exec rm -rf {} +
@@ -31,32 +31,32 @@ clean:
 
 upgrade:
     @uv lock --upgrade
-    @uv run --group=git-hooks prek auto-update
+    @uv run --group="git-hooks" prek auto-update
 
 lock:
     @uv lock
 
 test:
-    @uv run --group=test pytest --cov
+    @uv run --group="test" pytest --cov
 
 lint:
-    @uv run --group=lint ty check
-    @uv run --group=lint ruff format --preview --check
-    @uv run --group=lint ruff check --show-fixes --preview
+    @uv run --group="lint" ty check
+    @uv run --group="lint" ruff format --preview --check
+    @uv run --group="lint" ruff check --show-fixes --preview
 
 fmt:
-    @uv run --group=lint ruff format --preview
+    @uv run --group="lint" ruff format --preview
 
 check: fmt lint test
 
 docs-build:
-    @uv run --group=docs mkdocs build
+    @uv run --group="docs" mkdocs build
 
 docs-serve:
-    @uv run --group=docs mkdocs serve --dev-addr="{{ DOCS_HOST }}:{{ DOCS_PORT }}" --no-livereload
+    @uv run --group="docs" mkdocs serve --dev-addr="{{ DOCS_HOST }}:{{ DOCS_PORT }}" --no-livereload
 
 changelog-build:
-    @uv run --group=changelog towncrier build
+    @uv run --group="changelog" towncrier build
 
 changelog-fragment:
     @uv run --group=changelog towncrier create
