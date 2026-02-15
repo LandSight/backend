@@ -21,7 +21,7 @@ cd backend
 
 2. Create a virtual environment and install dependencies:
 ```bash
-just install
+just setup
 ```
 
 ## Code Style
