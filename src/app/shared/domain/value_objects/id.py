@@ -1,5 +1,5 @@
 import uuid
-from typing import Final, Literal
+from typing import Final
 
 from app.shared.domain.errors import InvalidUUIDTypeError, InvalidUUIDVersionError
 from app.shared.domain.value_objects.base import BaseValueObject
@@ -8,7 +8,7 @@ from app.shared.domain.value_objects.base import BaseValueObject
 class EntityIdValueObject(BaseValueObject[uuid.UUID]):
     """Entity ID value object."""
 
-    _UUID_VERSION: Final[Literal[6]] = 6
+    _UUID_VERSION: Final[int] = 6
 
     @staticmethod
     def default() -> EntityIdValueObject:
