@@ -9,7 +9,10 @@ authors = [
   { name = "Vlad Korneev", email = "veenrok@veenrok.com" },
 ]
 requires-python = ">=3.14"
-classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.14" ]
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
   "pydantic-settings>=2.12",
 ]
@@ -18,6 +21,7 @@ dependencies = [
 dev = [
   { include-group = "changelog" },
   { include-group = "docs" },
+  { include-group = "git-hooks" },
   { include-group = "lint" },
   { include-group = "pre-commit" },
   { include-group = "test" },
@@ -31,13 +35,16 @@ docs = [
   "mkdocs-material>=9.7.1",
   "mkdocs-minify-plugin>=0.8",
 ]
+changelog = [
+  "towncrier>=25.8",
+]
+git-hooks = [
+  "prek>=0.3.2",
+]
 lint = [
   "ruff>=0.14.10",
   "ty>=0.0.12",
 ]
 pre-commit = [
   "pre-commit>=4.5.1",
-]
-changelog = [
-  "towncrier>=25.8",
 ]
