@@ -13,7 +13,7 @@ default:
 install:
     @uv venv {{ VENV_DIR }}
     @uv sync
-    @uv run --group=pre-commit pre-commit install
+    @uv run --group=git-hooks prek install
 
 clean:
     @find -type d -name "dist" -exec rm -rf {} +
@@ -28,7 +28,7 @@ clean:
 
 upgrade:
     @uv lock --upgrade
-    @uv run --group=pre-commit pre-commit autoupdate
+    @uv run --group=git-hooks prek auto-update
 
 lock:
     @uv lock
@@ -44,10 +44,7 @@ lint:
 fmt:
     @uv run --group=lint ruff format --preview
 
-pre-commit:
-    @uv run --group=pre-commit pre-commit run
-
-check: fmt lint test pre-commit
+check: fmt lint test
 
 docs-build:
     @uv run --group=docs mkdocs build
