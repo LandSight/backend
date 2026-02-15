@@ -13,9 +13,13 @@ DOCS_PORT := env_var_or_default("DOCS_PORT", "8008")
 default:
     @just --list
 
-install:
+venv:
     @uv venv {{ VENV_DIR }}
+
+sync:
     @uv sync
+
+setup: venv sync
     @uv run --group="git-hooks" prek install
 
 clean:
