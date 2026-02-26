@@ -16,3 +16,4 @@ addopts = [
 xfail_strict = true
 log_cli = true
 log_cli_level = "INFO"
+anyio_mode = "auto"
