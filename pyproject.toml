@@ -18,6 +18,9 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
+  "granian>=2.7.2",
+  "litestar>=2.21.0",
+  "msgspec>=0.20.0",
   "pydantic-settings>=2.12",
 ]
 
@@ -28,6 +31,7 @@ dev = [
   { include-group = "git-hooks" },
   { include-group = "lint" },
   { include-group = "test" },
+  "granian[reload]>=2.7.2",
 ]
 test = [
   "pytest>=9.0.1",
