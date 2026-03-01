@@ -4,6 +4,7 @@ set dotenv-load := true
 VENV_DIR := ".venv"
 BUILD_DIR := "build"
 CACHE_DIR := ".cache"
+SRC_DIR := "src"
 
 APP_HOST := env("APP_HOST", "127.0.0.1")
 APP_PORT := env("APP_PORT", "8000")
@@ -72,4 +73,5 @@ app-serve:
         --interface="asgi" \
         --factory \
         --reload \
+        --reload-paths="{{ SRC_DIR }}" \
         app.interface.http.asgi:create_asgi_application
