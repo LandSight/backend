@@ -1,9 +1,9 @@
 import typing
 
-from msgspec import Struct
+from pydantic import BaseModel
 
 
-class HealthResponse(Struct):
+class HealthResponse(BaseModel):
     """Health response schema."""
 
     status: typing.Literal["ok"] = "ok"
