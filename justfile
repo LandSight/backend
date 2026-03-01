@@ -17,7 +17,7 @@ venv:
     @uv venv {{ VENV_DIR }}
 
 sync:
-    @uv sync
+    @uv sync --all-extras --all-groups
 
 setup: venv sync
     @uv run --group="git-hooks" prek install
