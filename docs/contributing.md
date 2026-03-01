@@ -52,6 +52,13 @@ To run the test suites, use command:
 just test
 ```
 
+## Running the Application
+
+To run the application in development mode, use command:
+```bash
+just app-serve
+```
+
 ## Commit Style
 
 This project uses the [Conventional Commits](https://www.conventionalcommits.org/) specification.

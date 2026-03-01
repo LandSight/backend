@@ -25,6 +25,10 @@ class BaseConfig(BaseSettings):
 class LoggingConfig(BaseConfig):
     """Logging configuration.
 
+    Notes
+    -----
+    All environment variables for this section must be prefixed with `LOGGING_`.
+
     Attributes
     ----------
     level : {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
@@ -34,9 +38,6 @@ class LoggingConfig(BaseConfig):
         Formatter name. Can be overridden via the `LOGGING_FORMATTER`
         environment variable.
 
-    Notes
-    -----
-    All environment variables for this section must be prefixed with `LOGGING_`.
     """
 
     model_config = SettingsConfigDict(
