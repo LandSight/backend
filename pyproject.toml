@@ -18,12 +18,10 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "pydantic-settings>=2.12",
-]
-optional-dependencies.http = [
   "granian>=2.7.2",
   "litestar>=2.21",
   "pydantic>=2.12.5",
+  "pydantic-settings>=2.12",
 ]
 
 [dependency-groups]
