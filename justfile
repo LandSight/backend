@@ -65,7 +65,7 @@ changelog-build:
 changelog-fragment:
     @uv run --group="changelog" towncrier create
 
-asgi-app-serve:
+app-serve:
     @uv run --group="dev" granian \
         --host="{{ APP_HOST }}" \
         --port="{{ APP_PORT }}" \
