@@ -292,10 +292,14 @@ name = "land-sight-backend"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "pydantic-settings" },
+]
+
+[package.optional-dependencies]
+http = [
     { name = "granian" },
     { name = "litestar" },
-    { name = "msgspec" },
-    { name = "pydantic-settings" },
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -333,11 +337,12 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "granian", specifier = ">=2.7.2" },
-    { name = "litestar", specifier = ">=2.21.0" },
-    { name = "msgspec", specifier = ">=0.20.0" },
+    { name = "granian", marker = "extra == 'http'", specifier = ">=2.7.2" },
+    { name = "litestar", marker = "extra == 'http'", specifier = ">=2.21" },
+    { name = "pydantic", marker = "extra == 'http'", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.12" },
 ]
+provides-extras = ["http"]
 
 [package.metadata.requires-dev]
 changelog = [{ name = "towncrier", specifier = ">=25.8" }]
