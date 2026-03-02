@@ -1,4 +1,4 @@
-required-version = ">=0.14"
+required-version = ">=0.15"
 target-version = "py314"
 line-length = 120
 src = [ "src", "tests" ]
