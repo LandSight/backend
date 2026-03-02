@@ -16,7 +16,7 @@ class BaseValueObject[ValueT]:
 
     def _normalize(self, value: ValueT) -> ValueT:
         """Normalize the value object."""
-        return value
+        raise NotImplementedError
 
     def _validate(self) -> None:
         """Validate normalized value against domain constraints."""
