@@ -23,3 +23,10 @@ hooks = [
   { id = "ruff-check" },
   { id = "ruff-format" }
 ]
+
+[[repos]]
+repo = "https://github.com/allganize/ty-pre-commit"
+rev = "v0.0.19"
+hooks = [
+    { id = "ty-check" }
+]
