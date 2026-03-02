@@ -11,15 +11,22 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/tox-dev/pyproject-fmt"
-rev = "v2.16.0"
+rev = "v2.16.2"
 hooks = [
   { id = "pyproject-fmt" }
 ]
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.15.1"
+rev = "v0.15.4"
 hooks = [
   { id = "ruff-check" },
   { id = "ruff-format" }
+]
+
+[[repos]]
+repo = "https://github.com/allganize/ty-pre-commit"
+rev = "v0.0.19"
+hooks = [
+    { id = "ty-check" }
 ]
