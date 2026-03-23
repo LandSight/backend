@@ -4,3 +4,7 @@ class DomainError(Exception):
 
 class ValidationError(DomainError):
     """Validation domain error."""
+
+
+class InvalidEntityIdError(ValidationError):
+    """Invalid entity ID error."""
