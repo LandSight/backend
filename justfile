@@ -55,10 +55,10 @@ fmt:
 check: fmt lint test
 
 docs-build:
-    @uv run --group="docs" mkdocs build
+    @uv run --group="docs" zensical build
 
 docs-serve:
-    @uv run --group="docs" mkdocs serve --dev-addr="{{ DOCS_HOST }}:{{ DOCS_PORT }}" --no-livereload
+    @uv run --group="docs" zensical serve --dev-addr="{{ DOCS_HOST }}:{{ DOCS_PORT }}"
 
 changelog-build:
     @uv run --group="changelog" towncrier build
