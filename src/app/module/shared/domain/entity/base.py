@@ -18,8 +18,7 @@ class BaseEntity[IdT](ABC):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
-            message = f"Cannot compare {self.__class__.__name__} with {other.__class__.__name__}"
-            raise TypeError(message)
+            return NotImplemented
         return self._id == other._id
 
     def __hash__(self) -> int:
