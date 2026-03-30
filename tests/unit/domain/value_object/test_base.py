@@ -118,3 +118,11 @@ class TestBaseValueObject:
 
         value.append("test")
         assert vo.unwrap() != value
+
+    def test_copy_incoming_value(self) -> None:
+        """Should copy incoming value, not modify it."""
+        value = []
+        vo = ArrayValueObject(value)
+        value.append("test")
+
+        assert vo.unwrap() != value
