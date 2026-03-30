@@ -2,7 +2,34 @@ from abc import ABC, abstractmethod
 
 
 class BaseEntity[IdT](ABC):
-    """Base class for all entities."""
+    """Base class for all entities.
+
+    Notes
+    -----
+    When overriding ``__init__`` in a subclass, call ``super().__init__(id)``
+    at the **end** of your custom ``__init__`` method. This ensures:
+
+    1. All subclass attributes are set before ``_validate()`` runs
+    2. The ``_id`` field is properly initialized
+    3. The overridden ``_validate()`` method can access all attributes
+
+    Attributes
+    ----------
+    id : IdT
+        The entity's ID.
+
+
+    Example
+    -------
+    >>> class User(BaseEntity[int]):
+    ...     def __init__(self, id: int, name: str) -> None:
+    ...         self.name = name  # Set subclass attributes first
+    ...         super().__init__(id)  # Then call parent __init__
+    ...
+    ...     def _validate(self) -> None:
+    ...         if not self.name:  # Can safely access self.name here
+    ...             raise ValidationError("Name is required")
+    """
 
     def __init__(self, id: IdT) -> None:
         self._id: IdT = id
