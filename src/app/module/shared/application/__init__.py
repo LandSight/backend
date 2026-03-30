@@ -1,4 +1,4 @@
-from . import error
+from . import error, use_case
 
 
-__all__ = ("error",)
+__all__ = ("error", "use_case")
