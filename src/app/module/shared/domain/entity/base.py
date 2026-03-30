@@ -6,6 +6,7 @@ class BaseEntity[IdT](ABC):
 
     def __init__(self, id: IdT) -> None:
         self._id: IdT = id
+        self._validate()
 
     @abstractmethod
     def _validate(self) -> None:
