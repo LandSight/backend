@@ -6,7 +6,7 @@ class BaseValueObject[ValueT](ABC):
     """Base class for all value objects."""
 
     def __init__(self, value: ValueT) -> None:
-        self._value = self._normalize(value)
+        self._value = self._normalize(deepcopy(value))
         self._validate()
 
     @abstractmethod
