@@ -52,6 +52,7 @@ per-file-ignores."**/__init__.py" = [
   "F401", # allow unused re-exports
 ]
 per-file-ignores."tests/**.py" = [
+  "PLR6301", # allow unused self in test classes
   "PLR2004", # magic value comparison
   "S101",    # allow assert statements in tests (Bandit S101)
 ]
