@@ -1,5 +1,6 @@
 import typing
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.platform.constants import ENV_FILE
@@ -73,3 +74,31 @@ class DatabaseConfig(BaseConfig):
     echo: bool = False
     pool_size: int = 5
     max_overflow: int = 10
+
+
+class AuthConfig(BaseConfig):
+    """Authentication configuration.
+
+    Notes
+    -----
+    All environment variables for this section must be prefixed with `AUTH_`.
+
+    Attributes
+    ----------
+    secret_key : str
+        Secret key for JWT signing.
+    algorithm : str
+        JWT signing algorithm.
+    access_token_expire_minutes : int
+        Access token lifetime in minutes.
+    refresh_token_expire_days : int
+        Refresh token lifetime in days.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="AUTH_",
+    )
+    secret_key: str = Field(..., description="Secret key for JWT signing")
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
