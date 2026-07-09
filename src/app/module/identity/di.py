@@ -1,11 +1,9 @@
 """Dependency injection for Identity module."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from litestar.di import NamedDependency, Provide
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.module.identity.application.port import TokenService, UserRepository
 from app.module.identity.application.use_case import (
     AuthenticateUserUseCase,
     GetUserUseCase,
@@ -17,13 +15,7 @@ from app.module.identity.infrastructure.security import (
     JWTCurrentUserProvider,
     JWTTokenService,
 )
-
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    from app.module.identity.application.port import TokenService, UserRepository
-    from app.platform.config.models import AuthConfig
+from app.platform.config.models import AuthConfig
 
 
 # ----- Repositories -----

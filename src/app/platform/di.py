@@ -5,16 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from litestar.di import NamedDependency, Provide
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
-    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-
-    from app.platform.config.models import AuthConfig, DatabaseConfig
-
 from app.platform.config.loaders import load_auth_config, load_database_config
+from app.platform.config.models import AuthConfig, DatabaseConfig
 from app.platform.database.engine import create_async_engine_from_config
 from app.platform.database.session import create_async_session_factory, get_async_session
 

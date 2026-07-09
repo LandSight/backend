@@ -74,3 +74,7 @@ isort.lines-after-imports = 2
   "TC001",   # allow runtime imports in controllers
   "TC002",   # allow runtime imports in controllers
 ]
+"src/app/**/di.py" = [
+  "TC001",   # runtime imports needed for dependency injection in controllers
+  "TC002",   # NamedDependency and use cases must be available at runtime
+]
