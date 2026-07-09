@@ -48,20 +48,29 @@ ignore = [
   "E203", # conflicts with formatter
   "E501", # formatter enforces line length
 ]
-per-file-ignores."**/__init__.py" = [
-  "F401", # allow unused re-exports
-]
-per-file-ignores."tests/**.py" = [
-  "PLR6301", # allow unused self in test classes
-  "PLR2004", # magic value comparison
-  "S101",    # allow assert statements in tests (Bandit S101)
-]
-per-file-ignores."src/app/interface/http/controller/**.py" = [
-  "PLR6301", # allow unused self
-]
+
 pydocstyle.convention = "numpy"
 
 isort.combine-as-imports = true
 isort.force-single-line = false
 isort.known-first-party = [ "app" ]
 isort.lines-after-imports = 2
+
+[lint.per-file-ignores]
+"**/__init__.py" = [
+  "F401", # allow unused re-exports
+]
+"tests/**.py" = [
+  "PLR6301", # allow unused self in test classes
+  "PLR2004", # magic value comparison
+  "S101",    # allow assert statements in tests (Bandit S101)
+]
+"src/app/interface/http/controller/**.py" = [
+  "PLR6301", # allow unused self
+  "TC001",   # allow runtime imports in controllers
+  "TC002",   # allow runtime imports in controllers
+]
+"src/app/module/**/interface/http/controller/**/*.py" = [
+  "TC001",   # allow runtime imports in controllers
+  "TC002",   # allow runtime imports in controllers
+]
