@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
+    from litestar import Litestar
+
 from app.platform.config.loaders import load_auth_config, load_database_config
 from app.platform.config.models import AuthConfig, DatabaseConfig
 from app.platform.database.engine import create_async_engine_from_config
@@ -31,9 +33,12 @@ async def provide_auth_config() -> AuthConfig:
 # ----- Engine -----
 async def provide_async_database_engine(
     database_config: NamedDependency[DatabaseConfig],
+    app: Litestar,
 ) -> AsyncEngine:
     """Provide async database engine."""
-    return create_async_engine_from_config(database_config)
+    engine = create_async_engine_from_config(database_config)
+    app.state.database_engine = engine
+    return engine
 
 
 # ----- Session -----

@@ -28,11 +28,25 @@ def create_async_engine_from_config(config: DatabaseConfig) -> AsyncEngine:
         Configured async engine.
     """
     return create_async_engine(
-        config.url,
+        config.get_url(),
         echo=config.echo,
         pool_size=config.pool_size,
         max_overflow=config.max_overflow,
     )
 
 
-__all__ = ("create_async_engine_from_config",)
+async def dispose_engine(engine: AsyncEngine) -> None:
+    """Dispose of an async database engine, closing all connections.
+
+    Parameters
+    ----------
+    engine : AsyncEngine
+        Database engine to dispose.
+    """
+    await engine.dispose()
+
+
+__all__ = (
+    "create_async_engine_from_config",
+    "dispose_engine",
+)

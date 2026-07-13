@@ -1,9 +1,20 @@
 from functools import cache
 
-from app.platform.config.models import AuthConfig, DatabaseConfig, LoggingConfig
+from app.platform.config.models import AppConfig, AuthConfig, DatabaseConfig, LoggingConfig
 
 
 @cache
+def load_app_config() -> AppConfig:
+    """Load full application configuration.
+
+    Returns
+    -------
+    AppConfig
+        App configuration populated from the environment.
+    """
+    return AppConfig()
+
+
 def load_logging_config() -> LoggingConfig:
     """Load logging settings from environment variables.
 
@@ -12,10 +23,9 @@ def load_logging_config() -> LoggingConfig:
     LoggingConfig
         Logging configuration populated from the environment.
     """
-    return LoggingConfig()
+    return load_app_config().logging
 
 
-@cache
 def load_database_config() -> DatabaseConfig:
     """Load database settings from environment variables.
 
@@ -24,10 +34,9 @@ def load_database_config() -> DatabaseConfig:
     DatabaseConfig
         Database configuration populated from the environment.
     """
-    return DatabaseConfig()
+    return load_app_config().database
 
 
-@cache
 def load_auth_config() -> AuthConfig:
     """Load authentication settings from environment variables.
 
@@ -36,4 +45,12 @@ def load_auth_config() -> AuthConfig:
     AuthConfig
         Authentication configuration populated from the environment.
     """
-    return AuthConfig()
+    return load_app_config().auth
+
+
+__all__ = (
+    "load_app_config",
+    "load_auth_config",
+    "load_database_config",
+    "load_logging_config",
+)
