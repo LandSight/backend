@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
 )
 
+from app.platform.logging import get_logger
+
 
 def create_async_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     """Create an async session factory.
@@ -50,11 +52,13 @@ async def get_async_session(
     AsyncSession
         Database session.
     """
+    logger = get_logger("app.platform.database.session")
     async with session_factory() as session:
         try:
             yield session
             await session.commit()
         except Exception:
+            logger.exception("Database session error — rolling back")
             await session.rollback()
             raise
         finally:

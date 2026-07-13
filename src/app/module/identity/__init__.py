@@ -1,8 +1,4 @@
-from . import application, domain, infrastructure
+from . import application, domain, infrastructure, interface
 
 
-__all__ = (
-    "application",
-    "domain",
-    "infrastructure",
-)
+__all__ = ("application", "domain", "infrastructure", "interface")

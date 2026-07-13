@@ -1,9 +1,11 @@
 """User profile endpoints."""
 
+from typing import Annotated
+
 from litestar import get
 from litestar.controller import Controller
 from litestar.di import NamedDependency
-from litestar.params import Parameter
+from litestar.params import HeaderParameter
 from litestar.status_codes import HTTP_200_OK
 
 from app.module.identity.application.dto.command import GetUserCommand
@@ -27,7 +29,7 @@ class UserController(Controller):
         self,
         get_user_use_case: NamedDependency[GetUserUseCase],
         current_user_provider: NamedDependency[CurrentUserProvider],
-        authorization: str | None = Parameter(header="Authorization", default=None),
+        authorization: Annotated[str, HeaderParameter(name="Authorization", required=True)],
     ) -> UserResponse:
         """Get the profile of the currently authenticated user.
 

@@ -21,7 +21,6 @@ class AuthResponse(BaseModel):
     """Response body for authentication endpoints."""
 
     access_token: str = Field(description="JWT access token.")
-    refresh_token: str = Field(description="JWT refresh token.")
     token_type: str = Field(default="Bearer", description="Token type.")
 
 

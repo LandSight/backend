@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from litestar import Litestar
+from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
 if TYPE_CHECKING:
@@ -15,8 +15,7 @@ if TYPE_CHECKING:
 
 from app.platform.config.loaders import load_auth_config, load_database_config
 from app.platform.config.models import AuthConfig, DatabaseConfig
-from app.platform.database.engine import create_async_engine_from_config
-from app.platform.database.session import create_async_session_factory, get_async_session
+from app.platform.database.session import create_async_session_factory
 
 
 # ----- Configs -----
@@ -30,23 +29,12 @@ async def provide_auth_config() -> AuthConfig:
     return load_auth_config()
 
 
-# ----- Engine -----
-async def provide_async_database_engine(
-    database_config: NamedDependency[DatabaseConfig],
-    app: Litestar,
-) -> AsyncEngine:
-    """Provide async database engine."""
-    engine = create_async_engine_from_config(database_config)
-    app.state.database_engine = engine
-    return engine
-
-
 # ----- Session -----
 async def provide_async_session_factory(
-    database_engine: NamedDependency[AsyncEngine],
+    state: State,
 ) -> async_sessionmaker[AsyncSession]:
-    """Provide a session factory bound to the engine."""
-    return create_async_session_factory(database_engine)
+    """Provide a session factory bound to the app database engine."""
+    return create_async_session_factory(state.engine)
 
 
 async def provide_async_session(
@@ -56,15 +44,21 @@ async def provide_async_session(
 
     The session is closed automatically after the request finishes.
     """
-    async with get_async_session(session_factory) as session:
-        yield session
+    async with session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 platform_dependencies = {
     "database_config": Provide(provide_database_config, use_cache=True),
     "auth_config": Provide(provide_auth_config, use_cache=True),
-    "database_engine": Provide(provide_async_database_engine, use_cache=True),
-    "session_factory": Provide(provide_async_session_factory),
+    "session_factory": Provide(provide_async_session_factory, use_cache=True),
     "session": Provide(provide_async_session),
 }
 

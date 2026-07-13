@@ -14,6 +14,7 @@ from app.module.identity.domain.value_object import (
     Username,
 )
 from app.module.shared.application.use_case import BaseUseCase
+from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
@@ -37,14 +38,18 @@ class RegisterUserUseCase(BaseUseCase[RegisterUserCommand, UserResponse]):
     ) -> None:
         self._user_repository = user_repository
         self._password_hasher = password_hasher
+        self._logger = get_logger("app.identity.use_case.register_user")
 
     @override
     async def __call__(self, command: RegisterUserCommand) -> UserResponse:
         username = Username(command.username)
         password = Password(command.password)
 
+        self._logger.info("Registering user: username=%s", command.username)
+
         existing_username = await self._user_repository.get_by_username(username)
         if existing_username is not None:
+            self._logger.warning("Registration failed: username already exists: %s", command.username)
             raise UserAlreadyExistsError(command.username)
 
         user_id = UserId(uuid6())
@@ -53,6 +58,8 @@ class RegisterUserUseCase(BaseUseCase[RegisterUserCommand, UserResponse]):
         user = User(id=user_id, username=username, hashed_password=hashed)
 
         await self._user_repository.save(user)
+
+        self._logger.info("User registered successfully: id=%s username=%s", user_id, command.username)
 
         return UserResponse(
             id=str(user.id.unwrap()),

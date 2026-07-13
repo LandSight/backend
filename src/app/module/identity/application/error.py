@@ -24,6 +24,24 @@ class UserAlreadyExistsError(ApplicationError):
         super().__init__(f"User with username '{username}' already exists.")
 
 
+class RefreshTokenInvalidError(AuthenticationError):
+    """Raised when refresh token is invalid or expired."""
+
+    default_message = "Invalid or expired refresh token"
+
+
+class RefreshTokenTypeError(AuthenticationError):
+    """Raised when token is not a refresh token."""
+
+    default_message = "Invalid token type"
+
+
+class RefreshTokenPayloadError(AuthenticationError):
+    """Raised when refresh token payload is invalid."""
+
+    default_message = "Invalid token payload"
+
+
 __all__ = (
     "AuthenticationError",
     "UserAlreadyExistsError",

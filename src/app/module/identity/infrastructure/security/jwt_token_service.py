@@ -30,7 +30,7 @@ class JWTTokenService(TokenService):
         if claims:
             payload.update(claims)
 
-        return jwt.encode(payload, self._config.secret_key, algorithm=self._config.algorithm)
+        return jwt.encode(payload, self._config.secret_key.get_secret_value(), algorithm=self._config.algorithm)
 
     @override
     def create_refresh_token(self, user_id: str) -> str:
@@ -42,14 +42,14 @@ class JWTTokenService(TokenService):
             "type": "refresh",
         }
 
-        return jwt.encode(payload, self._config.secret_key, algorithm=self._config.algorithm)
+        return jwt.encode(payload, self._config.secret_key.get_secret_value(), algorithm=self._config.algorithm)
 
     @override
     def verify_token(self, token: str) -> dict:
         """See :class:`app.module.identity.application.port.TokenService.verify_token`."""
         return jwt.decode(
             token,
-            self._config.secret_key,
+            self._config.secret_key.get_secret_value(),
             algorithms=[self._config.algorithm],
         )
 

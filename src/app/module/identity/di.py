@@ -7,6 +7,7 @@ from app.module.identity.application.port import TokenService, UserRepository
 from app.module.identity.application.use_case import (
     AuthenticateUserUseCase,
     GetUserUseCase,
+    RefreshTokenUseCase,
     RegisterUserUseCase,
 )
 from app.module.identity.infrastructure.repository import PostgresUserRepository
@@ -66,6 +67,12 @@ async def provide_get_user_use_case(
     return GetUserUseCase(user_repository)
 
 
+async def provide_refresh_token_use_case(
+    token_service: NamedDependency[JWTTokenService],
+) -> RefreshTokenUseCase:
+    return RefreshTokenUseCase(token_service)
+
+
 # Словарь зависимостей модуля
 identity_dependencies = {
     "user_repository": Provide(provide_postgres_user_repository),
@@ -75,6 +82,7 @@ identity_dependencies = {
     "register_user_use_case": Provide(provide_register_use_case),
     "authenticate_user_use_case": Provide(provide_authenticate_use_case),
     "get_user_use_case": Provide(provide_get_user_use_case),
+    "refresh_token_use_case": Provide(provide_refresh_token_use_case),
 }
 
 __all__ = ("identity_dependencies",)

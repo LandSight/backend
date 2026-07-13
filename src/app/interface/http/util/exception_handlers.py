@@ -18,6 +18,7 @@ from litestar import Request, Response, status_codes
 from app.interface.http.util.response import make_error_response
 from app.module.shared.application.error import ApplicationError
 from app.module.shared.domain.error import DomainError
+from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
@@ -28,11 +29,20 @@ def _create_domain_error_handler(
     mapping: dict[type[DomainError], int],
 ) -> ExceptionHandler:
     """Create a domain error handler for the given mapping."""
+    logger = get_logger("app.interface.http.exception_handlers")
 
     def handler(request: Request, exc: DomainError) -> Response:
         status_code = mapping.get(type(exc))
         if status_code is None:
             return _internal_server_error_handler(request, exc)
+
+        logger.warning(
+            "Domain error %s: %s while processing %s %s",
+            type(exc).__name__,
+            exc,
+            request.method,
+            request.url,
+        )
         return make_error_response(status_code, str(exc))
 
     return cast("ExceptionHandler", handler)
@@ -42,18 +52,34 @@ def _create_application_error_handler(
     mapping: dict[type[ApplicationError], int],
 ) -> ExceptionHandler:
     """Create an application error handler for the given mapping."""
+    logger = get_logger("app.interface.http.exception_handlers")
 
     def handler(request: Request, exc: ApplicationError) -> Response:
         status_code = mapping.get(type(exc))
         if status_code is None:
             return _internal_server_error_handler(request, exc)
+
+        logger.warning(
+            "Application error %s: %s while processing %s %s",
+            type(exc).__name__,
+            exc,
+            request.method,
+            request.url,
+        )
         return make_error_response(status_code, str(exc))
 
     return cast("ExceptionHandler", handler)
 
 
-def _internal_server_error_handler(_request: Request, _exc: Exception) -> Response:
-    """Handle unexpected errors."""
+def _internal_server_error_handler(request: Request, exc: Exception) -> Response:
+    """Handle unexpected errors with full traceback logging."""
+    logger = get_logger("app.interface.http.exception_handlers")
+    logger.error(
+        "Unhandled exception while processing %s %s",
+        request.method,
+        request.url,
+        exc_info=exc,
+    )
     return make_error_response(status_codes.HTTP_500_INTERNAL_SERVER_ERROR, "Internal Server Error")
 
 
