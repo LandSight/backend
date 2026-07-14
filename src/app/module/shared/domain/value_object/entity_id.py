@@ -2,13 +2,13 @@ from typing import override
 from uuid import UUID
 
 from app.module.shared.domain.error import ValidationError
-from app.module.shared.domain.value_object.base import BaseValueObject
+from app.module.shared.domain.value_object import BaseValueObject
 
 
 class EntityIdUUID6ValueObject(BaseValueObject[UUID]):
     """Entity ID value object using UUID6."""
 
-    UUID_VERSION = 6
+    _UUID_VERSION = 6
 
     @override
     def _normalize(self, value: UUID) -> UUID:
@@ -16,7 +16,7 @@ class EntityIdUUID6ValueObject(BaseValueObject[UUID]):
 
     @override
     def _validate(self) -> None:
-        if self._value.version != self.UUID_VERSION:
+        if self._value.version != self._UUID_VERSION:
             message = f"Invalid UUID version: {self._value.version}"
             raise ValidationError(message)
 

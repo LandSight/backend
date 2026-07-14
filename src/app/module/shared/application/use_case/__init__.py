@@ -1,4 +1,4 @@
-from . import base
+from .base import BaseUseCase
 
 
-__all__ = ("base",)
+__all__ = ("BaseUseCase",)

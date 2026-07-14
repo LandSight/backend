@@ -8,7 +8,7 @@ from app.interface.http.schema.system import HealthResponse
 class SystemController(Controller):
     """System management endpoints."""
 
-    path = "/system"
+    path = "api/v1/system"
     tags = ("system",)
 
     @get(
@@ -27,3 +27,6 @@ class SystemController(Controller):
             Always returns {"status": "ok"} when service is healthy.
         """
         return HealthResponse(status="ok")
+
+
+__all__ = ("SystemController",)
