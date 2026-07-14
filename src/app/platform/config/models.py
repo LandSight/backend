@@ -26,10 +26,6 @@ class BaseConfig(BaseSettings):
 class LoggingConfig(BaseConfig):
     """Logging configuration.
 
-    Notes
-    -----
-    All environment variables for this section must be prefixed with ``LOGGING_``.
-
     Attributes
     ----------
     level : {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
@@ -49,10 +45,6 @@ class LoggingConfig(BaseConfig):
 
 class DatabaseConfig(BaseConfig):
     """Database configuration.
-
-    Notes
-    -----
-    All environment variables for this section must be prefixed with ``DATABASE_``.
 
     Attributes
     ----------
@@ -142,10 +134,6 @@ class DatabaseConfig(BaseConfig):
 
 class AuthConfig(BaseConfig):
     """Authentication configuration.
-
-    Notes
-    -----
-    All environment variables for this section must be prefixed with ``AUTH_``.
 
     Attributes
     ----------

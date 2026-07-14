@@ -20,25 +20,25 @@ from app.platform.config.models import AuthConfig
 
 
 # ----- Repositories -----
-async def provide_postgres_user_repository(
+def provide_postgres_user_repository(
     session: NamedDependency[AsyncSession],
 ) -> PostgresUserRepository:
     return PostgresUserRepository(session)
 
 
 # ----- Security Services -----
-async def provide_bcrypt_password_hasher() -> BcryptPasswordHasher:
+def provide_bcrypt_password_hasher() -> BcryptPasswordHasher:
     return BcryptPasswordHasher()
 
 
-async def provide_jwt_token_service(
+def provide_jwt_token_service(
     auth_config: NamedDependency[AuthConfig],
 ) -> JWTTokenService:
     return JWTTokenService(auth_config)
 
 
 # ----- Current User Provider -----
-async def provide_jwt_current_user_provider(
+def provide_jwt_current_user_provider(
     token_service: NamedDependency[TokenService],
     user_repository: NamedDependency[UserRepository],
 ) -> JWTCurrentUserProvider:
@@ -46,14 +46,14 @@ async def provide_jwt_current_user_provider(
 
 
 # ----- Use Cases -----
-async def provide_register_use_case(
+def provide_register_use_case(
     user_repository: NamedDependency[PostgresUserRepository],
     password_hasher: NamedDependency[BcryptPasswordHasher],
 ) -> RegisterUserUseCase:
     return RegisterUserUseCase(user_repository, password_hasher)
 
 
-async def provide_authenticate_use_case(
+def provide_authenticate_use_case(
     user_repository: NamedDependency[PostgresUserRepository],
     password_hasher: NamedDependency[BcryptPasswordHasher],
     token_service: NamedDependency[JWTTokenService],
@@ -61,13 +61,13 @@ async def provide_authenticate_use_case(
     return AuthenticateUserUseCase(user_repository, password_hasher, token_service)
 
 
-async def provide_get_user_use_case(
+def provide_get_user_use_case(
     user_repository: NamedDependency[PostgresUserRepository],
 ) -> GetUserUseCase:
     return GetUserUseCase(user_repository)
 
 
-async def provide_refresh_token_use_case(
+def provide_refresh_token_use_case(
     token_service: NamedDependency[JWTTokenService],
 ) -> RefreshTokenUseCase:
     return RefreshTokenUseCase(token_service)

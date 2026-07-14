@@ -41,7 +41,7 @@ class BaseEntity[IdT](ABC):
 
     @property
     def id(self) -> IdT:
-        """Returns the entity's ID."""
+        """The entity ID."""
         return self._id
 
     def __eq__(self, other: object) -> bool:

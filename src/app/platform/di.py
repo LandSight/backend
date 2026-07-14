@@ -19,18 +19,18 @@ from app.platform.database.session import create_async_session_factory
 
 
 # ----- Configs -----
-async def provide_database_config() -> DatabaseConfig:
+def provide_database_config() -> DatabaseConfig:
     """Provide database configuration."""
     return load_database_config()
 
 
-async def provide_auth_config() -> AuthConfig:
+def provide_auth_config() -> AuthConfig:
     """Provide authentication configuration."""
     return load_auth_config()
 
 
 # ----- Session -----
-async def provide_async_session_factory(
+def provide_async_session_factory(
     state: State,
 ) -> async_sessionmaker[AsyncSession]:
     """Provide a session factory bound to the app database engine."""

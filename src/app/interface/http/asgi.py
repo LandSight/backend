@@ -39,10 +39,11 @@ async def lifespan(app: Litestar) -> AsyncGenerator[None]:
     engine = create_async_engine_from_config(config.database)
     app.state.engine = engine
 
-    yield
-
-    # ── Shutdown ─────────────────────────────────────────────────────
-    await dispose_engine(engine)
+    try:
+        yield
+    finally:
+        # ── Shutdown ─────────────────────────────────────────────────
+        await dispose_engine(engine)
 
 
 def create_asgi_application() -> Litestar:

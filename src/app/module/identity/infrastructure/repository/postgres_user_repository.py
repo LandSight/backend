@@ -65,7 +65,8 @@ class PostgresUserRepository(BaseSQLAlchemyRepository, UserRepository):
         if model is not None:
             await self._session.delete(model)
 
-    def _to_domain(self, model: UserModel) -> User:
+    @staticmethod
+    def _to_domain(model: UserModel) -> User:
         """Convert an ORM model to a domain entity.
 
         Parameters
