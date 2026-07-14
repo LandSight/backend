@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import override
 
 from app.module.parcel.domain.value_object.latitude import Latitude
@@ -10,45 +9,35 @@ from app.module.parcel.domain.value_object.longitude import Longitude
 from app.module.shared.domain.value_object import BaseValueObject
 
 
-@dataclass(frozen=True, slots=True)
-class _GeoPointCoords:
-    """Internal immutable container for lat/lon."""
-
-    lat: Latitude
-    lon: Longitude
-
-
-class GeoPoint(BaseValueObject[_GeoPointCoords]):
+class GeoPoint(BaseValueObject[tuple[Latitude, Longitude]]):
     """Geographic point value object."""
 
     @property
     def latitude(self) -> Latitude:
         """Latitude of geographic point."""
-        return self._value.lat
+        return self._value[0]
 
     @property
     def longitude(self) -> Longitude:
         """Longitude of geographic point."""
-        return self._value.lon
+        return self._value[1]
 
     @override
-    def _normalize(self, value: tuple[float, float] | _GeoPointCoords) -> _GeoPointCoords:
-        if isinstance(value, _GeoPointCoords):
-            return value
-
-        lat_val, lon_val = value
-        return _GeoPointCoords(
-            lat=Latitude(lat_val),
-            lon=Longitude(lon_val),
-        )
+    def _normalize(self, value: tuple[Latitude, Longitude]) -> tuple[Latitude, Longitude]:
+        return value
 
     @override
     def _validate(self) -> None:
         pass
 
+    @classmethod
+    def create(cls, lat: float, lon: float) -> GeoPoint:
+        """Create a GeoPoint from raw latitude and longitude values."""
+        return cls((Latitude(lat), Longitude(lon)))
+
     def to_tuple(self) -> tuple[float, float]:
         """Return (lat, lon) as floats."""
-        return (self._value.lat.unwrap(), self._value.lon.unwrap())
+        return (self.latitude.unwrap(), self.longitude.unwrap())
 
 
 __all__ = ("GeoPoint",)

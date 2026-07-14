@@ -20,8 +20,8 @@ class ParcelAlreadyExistsError(ApplicationError):
 class InvalidPolygonError(ApplicationError):
     """Raised when the polygon geometry is invalid."""
 
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"Polygon is not valid: {reason}.")
 
 
 __all__ = (
