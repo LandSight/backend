@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from app.module.parcel.application.dto.command import DeleteParcelCommand
-from app.module.parcel.application.error import ParcelNotFoundError
-from app.module.parcel.domain.value_object import ParcelId
+from app.module.parcel.application.error import NotParcelOwnerError, ParcelNotFoundError
+from app.module.parcel.domain.value_object import OwnerId, ParcelId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -17,7 +17,10 @@ if TYPE_CHECKING:
 
 
 class DeleteParcelUseCase(BaseUseCase[DeleteParcelCommand, None]):
-    """Delete a parcel by its ID."""
+    """Delete a parcel by its ID.
+
+    Only the owner of the parcel can delete it.
+    """
 
     def __init__(
         self,
@@ -36,6 +39,15 @@ class DeleteParcelUseCase(BaseUseCase[DeleteParcelCommand, None]):
         if parcel is None:
             self._logger.warning("Parcel not found for deletion: id=%s", command.parcel_id)
             raise ParcelNotFoundError(command.parcel_id)
+
+        current_user_id = OwnerId(UUID(command.current_user_id))
+        if parcel.owner_id != current_user_id:
+            self._logger.warning(
+                "User %s is not the owner of parcel %s",
+                command.current_user_id,
+                command.parcel_id,
+            )
+            raise NotParcelOwnerError(command.parcel_id)
 
         await self._parcel_repository.delete(parcel_id)
 

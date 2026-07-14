@@ -24,8 +24,16 @@ class InvalidPolygonError(ApplicationError):
         super().__init__(f"Polygon is not valid: {reason}.")
 
 
+class NotParcelOwnerError(ApplicationError):
+    """Raised when a user tries to modify a parcel they do not own."""
+
+    def __init__(self, parcel_id: str) -> None:
+        super().__init__(f"User is not the owner of parcel '{parcel_id}'.")
+
+
 __all__ = (
     "InvalidPolygonError",
+    "NotParcelOwnerError",
     "ParcelAlreadyExistsError",
     "ParcelNotFoundError",
 )
