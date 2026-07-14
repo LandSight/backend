@@ -1,5 +1,7 @@
 """Polygon value object."""
 
+from __future__ import annotations
+
 from typing import override
 
 from app.module.parcel.domain.value_object.geo_point import GeoPoint

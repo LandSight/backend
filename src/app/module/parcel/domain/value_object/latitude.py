@@ -1,5 +1,7 @@
 """Latitude value object."""
 
+from __future__ import annotations
+
 from typing import override
 
 from app.module.shared.domain.error import ValidationError

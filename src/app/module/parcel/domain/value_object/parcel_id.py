@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.module.shared.domain.value_object import EntityIdUUID6ValueObject
 
 
