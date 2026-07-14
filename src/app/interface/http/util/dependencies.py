@@ -1,20 +1,15 @@
 """Dependency assembly for the application."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from litestar.di import Provide
 from litestar.params import HeaderParameter
 
 from app.module.identity.di import identity_dependencies
 from app.module.parcel.di import parcel_dependencies
+from app.module.shared.application.dto.response import CurrentUser  # noqa: TC001
+from app.module.shared.application.port import CurrentUserProvider  # noqa: TC001
 from app.platform.di import platform_dependencies
-
-
-if TYPE_CHECKING:
-    from app.module.shared.application.dto.response import CurrentUser
-    from app.module.shared.application.port import CurrentUserProvider
 
 
 async def provide_current_user(
