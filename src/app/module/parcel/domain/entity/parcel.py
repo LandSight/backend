@@ -2,7 +2,12 @@
 
 from typing import override
 
-from app.module.parcel.domain.value_object import ParcelId, ParcelName, Polygon
+from app.module.parcel.domain.value_object import (
+    OwnerId,
+    ParcelId,
+    ParcelName,
+    Polygon,
+)
 from app.module.shared.domain.entity import BaseEntity
 
 
@@ -17,6 +22,8 @@ class Parcel(BaseEntity[ParcelId]):
         Human-readable name of the parcel.
     polygon : Polygon
         Geographic boundary of the parcel.
+    owner_id : OwnerId
+        ID of the user who owns this parcel.
     """
 
     def __init__(
@@ -24,9 +31,11 @@ class Parcel(BaseEntity[ParcelId]):
         id: ParcelId,
         name: ParcelName,
         polygon: Polygon,
+        owner_id: OwnerId,
     ) -> None:
         self._name: ParcelName = name
         self._polygon: Polygon = polygon
+        self._owner_id: OwnerId = owner_id
 
         super().__init__(id)
 
@@ -43,6 +52,11 @@ class Parcel(BaseEntity[ParcelId]):
     def polygon(self) -> Polygon:
         """Geographic boundary of the parcel."""
         return self._polygon
+
+    @property
+    def owner_id(self) -> OwnerId:
+        """ID of the user who owns this parcel."""
+        return self._owner_id
 
 
 __all__ = ("Parcel",)
