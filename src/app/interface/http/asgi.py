@@ -20,6 +20,7 @@ from app.interface.http.util import (
 )
 from app.module.identity.interface.http.controller.auth import AuthController
 from app.module.identity.interface.http.controller.user import UserController
+from app.module.parcel.interface.http.controller.parcel import ParcelController
 from app.platform.config.loaders import load_app_config
 from app.platform.database.engine import create_async_engine_from_config, dispose_engine
 from app.platform.logging import configure_logging
@@ -59,6 +60,7 @@ def create_asgi_application() -> Litestar:
             SystemController,
             AuthController,
             UserController,
+            ParcelController,
         ],
         dependencies=get_all_dependencies(),
         openapi_config=OpenAPIConfig(
