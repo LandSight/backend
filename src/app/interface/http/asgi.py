@@ -11,8 +11,9 @@ from litestar.openapi.plugins import ScalarRenderPlugin
 
 from app import __api_version__
 from app.interface.http.controller.system import SystemController
+from app.interface.http.guards import require_authorization
+from app.interface.http.middleware import RequestLoggingMiddleware
 from app.interface.http.util import (
-    RequestLoggingMiddleware,
     create_exception_handlers,
     get_all_application_error_mappings,
     get_all_dependencies,
@@ -63,6 +64,7 @@ def create_asgi_application() -> Litestar:
             ParcelController,
         ],
         dependencies=get_all_dependencies(),
+        guards=[require_authorization],
         openapi_config=OpenAPIConfig(
             title="Land Sight API",
             version=__api_version__,
