@@ -1,5 +1,7 @@
 """Register user use case."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
@@ -8,7 +10,6 @@ from app.module.identity.application.dto.response import UserResponse
 from app.module.identity.application.error import UserAlreadyExistsError
 from app.module.identity.domain.entity import User
 from app.module.identity.domain.value_object import (
-    HashedPassword,
     Password,
     UserId,
     Username,
@@ -53,7 +54,7 @@ class RegisterUserUseCase(BaseUseCase[RegisterUserCommand, UserResponse]):
             raise UserAlreadyExistsError(command.username)
 
         user_id = UserId(uuid6())
-        hashed = HashedPassword(self._password_hasher.hash(password.unwrap()))
+        hashed = self._password_hasher.hash(password)
 
         user = User(id=user_id, username=username, hashed_password=hashed)
 

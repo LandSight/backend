@@ -1,5 +1,7 @@
 """Authenticate user use case."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from app.module.identity.application.dto.command import AuthenticateUserCommand
@@ -50,13 +52,12 @@ class AuthenticateUserUseCase(BaseUseCase[AuthenticateUserCommand, TokenResponse
             self._logger.warning("Authentication failed: user not found: %s", command.username)
             raise AuthenticationError
 
-        if not self._password_hasher.verify(password.unwrap(), user.hashed_password.unwrap()):
+        if not self._password_hasher.verify(password, user.hashed_password):
             self._logger.warning("Authentication failed: invalid password: %s", command.username)
             raise AuthenticationError
 
-        user_id_str = str(user.id.unwrap())
-        access_token = self._token_service.create_access_token(user_id_str)
-        refresh_token = self._token_service.create_refresh_token(user_id_str)
+        access_token = self._token_service.create_access_token(user.id)
+        refresh_token = self._token_service.create_refresh_token(user.id)
 
         self._logger.info("Authentication successful: username=%s", command.username)
 
