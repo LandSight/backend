@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.parcel.domain.entity.parcel import Parcel
-    from app.module.parcel.domain.value_object import ParcelId
+    from app.module.parcel.domain.value_object import OwnerId, ParcelId
 
 
 class ParcelRepository(ABC):
@@ -42,6 +42,22 @@ class ParcelRepository(ABC):
         -------
         Parcel | None
             The parcel if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_by_owner_id(self, owner_id: OwnerId) -> list[Parcel]:
+        """Retrieve all parcels owned by a specific user.
+
+        Parameters
+        ----------
+        owner_id : OwnerId
+            Owner identifier.
+
+        Returns
+        -------
+        list[Parcel]
+            List of parcels owned by the user.
         """
         raise NotImplementedError
 

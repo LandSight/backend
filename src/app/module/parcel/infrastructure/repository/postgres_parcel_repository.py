@@ -62,6 +62,16 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
         return self._to_domain(model) if model is not None else None
 
     @override
+    async def get_by_owner_id(self, owner_id: OwnerId) -> list[Parcel]:
+        """See :class:`app.module.parcel.application.port.ParcelRepository.get_by_owner_id`."""
+        result = await self._session.execute(
+            select(ParcelModel).where(ParcelModel.owner_id == owner_id.unwrap()),
+        )
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
+
+    @override
     async def delete(self, parcel_id: ParcelId) -> None:
         """See :class:`app.module.parcel.application.port.ParcelRepository.delete`."""
         result = await self._session.execute(
