@@ -11,9 +11,12 @@ class GetParcelCommand:
     ----------
     parcel_id : str
         Parcel identifier.
+    current_user_id : str
+        ID of the user requesting the parcel (for ownership check).
     """
 
     parcel_id: str
+    current_user_id: str
 
 
 __all__ = ("GetParcelCommand",)

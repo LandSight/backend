@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.module.identity.application.error import AuthenticationError, UserNotFoundError
 from app.module.identity.domain.value_object import UserId
+from app.module.shared.application.dto.response import CurrentUser
 from app.module.shared.application.port import CurrentUserProvider
 from app.platform.logging import get_logger
 
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class JWTCurrentUserProvider(CurrentUserProvider):
-    """Provides current user ID from a JWT token.
+    """Provides current user from a JWT token.
 
     Parameters
     ----------
@@ -34,8 +35,8 @@ class JWTCurrentUserProvider(CurrentUserProvider):
         self._logger = get_logger("app.identity.infrastructure.jwt_current_user_provider")
 
     @override
-    async def get_current_user_id(self, token: str) -> str:
-        """Resolve a user ID from a JWT token.
+    async def get_current_user(self, token: str) -> CurrentUser:
+        """Resolve a current user from a JWT token.
 
         Parameters
         ----------
@@ -44,8 +45,8 @@ class JWTCurrentUserProvider(CurrentUserProvider):
 
         Returns
         -------
-        str
-            The user ID string.
+        CurrentUser
+            The authenticated user's id and username.
 
         Raises
         ------
@@ -73,7 +74,7 @@ class JWTCurrentUserProvider(CurrentUserProvider):
             raise UserNotFoundError(user_id)
 
         self._logger.info("Token verified successfully: user_id=%s", user_id)
-        return user_id
+        return CurrentUser(id=user_id, username=user.username.unwrap())
 
 
 __all__ = ("JWTCurrentUserProvider",)

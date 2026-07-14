@@ -1,11 +1,8 @@
 """Parcel endpoints."""
 
-from typing import Annotated
-
 from litestar import delete, get, post
 from litestar.controller import Controller
 from litestar.di import NamedDependency
-from litestar.params import HeaderParameter
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from app.module.parcel.application.dto.command import (
@@ -25,7 +22,7 @@ from app.module.parcel.interface.http.schema.parcel import (
     ParcelListResponse,
     ParcelResponse,
 )
-from app.module.shared.application.port import CurrentUserProvider
+from app.module.shared.application.dto.response import CurrentUser
 
 
 class ParcelController(Controller):
@@ -43,8 +40,7 @@ class ParcelController(Controller):
         self,
         data: CreateParcelRequest,
         create_parcel_use_case: NamedDependency[CreateParcelUseCase],
-        current_user_provider: NamedDependency[CurrentUserProvider],
-        authorization: Annotated[str, HeaderParameter(name="Authorization", required=True)],
+        current_user: CurrentUser,
     ) -> ParcelResponse:
         """Create a new parcel.
 
@@ -54,23 +50,18 @@ class ParcelController(Controller):
             Parcel data.
         create_parcel_use_case : CreateParcelUseCase
             Injected use case.
-        current_user_provider : CurrentUserProvider
-            Injected provider for extracting user ID from the token.
-        authorization : str
-            Raw Authorization header value.
+        current_user : CurrentUser
+            The currently authenticated user (resolved from token).
 
         Returns
         -------
         ParcelResponse
             Created parcel data.
         """
-        token = (authorization or "").removeprefix("Bearer ")
-        current_user_id = await current_user_provider.get_current_user_id(token)
-
         command = CreateParcelCommand(
             name=data.name,
             polygon=data.polygon,
-            owner_id=current_user_id,
+            owner_id=current_user.id,
         )
         result = await create_parcel_use_case(command)
 
@@ -89,8 +80,7 @@ class ParcelController(Controller):
     async def list_user_parcels(
         self,
         list_user_parcels_use_case: NamedDependency[ListUserParcelsUseCase],
-        current_user_provider: NamedDependency[CurrentUserProvider],
-        authorization: Annotated[str, HeaderParameter(name="Authorization", required=True)],
+        current_user: CurrentUser,
     ) -> ParcelListResponse:
         """List all parcels owned by the currently authenticated user.
 
@@ -98,20 +88,15 @@ class ParcelController(Controller):
         ----------
         list_user_parcels_use_case : ListUserParcelsUseCase
             Injected use case.
-        current_user_provider : CurrentUserProvider
-            Injected provider for extracting user ID from the token.
-        authorization : str
-            Raw Authorization header value.
+        current_user : CurrentUser
+            The currently authenticated user (resolved from token).
 
         Returns
         -------
         ParcelListResponse
             List of parcels owned by the user.
         """
-        token = (authorization or "").removeprefix("Bearer ")
-        current_user_id = await current_user_provider.get_current_user_id(token)
-
-        command = ListUserParcelsCommand(owner_id=current_user_id)
+        command = ListUserParcelsCommand(owner_id=current_user.id)
         results = await list_user_parcels_use_case(command)
 
         parcels = [
@@ -135,6 +120,7 @@ class ParcelController(Controller):
         self,
         parcel_id: str,
         get_parcel_use_case: NamedDependency[GetParcelUseCase],
+        current_user: CurrentUser,
     ) -> ParcelResponse:
         """Get a parcel by its ID.
 
@@ -144,13 +130,18 @@ class ParcelController(Controller):
             Parcel identifier from the path.
         get_parcel_use_case : GetParcelUseCase
             Injected use case.
+        current_user : CurrentUser
+            The currently authenticated user (resolved from token).
 
         Returns
         -------
         ParcelResponse
             Parcel data.
         """
-        command = GetParcelCommand(parcel_id=parcel_id)
+        command = GetParcelCommand(
+            parcel_id=parcel_id,
+            current_user_id=current_user.id,
+        )
         result = await get_parcel_use_case(command)
 
         return ParcelResponse(
@@ -169,8 +160,7 @@ class ParcelController(Controller):
         self,
         parcel_id: str,
         delete_parcel_use_case: NamedDependency[DeleteParcelUseCase],
-        current_user_provider: NamedDependency[CurrentUserProvider],
-        authorization: Annotated[str, HeaderParameter(name="Authorization", required=True)],
+        current_user: CurrentUser,
     ) -> None:
         """Delete a parcel by its ID.
 
@@ -182,17 +172,12 @@ class ParcelController(Controller):
             Parcel identifier from the path.
         delete_parcel_use_case : DeleteParcelUseCase
             Injected use case.
-        current_user_provider : CurrentUserProvider
-            Injected provider for extracting user ID from the token.
-        authorization : str
-            Raw Authorization header value.
+        current_user : CurrentUser
+            The currently authenticated user (resolved from token).
         """
-        token = (authorization or "").removeprefix("Bearer ")
-        current_user_id = await current_user_provider.get_current_user_id(token)
-
         command = DeleteParcelCommand(
             parcel_id=parcel_id,
-            current_user_id=current_user_id,
+            current_user_id=current_user.id,
         )
         await delete_parcel_use_case(command)
 
