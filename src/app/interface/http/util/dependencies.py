@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from app.module.identity.di import identity_dependencies
+from app.module.parcel.di import parcel_dependencies
 from app.platform.di import platform_dependencies
 
 
@@ -21,4 +22,5 @@ def get_all_dependencies() -> dict[str, Provide]:
     dependencies = {}
     dependencies.update(platform_dependencies)
     dependencies.update(identity_dependencies)
+    dependencies.update(parcel_dependencies)
     return dependencies
