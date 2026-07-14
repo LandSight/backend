@@ -54,12 +54,12 @@ def provide_delete_parcel_use_case(
 
 
 parcel_dependencies = {
-    "parcel_repository": Provide(provide_postgres_parcel_repository),
-    "polygon_service": Provide(provide_shapely_polygon_service),
-    "create_parcel_use_case": Provide(provide_create_parcel_use_case),
-    "get_parcel_use_case": Provide(provide_get_parcel_use_case),
-    "list_user_parcels_use_case": Provide(provide_list_user_parcels_use_case),
-    "delete_parcel_use_case": Provide(provide_delete_parcel_use_case),
+    "parcel_repository": Provide(provide_postgres_parcel_repository, sync_to_thread=False),
+    "polygon_service": Provide(provide_shapely_polygon_service, sync_to_thread=False),
+    "create_parcel_use_case": Provide(provide_create_parcel_use_case, sync_to_thread=False),
+    "get_parcel_use_case": Provide(provide_get_parcel_use_case, sync_to_thread=False),
+    "list_user_parcels_use_case": Provide(provide_list_user_parcels_use_case, sync_to_thread=False),
+    "delete_parcel_use_case": Provide(provide_delete_parcel_use_case, sync_to_thread=False),
 }
 
 __all__ = ("parcel_dependencies",)
