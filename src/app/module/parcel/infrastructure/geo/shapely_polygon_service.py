@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from typing import Any, override
 
-from shapely.geometry import Polygon as ShapelyPolygon, mapping, shape
+from shapely.geometry import Polygon as ShapelyPolygon, mapping
 from shapely.validation import explain_validity
 
-from app.module.parcel.application.error import InvalidPolygonError
+from app.module.parcel.application.error import InvalidGeoJsonError, InvalidPolygonError
 from app.module.parcel.application.port.polygon_service import PolygonService
 from app.module.parcel.domain.value_object.geo_point import GeoPoint
 from app.module.parcel.domain.value_object.polygon import Polygon
-from app.module.shared.domain.error import ValidationError
 
 
 class ShapelyPolygonService(PolygonService):
@@ -25,16 +24,24 @@ class ShapelyPolygonService(PolygonService):
     def to_domain(self, geojson: dict[str, Any]) -> Polygon:
         """See :class:`app.module.parcel.application.port.polygon_service.PolygonService.to_domain`."""
         if not isinstance(geojson, dict):
-            message = "GeoJSON must be a dict."
-            raise ValidationError(message)
+            reason = "GeoJSON must be a dict"
+            raise InvalidGeoJsonError(reason)
 
-        shapely_geom = shape(geojson)
+        if geojson.get("type") != "Polygon":
+            reason = f"Expected Polygon geometry, got '{geojson.get('type')}'"
+            raise InvalidGeoJsonError(reason)
 
-        if shapely_geom.geom_type != "Polygon":
-            message = f"Expected Polygon geometry, got '{shapely_geom.geom_type}'."
-            raise ValidationError(message)
+        coordinates = geojson.get("coordinates")
+        if not isinstance(coordinates, list) or len(coordinates) == 0:
+            reason = "GeoJSON Polygon must have a non-empty coordinates array"
+            raise InvalidGeoJsonError(reason)
 
-        points = [GeoPoint.create(float(coord[1]), float(coord[0])) for coord in shapely_geom.exterior.coords]
+        ring = coordinates[0]
+        if not isinstance(ring, list):
+            reason = "GeoJSON Polygon ring must be an array of coordinates"
+            raise InvalidGeoJsonError(reason)
+
+        points = [GeoPoint.create(float(coord[1]), float(coord[0])) for coord in ring]
 
         return Polygon(tuple(points))
 
@@ -43,12 +50,7 @@ class ShapelyPolygonService(PolygonService):
         """See :class:`app.module.parcel.application.port.polygon_service.PolygonService.from_domain`."""
         coords = [(point.longitude.unwrap(), point.latitude.unwrap()) for point in polygon.points]
 
-        shapely_geom = shape(
-            {
-                "type": "Polygon",
-                "coordinates": [coords],
-            }
-        )
+        shapely_geom = ShapelyPolygon(coords)
 
         return mapping(shapely_geom)
 
@@ -73,7 +75,8 @@ class ShapelyPolygonService(PolygonService):
 
         return area_m2
 
-    def _to_shapely(self, polygon: Polygon) -> ShapelyPolygon:
+    @staticmethod
+    def _to_shapely(polygon: Polygon) -> ShapelyPolygon:
         """Convert domain Polygon to Shapely Polygon.
 
         Shapely uses (x, y) = (lon, lat) order.

@@ -17,6 +17,13 @@ class ParcelAlreadyExistsError(ApplicationError):
         super().__init__(f"Parcel with name '{name}' already exists.")
 
 
+class InvalidGeoJsonError(ApplicationError):
+    """Raised when the provided GeoJSON is malformed or not a valid Polygon."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"Invalid GeoJSON: {reason}.")
+
+
 class InvalidPolygonError(ApplicationError):
     """Raised when the polygon geometry is invalid."""
 
@@ -32,6 +39,7 @@ class NotParcelOwnerError(ApplicationError):
 
 
 __all__ = (
+    "InvalidGeoJsonError",
     "InvalidPolygonError",
     "NotParcelOwnerError",
     "ParcelAlreadyExistsError",

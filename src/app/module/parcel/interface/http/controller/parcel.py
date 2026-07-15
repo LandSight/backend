@@ -19,8 +19,9 @@ from app.module.parcel.application.use_case import (
 )
 from app.module.parcel.interface.http.schema.parcel import (
     CreateParcelRequest,
-    ParcelListResponse,
-    ParcelResponse,
+    ParcelFeature,
+    ParcelFeatureCollection,
+    ParcelFeatureProperties,
 )
 from app.module.shared.application.dto.response import CurrentUser
 from app.module.shared.interface.http.guards import require_authorization
@@ -43,7 +44,7 @@ class ParcelController(Controller):
         data: CreateParcelRequest,
         create_parcel_use_case: NamedDependency[CreateParcelUseCase],
         current_user: CurrentUser,
-    ) -> ParcelResponse:
+    ) -> ParcelFeature:
         """Create a new parcel.
 
         Parameters
@@ -57,21 +58,23 @@ class ParcelController(Controller):
 
         Returns
         -------
-        ParcelResponse
-            Created parcel data.
+        ParcelFeature
+            Created parcel as a GeoJSON Feature.
         """
         command = CreateParcelCommand(
             name=data.name,
-            polygon=data.polygon,
+            polygon=data.polygon.model_dump(),
             owner_id=current_user.id,
         )
         result = await create_parcel_use_case(command)
 
-        return ParcelResponse(
-            id=result.id,
-            name=result.name,
-            polygon=result.polygon,
-            owner_id=result.owner_id,
+        return ParcelFeature(
+            geometry=result.polygon,
+            properties=ParcelFeatureProperties(
+                id=result.id,
+                name=result.name,
+                owner_id=result.owner_id,
+            ),
         )
 
     @get(
@@ -83,7 +86,7 @@ class ParcelController(Controller):
         self,
         list_user_parcels_use_case: NamedDependency[ListUserParcelsUseCase],
         current_user: CurrentUser,
-    ) -> ParcelListResponse:
+    ) -> ParcelFeatureCollection:
         """List all parcels owned by the currently authenticated user.
 
         Parameters
@@ -95,23 +98,25 @@ class ParcelController(Controller):
 
         Returns
         -------
-        ParcelListResponse
-            List of parcels owned by the user.
+        ParcelFeatureCollection
+            List of parcels as a GeoJSON FeatureCollection.
         """
         command = ListUserParcelsCommand(owner_id=current_user.id)
         results = await list_user_parcels_use_case(command)
 
-        parcels = [
-            ParcelResponse(
-                id=r.id,
-                name=r.name,
-                polygon=r.polygon,
-                owner_id=r.owner_id,
+        features = [
+            ParcelFeature(
+                geometry=r.polygon,
+                properties=ParcelFeatureProperties(
+                    id=r.id,
+                    name=r.name,
+                    owner_id=r.owner_id,
+                ),
             )
             for r in results
         ]
 
-        return ParcelListResponse(parcels=parcels, total=len(parcels))
+        return ParcelFeatureCollection(features=features, total=len(features))
 
     @get(
         "/{parcel_id:str}",
@@ -123,7 +128,7 @@ class ParcelController(Controller):
         parcel_id: str,
         get_parcel_use_case: NamedDependency[GetParcelUseCase],
         current_user: CurrentUser,
-    ) -> ParcelResponse:
+    ) -> ParcelFeature:
         """Get a parcel by its ID.
 
         Parameters
@@ -137,8 +142,8 @@ class ParcelController(Controller):
 
         Returns
         -------
-        ParcelResponse
-            Parcel data.
+        ParcelFeature
+            Parcel as a GeoJSON Feature.
         """
         command = GetParcelCommand(
             parcel_id=parcel_id,
@@ -146,11 +151,13 @@ class ParcelController(Controller):
         )
         result = await get_parcel_use_case(command)
 
-        return ParcelResponse(
-            id=result.id,
-            name=result.name,
-            polygon=result.polygon,
-            owner_id=result.owner_id,
+        return ParcelFeature(
+            geometry=result.polygon,
+            properties=ParcelFeatureProperties(
+                id=result.id,
+                name=result.name,
+                owner_id=result.owner_id,
+            ),
         )
 
     @delete(

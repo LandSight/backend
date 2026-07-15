@@ -1,12 +1,14 @@
 from .parcel import (
     CreateParcelRequest,
-    ParcelListResponse,
-    ParcelResponse,
+    ParcelFeature,
+    ParcelFeatureCollection,
+    ParcelFeatureProperties,
 )
 
 
 __all__ = (
     "CreateParcelRequest",
-    "ParcelListResponse",
-    "ParcelResponse",
+    "ParcelFeature",
+    "ParcelFeatureCollection",
+    "ParcelFeatureProperties",
 )
