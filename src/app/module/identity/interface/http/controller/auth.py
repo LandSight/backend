@@ -34,7 +34,6 @@ class AuthController(Controller):
 
     path = "/api/v1/auth"
     tags = ("auth",)
-    guards: list = []  # noqa: RUF012
 
     @post(
         "/register",

@@ -17,7 +17,7 @@ class ParcelName(BaseValueObject[str]):
     - Allowed: letters, digits, spaces, hyphens, underscores
     - Must start with a letter
     - No leading/trailing whitespace
-    - Normalized: stripped and lowercased
+    - Normalized: stripped (case-sensitive for display)
     """
 
     _MIN_LENGTH = 3
@@ -29,7 +29,7 @@ class ParcelName(BaseValueObject[str]):
 
     @override
     def _normalize(self, value: str) -> str:
-        return value.strip().lower()
+        return value.strip()
 
     @override
     def _validate(self) -> None:
@@ -41,7 +41,7 @@ class ParcelName(BaseValueObject[str]):
             raise ValidationError(message)
 
         if not self._PATTERN.match(self._value):
-            allowed = "alphanumeric, spaces, hyphens, and underscores"
+            allowed = "letters, digits, spaces, hyphens, and underscores"
             message = f"Parcel name must start with a letter and contain only {allowed} characters."
             raise ValidationError(message)
 

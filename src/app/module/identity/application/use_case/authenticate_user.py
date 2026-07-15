@@ -12,6 +12,7 @@ from app.module.identity.domain.value_object import (
     Username,
 )
 from app.module.shared.application.use_case import BaseUseCase
+from app.module.shared.domain.error import ValidationError
 from app.platform.logging import get_logger
 
 
@@ -42,8 +43,12 @@ class AuthenticateUserUseCase(BaseUseCase[AuthenticateUserCommand, TokenResponse
 
     @override
     async def __call__(self, command: AuthenticateUserCommand) -> TokenResponse:
-        username = Username(command.username)
-        password = Password(command.password)
+        try:
+            username = Username(command.username)
+            password = Password(command.password)
+        except ValidationError as e:
+            self._logger.warning("Authentication failed: invalid format: %s", e)
+            raise AuthenticationError from e
 
         self._logger.info("Authentication attempt: username=%s", command.username)
 

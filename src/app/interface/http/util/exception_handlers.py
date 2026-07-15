@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from litestar import Request, Response, status_codes
+from litestar.exceptions import HTTPException, NotAuthorizedException, SerializationException
 
 from app.interface.http.util.response import make_error_response
 from app.module.shared.application.error import ApplicationError
@@ -71,6 +72,49 @@ def _create_application_error_handler(
     return cast("ExceptionHandler", handler)
 
 
+def not_authorized_handler(
+    request: Request,
+    exc: NotAuthorizedException,
+) -> Response:
+    """Handle unauthorized requests."""
+    logger = get_logger("app.interface.http.exception_handlers")
+    logger.warning("Unauthorized access attempt: %s %s", request.method, request)
+    return make_error_response(
+        status_codes.HTTP_401_UNAUTHORIZED,
+        exc.detail or "Authorization required",
+    )
+
+
+def http_exception_handler(request: Request, exc: HTTPException) -> Response:
+    """Handle any HTTP exception."""
+    logger = get_logger("app.interface.http.exception_handlers")
+    logger.warning(
+        "HTTP exception %s: %s while processing %s %s",
+        exc.status_code,
+        exc.detail,
+        request.method,
+        request.url,
+    )
+    return make_error_response(exc.status_code, exc.detail or "HTTP error")
+
+
+def serialization_exception_handler(
+    request: Request,
+    _exc: SerializationException,
+) -> Response:
+    """Handle malformed JSON."""
+    logger = get_logger("app.interface.http.exception_handlers")
+    logger.warning(
+        "Malformed JSON while processing %s %s",
+        request.method,
+        request.url,
+    )
+    return make_error_response(
+        status_codes.HTTP_400_BAD_REQUEST,
+        "Invalid JSON payload. Please check your request body.",
+    )
+
+
 def _internal_server_error_handler(request: Request, exc: Exception) -> Response:
     """Handle unexpected errors with full traceback logging."""
     logger = get_logger("app.interface.http.exception_handlers")
@@ -109,6 +153,12 @@ def create_exception_handlers(
     if application_mappings:
         handlers[ApplicationError] = _create_application_error_handler(application_mappings)
 
+    # HTTP-исключения от Litestar
+    handlers[NotAuthorizedException] = cast("ExceptionHandler", not_authorized_handler)
+    handlers[HTTPException] = cast("ExceptionHandler", http_exception_handler)
+    handlers[SerializationException] = cast("ExceptionHandler", serialization_exception_handler)
+
+    # Fallback
     handlers[Exception] = _internal_server_error_handler
     return handlers
 

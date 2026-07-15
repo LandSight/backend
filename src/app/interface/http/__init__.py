@@ -1,10 +1,10 @@
-from . import asgi, controller, guards, middleware, schema, util
+from . import asgi, controller, lifespan, middleware, schema, util
 
 
 __all__ = (
     "asgi",
     "controller",
-    "guards",
+    "lifespan",
     "middleware",
     "schema",
     "util",

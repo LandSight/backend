@@ -23,6 +23,7 @@ from app.module.parcel.interface.http.schema.parcel import (
     ParcelResponse,
 )
 from app.module.shared.application.dto.response import CurrentUser
+from app.module.shared.interface.http.guards import require_authorization
 
 
 class ParcelController(Controller):
@@ -30,6 +31,7 @@ class ParcelController(Controller):
 
     path = "/api/v1/parcels"
     tags = ("parcels",)
+    guards = [require_authorization]  # noqa: RUF012
 
     @post(
         "/",

@@ -9,6 +9,7 @@ from app.module.identity.application.dto.command import GetUserCommand
 from app.module.identity.application.use_case import GetUserUseCase
 from app.module.identity.interface.http.schema.user import UserResponse
 from app.module.shared.application.dto.response import CurrentUser
+from app.module.shared.interface.http.guards import require_authorization
 
 
 class UserController(Controller):
@@ -16,6 +17,7 @@ class UserController(Controller):
 
     path = "/api/v1/users"
     tags = ("users",)
+    guards = [require_authorization]  # noqa: RUF012
 
     @get(
         "/profile",
