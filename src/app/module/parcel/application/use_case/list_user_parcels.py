@@ -42,7 +42,7 @@ class ListUserParcelsUseCase(BaseUseCase[ListUserParcelsCommand, list[ParcelResp
                 id=str(parcel.id.unwrap()),
                 name=parcel.name.unwrap(),
                 polygon=self._polygon_service.from_domain(parcel.polygon),
-                owner_id=str(parcel.owner_id),
+                owner_id=str(parcel.owner_id.unwrap()),
             )
             for parcel in parcels
         ]
