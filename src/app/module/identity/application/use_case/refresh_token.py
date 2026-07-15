@@ -1,6 +1,9 @@
 """Refresh token use case."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
+from uuid import UUID
 
 from app.module.identity.application.dto.command import RefreshTokenCommand
 from app.module.identity.application.dto.response import TokenResponse
@@ -9,6 +12,7 @@ from app.module.identity.application.error import (
     RefreshTokenPayloadError,
     RefreshTokenTypeError,
 )
+from app.module.identity.domain.value_object import UserId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -45,15 +49,17 @@ class RefreshTokenUseCase(BaseUseCase[RefreshTokenCommand, TokenResponse]):
             self._logger.warning("Token is not a refresh token")
             raise RefreshTokenTypeError
 
-        user_id = payload.get("sub")
-        if not user_id:
+        user_id_str = payload.get("sub")
+        if not user_id_str:
             self._logger.warning("Refresh token does not contain user ID")
             raise RefreshTokenPayloadError
+
+        user_id = UserId(UUID(user_id_str))
 
         access_token = self._token_service.create_access_token(user_id)
         refresh_token = self._token_service.create_refresh_token(user_id)
 
-        self._logger.info("Token refreshed successfully: user_id=%s", user_id)
+        self._logger.info("Token refreshed successfully: user_id=%s", user_id_str)
 
         return TokenResponse(
             access_token=access_token,

@@ -1,10 +1,17 @@
 """Current user provider port."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from app.module.shared.application.dto.response import CurrentUser
 
 
 class CurrentUserProvider(ABC):
-    """Port for resolving the current user ID from an authentication token.
+    """Port for resolving the current user from an authentication token.
 
     The token is extracted from the HTTP request by the controller layer
     and passed to this port. This keeps the port free of framework
@@ -15,8 +22,8 @@ class CurrentUserProvider(ABC):
     """
 
     @abstractmethod
-    async def get_current_user_id(self, token: str) -> str:
-        """Resolve a user ID from an authentication token.
+    async def get_current_user(self, token: str) -> CurrentUser:
+        """Resolve a current user from an authentication token.
 
         Parameters
         ----------
@@ -25,8 +32,8 @@ class CurrentUserProvider(ABC):
 
         Returns
         -------
-        str
-            The user ID as a string.
+        CurrentUser
+            The authenticated user's id and username.
 
         Raises
         ------

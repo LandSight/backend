@@ -56,9 +56,9 @@ async def provide_async_session(
 
 
 platform_dependencies = {
-    "database_config": Provide(provide_database_config, use_cache=True),
-    "auth_config": Provide(provide_auth_config, use_cache=True),
-    "session_factory": Provide(provide_async_session_factory, use_cache=True),
+    "database_config": Provide(provide_database_config, use_cache=True, sync_to_thread=False),
+    "auth_config": Provide(provide_auth_config, use_cache=True, sync_to_thread=False),
+    "session_factory": Provide(provide_async_session_factory, use_cache=True, sync_to_thread=False),
     "session": Provide(provide_async_session),
 }
 

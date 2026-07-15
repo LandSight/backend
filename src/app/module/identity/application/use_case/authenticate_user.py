@@ -1,5 +1,7 @@
 """Authenticate user use case."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from app.module.identity.application.dto.command import AuthenticateUserCommand
@@ -10,6 +12,7 @@ from app.module.identity.domain.value_object import (
     Username,
 )
 from app.module.shared.application.use_case import BaseUseCase
+from app.module.shared.domain.error import ValidationError
 from app.platform.logging import get_logger
 
 
@@ -40,8 +43,12 @@ class AuthenticateUserUseCase(BaseUseCase[AuthenticateUserCommand, TokenResponse
 
     @override
     async def __call__(self, command: AuthenticateUserCommand) -> TokenResponse:
-        username = Username(command.username)
-        password = Password(command.password)
+        try:
+            username = Username(command.username)
+            password = Password(command.password)
+        except ValidationError as e:
+            self._logger.warning("Authentication failed: invalid format: %s", e)
+            raise AuthenticationError from e
 
         self._logger.info("Authentication attempt: username=%s", command.username)
 
@@ -50,13 +57,12 @@ class AuthenticateUserUseCase(BaseUseCase[AuthenticateUserCommand, TokenResponse
             self._logger.warning("Authentication failed: user not found: %s", command.username)
             raise AuthenticationError
 
-        if not self._password_hasher.verify(password.unwrap(), user.hashed_password.unwrap()):
+        if not self._password_hasher.verify(password, user.hashed_password):
             self._logger.warning("Authentication failed: invalid password: %s", command.username)
             raise AuthenticationError
 
-        user_id_str = str(user.id.unwrap())
-        access_token = self._token_service.create_access_token(user_id_str)
-        refresh_token = self._token_service.create_refresh_token(user_id_str)
+        access_token = self._token_service.create_access_token(user.id)
+        refresh_token = self._token_service.create_refresh_token(user.id)
 
         self._logger.info("Authentication successful: username=%s", command.username)
 

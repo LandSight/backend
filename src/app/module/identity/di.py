@@ -75,14 +75,14 @@ def provide_refresh_token_use_case(
 
 # Словарь зависимостей модуля
 identity_dependencies = {
-    "user_repository": Provide(provide_postgres_user_repository),
-    "password_hasher": Provide(provide_bcrypt_password_hasher),
-    "token_service": Provide(provide_jwt_token_service),
-    "current_user_provider": Provide(provide_jwt_current_user_provider),
-    "register_user_use_case": Provide(provide_register_use_case),
-    "authenticate_user_use_case": Provide(provide_authenticate_use_case),
-    "get_user_use_case": Provide(provide_get_user_use_case),
-    "refresh_token_use_case": Provide(provide_refresh_token_use_case),
+    "user_repository": Provide(provide_postgres_user_repository, sync_to_thread=False),
+    "password_hasher": Provide(provide_bcrypt_password_hasher, sync_to_thread=False),
+    "token_service": Provide(provide_jwt_token_service, sync_to_thread=False),
+    "current_user_provider": Provide(provide_jwt_current_user_provider, sync_to_thread=False),
+    "register_user_use_case": Provide(provide_register_use_case, sync_to_thread=False),
+    "authenticate_user_use_case": Provide(provide_authenticate_use_case, sync_to_thread=False),
+    "get_user_use_case": Provide(provide_get_user_use_case, sync_to_thread=False),
+    "refresh_token_use_case": Provide(provide_refresh_token_use_case, sync_to_thread=False),
 }
 
 __all__ = ("identity_dependencies",)
