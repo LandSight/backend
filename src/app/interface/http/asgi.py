@@ -10,15 +10,13 @@ from app import __api_version__
 from app.interface.http.controller.system import SystemController
 from app.interface.http.lifespan import lifespan
 from app.interface.http.middleware import RequestLoggingMiddleware
+from app.interface.http.router import api_v1_router
 from app.interface.http.util import (
     create_exception_handlers,
     get_all_application_error_mappings,
     get_all_dependencies,
     get_all_domain_error_mappings,
 )
-from app.module.identity.interface.http.controller.auth import AuthController
-from app.module.identity.interface.http.controller.user import UserController
-from app.module.parcel.interface.http.controller.parcel import ParcelController
 
 
 def create_asgi_application() -> Litestar:
@@ -32,9 +30,7 @@ def create_asgi_application() -> Litestar:
     app = Litestar(
         route_handlers=[
             SystemController,
-            AuthController,
-            UserController,
-            ParcelController,
+            api_v1_router,
         ],
         dependencies=get_all_dependencies(),
         openapi_config=OpenAPIConfig(

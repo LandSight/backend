@@ -8,7 +8,7 @@ from app.interface.http.schema.system import HealthResponse
 class SystemController(Controller):
     """System management endpoints."""
 
-    path = "api/v1/system"
+    path = "/system"
     tags = ("system",)
 
     @get(
