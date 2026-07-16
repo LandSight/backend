@@ -32,7 +32,7 @@ from app.platform.config.loaders import load_auth_config
 class AuthController(Controller):
     """Authentication and user management endpoints."""
 
-    path = "/api/v1/auth"
+    path = "/auth"
     tags = ("auth",)
 
     @post(

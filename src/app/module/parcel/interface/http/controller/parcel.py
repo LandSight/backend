@@ -30,7 +30,7 @@ from app.module.shared.interface.http.guards import require_authorization
 class ParcelController(Controller):
     """Parcel management endpoints."""
 
-    path = "/api/v1/parcels"
+    path = "/"
     tags = ("parcels",)
     guards = [require_authorization]  # noqa: RUF012
 

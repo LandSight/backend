@@ -15,7 +15,7 @@ from app.module.shared.interface.http.guards import require_authorization
 class UserController(Controller):
     """User profile endpoints."""
 
-    path = "/api/v1/users"
+    path = "/users"
     tags = ("users",)
     guards = [require_authorization]  # noqa: RUF012
 
