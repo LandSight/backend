@@ -1,7 +1,8 @@
 """Get user use case."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
-from uuid import UUID
 
 from app.module.identity.application.dto.command import GetUserCommand
 from app.module.identity.application.dto.response import UserResponse
@@ -29,17 +30,17 @@ class GetUserUseCase(BaseUseCase[GetUserCommand, UserResponse]):
     async def __call__(self, command: GetUserCommand) -> UserResponse:
         self._logger.info("Getting user: user_id=%s", command.user_id)
 
-        user_id = UserId(UUID(command.user_id))
+        user_id = UserId(command.user_id)
 
         user = await self._user_repository.get_by_id(user_id)
         if user is None:
             self._logger.warning("User not found: user_id=%s", command.user_id)
-            raise UserNotFoundError(command.user_id)
+            raise UserNotFoundError(str(command.user_id))
 
         self._logger.info("User retrieved: user_id=%s username=%s", command.user_id, user.username.unwrap())
 
         return UserResponse(
-            id=str(user.id.unwrap()),
+            id=user.id.unwrap(),
             username=user.username.unwrap(),
         )
 

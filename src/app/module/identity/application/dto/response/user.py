@@ -1,6 +1,13 @@
 """User response DTO."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -9,13 +16,13 @@ class UserResponse:
 
     Attributes
     ----------
-    id : str
+    id : UUID
         User identifier.
     username : str
         Username.
     """
 
-    id: str
+    id: UUID
     username: str
 
 
