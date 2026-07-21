@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from typing import override
 
-from app.module.parcel.domain.value_object.latitude import Latitude
-from app.module.parcel.domain.value_object.longitude import Longitude
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object import BaseValueObject, Latitude, Longitude
 
 
 class GeoPoint(BaseValueObject[tuple[Latitude, Longitude]]):

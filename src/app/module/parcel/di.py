@@ -11,6 +11,7 @@ from app.module.parcel.application.use_case import (
 )
 from app.module.parcel.infrastructure.geo import ShapelyPolygonService
 from app.module.parcel.infrastructure.repository import PostgresParcelRepository
+from app.module.parcel.interface.internal.api import ParcelInternal
 
 
 # ----- Repositories -----
@@ -53,6 +54,21 @@ def provide_delete_parcel_use_case(
     return DeleteParcelUseCase(parcel_repository)
 
 
+# ----- Internal API -----
+def provide_parcel_internal(
+    create_parcel_use_case: NamedDependency[CreateParcelUseCase],
+    get_parcel_use_case: NamedDependency[GetParcelUseCase],
+    list_user_parcels_use_case: NamedDependency[ListUserParcelsUseCase],
+    delete_parcel_use_case: NamedDependency[DeleteParcelUseCase],
+) -> ParcelInternal:
+    return ParcelInternal(
+        create_parcel_use_case=create_parcel_use_case,
+        get_parcel_use_case=get_parcel_use_case,
+        list_user_parcels_use_case=list_user_parcels_use_case,
+        delete_parcel_use_case=delete_parcel_use_case,
+    )
+
+
 parcel_dependencies = {
     "parcel_repository": Provide(provide_postgres_parcel_repository, sync_to_thread=False),
     "polygon_service": Provide(provide_shapely_polygon_service, sync_to_thread=False),
@@ -60,6 +76,7 @@ parcel_dependencies = {
     "get_parcel_use_case": Provide(provide_get_parcel_use_case, sync_to_thread=False),
     "list_user_parcels_use_case": Provide(provide_list_user_parcels_use_case, sync_to_thread=False),
     "delete_parcel_use_case": Provide(provide_delete_parcel_use_case, sync_to_thread=False),
+    "parcel_api": Provide(provide_parcel_internal, sync_to_thread=False),
 }
 
 __all__ = ("parcel_dependencies",)

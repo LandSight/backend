@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
-from uuid import UUID
 
 from app.module.parcel.application.dto.command import GetParcelCommand
 from app.module.parcel.application.dto.response import ParcelResponse
@@ -36,29 +35,29 @@ class GetParcelUseCase(BaseUseCase[GetParcelCommand, ParcelResponse]):
     async def __call__(self, command: GetParcelCommand) -> ParcelResponse:
         self._logger.info("Getting parcel: id=%s", command.parcel_id)
 
-        parcel_id = ParcelId(UUID(command.parcel_id))
+        parcel_id = ParcelId(command.parcel_id)
         parcel = await self._parcel_repository.get_by_id(parcel_id)
 
         if parcel is None:
             self._logger.warning("Parcel not found: id=%s", command.parcel_id)
-            raise ParcelNotFoundError(command.parcel_id)
+            raise ParcelNotFoundError(str(command.parcel_id))
 
-        current_user_id = OwnerId(UUID(command.current_user_id))
+        current_user_id = OwnerId(command.current_user_id)
         if parcel.owner_id != current_user_id:
             self._logger.warning(
                 "User %s is not the owner of parcel %s",
                 command.current_user_id,
                 command.parcel_id,
             )
-            raise NotParcelOwnerError(command.parcel_id)
+            raise NotParcelOwnerError(str(command.parcel_id))
 
         self._logger.info("Parcel found: id=%s name=%s", command.parcel_id, parcel.name.unwrap())
 
         return ParcelResponse(
-            id=str(parcel.id.unwrap()),
+            id=parcel.id.unwrap(),
             name=parcel.name.unwrap(),
             polygon=self._polygon_service.from_domain(parcel.polygon),
-            owner_id=str(parcel.owner_id.unwrap()),
+            owner_id=parcel.owner_id.unwrap(),
         )
 
 

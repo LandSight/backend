@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
-from uuid import UUID
 
 from app.module.parcel.application.dto.command import ListUserParcelsCommand
 from app.module.parcel.application.dto.response import ParcelResponse
@@ -32,17 +31,17 @@ class ListUserParcelsUseCase(BaseUseCase[ListUserParcelsCommand, list[ParcelResp
     async def __call__(self, command: ListUserParcelsCommand) -> list[ParcelResponse]:
         self._logger.info("Listing parcels for owner: id=%s", command.owner_id)
 
-        owner_id = OwnerId(UUID(command.owner_id))
+        owner_id = OwnerId(command.owner_id)
         parcels = await self._parcel_repository.get_by_owner_id(owner_id)
 
         self._logger.info("Found %d parcels for owner: id=%s", len(parcels), command.owner_id)
 
         return [
             ParcelResponse(
-                id=str(parcel.id.unwrap()),
+                id=parcel.id.unwrap(),
                 name=parcel.name.unwrap(),
                 polygon=self._polygon_service.from_domain(parcel.polygon),
-                owner_id=str(parcel.owner_id.unwrap()),
+                owner_id=parcel.owner_id.unwrap(),
             )
             for parcel in parcels
         ]

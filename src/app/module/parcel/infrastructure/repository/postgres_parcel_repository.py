@@ -11,12 +11,12 @@ from sqlalchemy import select
 from app.module.parcel.application.port import ParcelRepository
 from app.module.parcel.domain.entity import Parcel
 from app.module.parcel.domain.value_object import (
+    GeoPoint,
     OwnerId,
     ParcelId,
     ParcelName,
     Polygon,
 )
-from app.module.parcel.domain.value_object.geo_point import GeoPoint
 from app.module.parcel.infrastructure.model import ParcelModel
 from app.platform.database.repository import BaseSQLAlchemyRepository
 

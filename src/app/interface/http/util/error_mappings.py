@@ -1,36 +1,108 @@
-"""Error mappings assembly for the application."""
+"""Error-to-HTTP-status mappings for all modules."""
 
-from app.module.identity.error_mappings import get_identity_application_error_mappings
-from app.module.parcel.error_mappings import get_parcel_application_error_mappings
-from app.module.shared.interface.http.error_mappings import (
-    get_shared_application_error_mappings,
-    get_shared_domain_error_mappings,
+from __future__ import annotations
+
+from litestar.status_codes import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+from app.module.identity.application.error import (
+    AuthenticationError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
+from app.module.parcel.application.error import (
+    InvalidGeoJsonError,
+    InvalidPolygonError,
+    NotParcelOwnerError,
+    ParcelAlreadyExistsError,
+    ParcelNotFoundError,
+)
+from app.module.shared.application.error import ApplicationError
+from app.module.shared.domain.error import DomainError, InvariantViolationError, ValidationError
 
-def get_all_domain_error_mappings() -> dict:
+
+#  Shared module
+
+
+def _get_shared_domain_error_mappings() -> dict[type[DomainError], int]:
+    """Return domain error mappings for shared domain errors."""
+    return {
+        ValidationError: HTTP_400_BAD_REQUEST,
+        InvariantViolationError: HTTP_409_CONFLICT,
+    }
+
+
+def _get_shared_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error mappings for shared application errors."""
+    return {
+        ApplicationError: HTTP_500_INTERNAL_SERVER_ERROR,
+    }
+
+
+#  Identity module
+
+
+def _get_identity_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Identity module."""
+    return {
+        AuthenticationError: HTTP_401_UNAUTHORIZED,
+        UserNotFoundError: HTTP_404_NOT_FOUND,
+        UserAlreadyExistsError: HTTP_409_CONFLICT,
+    }
+
+
+#  Parcel module
+
+
+def _get_parcel_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Parcel module."""
+    return {
+        ParcelNotFoundError: HTTP_404_NOT_FOUND,
+        ParcelAlreadyExistsError: HTTP_409_CONFLICT,
+        InvalidGeoJsonError: HTTP_400_BAD_REQUEST,
+        InvalidPolygonError: HTTP_400_BAD_REQUEST,
+        NotParcelOwnerError: HTTP_403_FORBIDDEN,
+    }
+
+
+#  Public API
+
+
+def get_all_domain_error_mappings() -> dict[type[DomainError], int]:
     """Merge all domain error mappings.
 
     Returns
     -------
-    dict
+    dict[type[DomainError], int]
         Combined domain error mappings.
     """
-    mappings = {}
-    mappings.update(get_shared_domain_error_mappings())
+    mappings: dict[type[DomainError], int] = {}
+    mappings.update(_get_shared_domain_error_mappings())
     return mappings
 
 
-def get_all_application_error_mappings() -> dict:
+def get_all_application_error_mappings() -> dict[type[ApplicationError], int]:
     """Merge all application error mappings.
 
     Returns
     -------
-    dict
+    dict[type[ApplicationError], int]
         Combined application error mappings.
     """
-    mappings = {}
-    mappings.update(get_shared_application_error_mappings())
-    mappings.update(get_identity_application_error_mappings())
-    mappings.update(get_parcel_application_error_mappings())
+    mappings: dict[type[ApplicationError], int] = {}
+    mappings.update(_get_shared_application_error_mappings())
+    mappings.update(_get_identity_application_error_mappings())
+    mappings.update(_get_parcel_application_error_mappings())
     return mappings
+
+
+__all__ = (
+    "get_all_application_error_mappings",
+    "get_all_domain_error_mappings",
+)

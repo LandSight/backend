@@ -67,12 +67,15 @@ isort.lines-after-imports = 2
 ]
 "src/app/interface/http/controller/**.py" = [
   "PLR6301", # allow unused self
+  "RUF012",  # allow mutable class attributes (guards, tags)
   "TC001",   # allow runtime imports in controllers
   "TC002",   # allow runtime imports in controllers
+  "TC003",   # allow runtime stdlib imports (UUID for path params)
 ]
-"src/app/module/**/interface/http/controller/**/*.py" = [
-  "TC001",   # allow runtime imports in controllers
-  "TC002",   # allow runtime imports in controllers
+"src/app/interface/http/schema/**.py" = [
+  "TC001",   # allow runtime imports in Pydantic schemas
+  "TC002",   # allow runtime imports in Pydantic schemas
+  "TC003",   # allow runtime stdlib imports (UUID for Pydantic fields)
 ]
 "src/app/**/di.py" = [
   "TC001",   # runtime imports needed for dependency injection in controllers

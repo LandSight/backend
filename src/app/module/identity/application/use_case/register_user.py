@@ -63,7 +63,7 @@ class RegisterUserUseCase(BaseUseCase[RegisterUserCommand, UserResponse]):
         self._logger.info("User registered successfully: id=%s username=%s", user_id, command.username)
 
         return UserResponse(
-            id=str(user.id.unwrap()),
+            id=user.id.unwrap(),
             username=username.unwrap(),
         )
 

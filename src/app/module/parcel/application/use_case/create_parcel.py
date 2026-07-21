@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
-from uuid import UUID, uuid6
+from uuid import uuid6
 
 from app.module.parcel.application.dto.command import CreateParcelCommand
 from app.module.parcel.application.dto.response import ParcelResponse
@@ -42,7 +42,7 @@ class CreateParcelUseCase(BaseUseCase[CreateParcelCommand, ParcelResponse]):
         self._polygon_service.validate(polygon)
 
         parcel_id = ParcelId(uuid6())
-        owner_id = OwnerId(UUID(command.owner_id))
+        owner_id = OwnerId(command.owner_id)
         parcel = Parcel(id=parcel_id, name=name, polygon=polygon, owner_id=owner_id)
 
         await self._parcel_repository.save(parcel)
@@ -50,10 +50,10 @@ class CreateParcelUseCase(BaseUseCase[CreateParcelCommand, ParcelResponse]):
         self._logger.info("Parcel created: id=%s name=%s", parcel_id, command.name)
 
         return ParcelResponse(
-            id=str(parcel.id.unwrap()),
+            id=parcel.id.unwrap(),
             name=name.unwrap(),
             polygon=command.polygon,
-            owner_id=str(owner_id.unwrap()),
+            owner_id=owner_id.unwrap(),
         )
 
 

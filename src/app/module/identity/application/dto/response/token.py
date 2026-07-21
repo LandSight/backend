@@ -1,7 +1,6 @@
 """Token response DTO."""
 
 from dataclasses import dataclass
-from typing import ClassVar
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,7 +19,7 @@ class TokenResponse:
 
     access_token: str
     refresh_token: str
-    token_type: ClassVar[str] = "Bearer"  # noqa: S105
+    token_type: str = "Bearer"  # noqa: S105
 
 
 __all__ = ("TokenResponse",)
