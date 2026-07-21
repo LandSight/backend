@@ -1,4 +1,4 @@
-"""Centralized dependency injection for the application.
+"""Centralized dependency injection for the HTTP layer.
 
 Assembles module-level internal APIs and provides framework-level
 dependencies (e.g., ``current_user``) that call into those APIs.
@@ -11,22 +11,21 @@ from typing import Annotated
 from litestar.di import Provide
 from litestar.params import HeaderParameter
 
+from app.interface.http.schema.current_user import CurrentUser
 from app.module.identity.di import identity_dependencies
-from app.module.identity.interface.internal.dto import GetCurrentUserByTokenInput, UserResult
+from app.module.identity.interface.internal.dto import GetCurrentUserByTokenInput
 from app.module.identity.interface.internal.port import IdentityInternalAPI
 from app.module.parcel.di import parcel_dependencies
 from app.platform.di import platform_dependencies
 
 
-# ──────────────────────────────────────────────
 #  Framework-level dependencies
-# ──────────────────────────────────────────────
 
 
 async def provide_current_user(
     identity_api: IdentityInternalAPI,
     authorization: Annotated[str | None, HeaderParameter(name="Authorization")] = None,
-) -> UserResult:
+) -> CurrentUser:
     """Resolve the current user from the Authorization header.
 
     Extracts the Bearer token from the header and delegates to the
@@ -42,7 +41,7 @@ async def provide_current_user(
 
     Returns
     -------
-    UserResult
+    CurrentUser
         The authenticated user's id and username.
 
     Raises
@@ -51,7 +50,8 @@ async def provide_current_user(
         If the token is missing, invalid, or expired.
     """
     token = (authorization or "").removeprefix("Bearer ")
-    return await identity_api.get_current_user(GetCurrentUserByTokenInput(token=token))
+    result = await identity_api.get_current_user(GetCurrentUserByTokenInput(token=token))
+    return CurrentUser(id=result.id, username=result.username)
 
 
 def get_all_dependencies() -> dict[str, Provide]:

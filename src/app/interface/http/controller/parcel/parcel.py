@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from uuid import UUID
 
 from litestar import delete, get, post
 from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
+from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.parcel import (
     CreateParcelRequest,
     ParcelFeature,
@@ -15,7 +16,6 @@ from app.interface.http.schema.parcel import (
     ParcelFeatureProperties,
 )
 from app.interface.http.util.guards import require_authorization
-from app.module.identity.interface.internal.dto import UserResult
 from app.module.parcel.interface.internal.dto import (
     CreateParcelInput,
     DeleteParcelInput,
@@ -26,16 +26,12 @@ from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 
 
-if TYPE_CHECKING:
-    from uuid import UUID
-
-
 class ParcelController(Controller):
     """Parcel management endpoints."""
 
     path = "/"
     tags = ("parcels",)
-    guards = [require_authorization]  # noqa: RUF012
+    guards = [require_authorization]
 
     @post(
         "/",
@@ -46,7 +42,7 @@ class ParcelController(Controller):
         self,
         data: CreateParcelRequest,
         parcel_api: ParcelInternalAPI,
-        current_user: UserResult,
+        current_user: CurrentUser,
     ) -> ParcelFeature:
         """Create a new parcel."""
         result = await parcel_api.create_parcel(
@@ -76,7 +72,7 @@ class ParcelController(Controller):
     async def list_user_parcels(
         self,
         parcel_api: ParcelInternalAPI,
-        current_user: UserResult,
+        current_user: CurrentUser,
     ) -> ParcelFeatureCollection:
         """List all parcels owned by the currently authenticated user."""
         result = await parcel_api.list_user_parcels(ListUserParcelsInput(owner_id=current_user.id))
@@ -102,7 +98,7 @@ class ParcelController(Controller):
         self,
         parcel_id: UUID,
         parcel_api: ParcelInternalAPI,
-        current_user: UserResult,
+        current_user: CurrentUser,
     ) -> ParcelFeature:
         """Get a parcel by its ID."""
         result = await parcel_api.get_parcel(
@@ -129,7 +125,7 @@ class ParcelController(Controller):
         self,
         parcel_id: UUID,
         parcel_api: ParcelInternalAPI,
-        current_user: UserResult,
+        current_user: CurrentUser,
     ) -> None:
         """Delete a parcel by its ID."""
         await parcel_api.delete_parcel(

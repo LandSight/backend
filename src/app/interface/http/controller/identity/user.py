@@ -6,9 +6,9 @@ from litestar import get
 from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK
 
+from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.identity import UserResponse
 from app.interface.http.util.guards import require_authorization
-from app.module.identity.interface.internal.dto import UserResult
 
 
 class UserController(Controller):
@@ -16,7 +16,7 @@ class UserController(Controller):
 
     path = "/users"
     tags = ("users",)
-    guards = [require_authorization]  # noqa: RUF012
+    guards = [require_authorization]
 
     @get(
         "/profile",
@@ -25,7 +25,7 @@ class UserController(Controller):
     )
     async def get_profile(
         self,
-        current_user: UserResult,
+        current_user: CurrentUser,
     ) -> UserResponse:
         """Get the profile of the currently authenticated user."""
         return UserResponse(id=current_user.id, username=current_user.username)
