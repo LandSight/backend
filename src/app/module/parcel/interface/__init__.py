@@ -1,4 +1,4 @@
-from . import http
+from . import internal
 
 
-__all__ = ("http",)
+__all__ = ("internal",)

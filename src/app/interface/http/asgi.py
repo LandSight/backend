@@ -7,6 +7,7 @@ from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import ScalarRenderPlugin
 
 from app import __api_version__
+from app.interface.di import get_all_dependencies
 from app.interface.http.controller.system import SystemController
 from app.interface.http.lifespan import lifespan
 from app.interface.http.middleware import RequestLoggingMiddleware
@@ -14,7 +15,6 @@ from app.interface.http.router import api_v1_router
 from app.interface.http.util import (
     create_exception_handlers,
     get_all_application_error_mappings,
-    get_all_dependencies,
     get_all_domain_error_mappings,
 )
 

@@ -1,4 +1,4 @@
-from . import http
+from . import di, http
 
 
-__all__ = ("http",)
+__all__ = ("di", "http")
