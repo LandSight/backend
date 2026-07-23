@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from boto3 import Session as BotoSession
+from botocore.client import BaseClient
 from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
+from rasterio.session import AWSSession
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
@@ -13,12 +16,13 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
 
-from app.platform.config.loaders import load_auth_config, load_database_config
-from app.platform.config.models import AuthConfig, DatabaseConfig
+from app.platform.config.loaders import load_auth_config, load_database_config, load_s3_config
+from app.platform.config.models import AuthConfig, DatabaseConfig, S3Config
 from app.platform.database.session import create_async_session_factory
+from app.platform.storage.session import create_aws_session
 
 
-# ----- Configs -----
+# ----- Config -----
 def provide_database_config() -> DatabaseConfig:
     """Provide database configuration."""
     return load_database_config()
@@ -29,7 +33,12 @@ def provide_auth_config() -> AuthConfig:
     return load_auth_config()
 
 
-# ----- Session -----
+def provide_s3_config() -> S3Config:
+    """Provide S3 configuration."""
+    return load_s3_config()
+
+
+# ----- Database -----
 def provide_async_session_factory(
     state: State,
 ) -> async_sessionmaker[AsyncSession]:
@@ -55,11 +64,37 @@ async def provide_async_session(
             await session.close()
 
 
+# ----- Storage -----
+def provide_boto_session(
+    state: State
+) -> BotoSession:
+    """Provide the boto session from application state."""
+    return state.boto_session
+
+
+def provide_s3_boto_client(
+    state: State
+) -> BaseClient:
+    """Provide the s3 boto client from application state."""
+    return state.s3_boto_client
+
+
+def provide_aws_session(
+    boto_session: NamedDependency[BotoSession]
+) -> AWSSession:
+    """Provide the aws session."""
+    return create_aws_session(boto_session)
+
+
 platform_dependencies = {
     "database_config": Provide(provide_database_config, use_cache=True, sync_to_thread=False),
     "auth_config": Provide(provide_auth_config, use_cache=True, sync_to_thread=False),
+    "s3_config": Provide(provide_s3_config, use_cache=True, sync_to_thread=False),
     "session_factory": Provide(provide_async_session_factory, use_cache=True, sync_to_thread=False),
     "session": Provide(provide_async_session),
+    "boto_session": Provide(provide_boto_session, use_cache=True, sync_to_thread=False),
+    "s3_boto_client": Provide(provide_s3_boto_client, use_cache=True, sync_to_thread=False),
+    "aws_session": Provide(provide_aws_session, use_cache=True, sync_to_thread=False),
 }
 
 
