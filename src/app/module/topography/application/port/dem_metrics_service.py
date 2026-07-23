@@ -29,22 +29,6 @@ class DemMetricsService(ABC):
     """
 
     @abstractmethod
-    def calculate_slope(self, raster: RasterData) -> Slope:
-        """Calculate mean slope in degrees from an elevation raster.
-
-        Parameters
-        ----------
-        raster : RasterData
-            Raster data containing elevation array and resolution.
-
-        Returns
-        -------
-        Slope
-            Mean slope in degrees.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def calculate_mean_elevation(self, raster: RasterData) -> Elevation:
         """Calculate the mean elevation, ignoring NaN values.
 
@@ -109,6 +93,38 @@ class DemMetricsService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def calculate_mean_slope(self, raster: RasterData) -> Slope:
+        """Calculate the mean slope in degrees.
+
+        Parameters
+        ----------
+        raster : RasterData
+            Raster data containing elevation array and resolution.
+
+        Returns
+        -------
+        Slope
+            Mean slope in degrees.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def calculate_max_slope(self, raster: RasterData) -> Slope:
+        """Calculate the maximum slope.
+
+        Parameters
+        ----------
+        raster : RasterData
+            Raster data containing elevation array and resolution.
+
+        Returns
+        -------
+        Slope
+            Maximum slope in degrees.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def calculate_slope_percentiles(self, raster: RasterData) -> SlopePercentiles:
         """Calculate slope percentiles (25, 50, 75, 90).
 
@@ -143,10 +159,8 @@ class DemMetricsService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def calculate_aspect(self, raster: RasterData) -> AspectDirection:
-        """Calculate dominant aspect direction from an elevation raster.
-
-        Uses the Horn (1981) algorithm.
+    def calculate_dominant_aspect(self, raster: RasterData) -> AspectDirection:
+        """Calculate the dominant aspect direction.
 
         Parameters
         ----------
@@ -156,7 +170,7 @@ class DemMetricsService(ABC):
         Returns
         -------
         AspectDirection
-            Dominant aspect direction.
+            Dominant aspect direction (N, NE, E, SE, S, SW, W, NW, or FLAT).
         """
         raise NotImplementedError
 
@@ -175,22 +189,6 @@ class DemMetricsService(ABC):
         -------
         Percentage
             Percentage of south-facing area (0-100).
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def calculate_max_slope(self, raster: RasterData) -> Slope:
-        """Calculate the maximum slope.
-
-        Parameters
-        ----------
-        raster : RasterData
-            Raster data containing elevation array and resolution.
-
-        Returns
-        -------
-        Slope
-            Maximum slope in degrees.
         """
         raise NotImplementedError
 
