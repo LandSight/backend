@@ -1,14 +1,7 @@
-from .elevation import Elevation
-from .parcel_id import ParcelId
-from .percentage import Percentage
-from .slope import Slope
-from .topography_metrics_id import TopographyMetricsId
+from . import metric, raster
 
 
 __all__ = (
-    "Elevation",
-    "ParcelId",
-    "Percentage",
-    "Slope",
-    "TopographyMetricsId",
+    "metric",
+    "raster",
 )

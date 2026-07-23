@@ -6,11 +6,18 @@ from typing import override
 
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
-from app.module.topography.domain.value_object import (
+from app.module.topography.domain.value_object.metric import (
+    Area,
+    AspectDirection,
+    CompactnessIndex,
     Elevation,
+    ElongationIndex,
     ParcelId,
     Percentage,
+    Perimeter,
     Slope,
+    SlopeDistribution,
+    SlopePercentiles,
     TopographyMetricsId,
 )
 
@@ -32,12 +39,28 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         Minimum elevation in meters.
     elevation_range : Elevation
         Elevation range (max - min) in meters.
+    elevation_std : Elevation
+        Standard deviation of elevation in meters.
     mean_slope : Slope
         Mean slope in degrees.
     max_slope : Slope
         Maximum slope in degrees.
-    steep_area_percentage : Percentage
-        Percentage of area with slope > 15°.
+    slope_percentiles : SlopePercentiles
+        Slope values at key percentiles (25, 50, 75, 90).
+    slope_distribution : SlopeDistribution
+        Slope histogram with 10 bins from 0° to 90°.
+    aspect : AspectDirection
+        Dominant slope aspect direction.
+    south_aspect_percentage : Percentage
+        Percentage of area facing south (SE, S, SW).
+    area : Area
+        Parcel area in square meters.
+    perimeter : Perimeter
+        Parcel perimeter in meters.
+    compactness_index : CompactnessIndex
+        Compactness index (4πA/P²), dimensionless.
+    elongation_index : ElongationIndex
+        Elongation index (width/length), dimensionless.
     """
 
     _ELEVATION_RANGE_TOLERANCE = 0.01
@@ -50,18 +73,34 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         max_elevation: Elevation,
         min_elevation: Elevation,
         elevation_range: Elevation,
+        elevation_std: Elevation,
         mean_slope: Slope,
         max_slope: Slope,
-        steep_area_percentage: Percentage,
+        slope_percentiles: SlopePercentiles,
+        slope_distribution: SlopeDistribution,
+        aspect: AspectDirection,
+        south_aspect_percentage: Percentage,
+        area: Area,
+        perimeter: Perimeter,
+        compactness_index: CompactnessIndex,
+        elongation_index: ElongationIndex,
     ) -> None:
         self._parcel_id: ParcelId = parcel_id
         self._mean_elevation: Elevation = mean_elevation
         self._max_elevation: Elevation = max_elevation
         self._min_elevation: Elevation = min_elevation
         self._elevation_range: Elevation = elevation_range
+        self._elevation_std: Elevation = elevation_std
         self._mean_slope: Slope = mean_slope
         self._max_slope: Slope = max_slope
-        self._steep_area_percentage: Percentage = steep_area_percentage
+        self._slope_percentiles: SlopePercentiles = slope_percentiles
+        self._slope_distribution: SlopeDistribution = slope_distribution
+        self._aspect: AspectDirection = aspect
+        self._south_aspect_percentage: Percentage = south_aspect_percentage
+        self._area: Area = area
+        self._perimeter: Perimeter = perimeter
+        self._compactness_index: CompactnessIndex = compactness_index
+        self._elongation_index: ElongationIndex = elongation_index
 
         super().__init__(id)
 
@@ -99,6 +138,11 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         return self._elevation_range
 
     @property
+    def elevation_std(self) -> Elevation:
+        """Standard deviation of elevation in meters."""
+        return self._elevation_std
+
+    @property
     def mean_slope(self) -> Slope:
         """Mean slope in degrees."""
         return self._mean_slope
@@ -109,9 +153,44 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         return self._max_slope
 
     @property
-    def steep_area_percentage(self) -> Percentage:
-        """Percentage of area with slope > 15°."""
-        return self._steep_area_percentage
+    def slope_percentiles(self) -> SlopePercentiles:
+        """Slope values at key percentiles (25, 50, 75, 90)."""
+        return self._slope_percentiles
+
+    @property
+    def slope_distribution(self) -> SlopeDistribution:
+        """Slope histogram with 10 bins from 0° to 90°."""
+        return self._slope_distribution
+
+    @property
+    def aspect(self) -> AspectDirection:
+        """Dominant slope aspect direction."""
+        return self._aspect
+
+    @property
+    def south_aspect_percentage(self) -> Percentage:
+        """Percentage of area facing south (SE, S, SW)."""
+        return self._south_aspect_percentage
+
+    @property
+    def area(self) -> Area:
+        """Parcel area in square meters."""
+        return self._area
+
+    @property
+    def perimeter(self) -> Perimeter:
+        """Parcel perimeter in meters."""
+        return self._perimeter
+
+    @property
+    def compactness_index(self) -> CompactnessIndex:
+        """Compactness index (4πA/P²), dimensionless."""
+        return self._compactness_index
+
+    @property
+    def elongation_index(self) -> ElongationIndex:
+        """Elongation index (width/length), dimensionless."""
+        return self._elongation_index
 
 
 __all__ = ("TopographyMetrics",)
