@@ -102,30 +102,25 @@ logs:
     @{{ COMPOSE_CMD }} logs --follow
 
 # ── Module Migrations ────────────────────────────────────
+# Uses a single global alembic.ini with named sections.
+# Usage: just migration-create <module> "<description>"
+#        just migration-upgrade <module>
+#        just migration-downgrade <module> <steps>
 
 migration-create module description:
-    @uv run alembic -c src/app/module/{{ module }}/infrastructure/alembic.ini revision --autogenerate -m "{{ description }}"
+    @uv run alembic -n {{ module }} revision --autogenerate -m "{{ description }}"
 
 migration-upgrade module:
-    @uv run alembic -c src/app/module/{{ module }}/infrastructure/alembic.ini upgrade head
+    @uv run alembic -n {{ module }} upgrade head
 
 migration-downgrade module steps:
-    @uv run alembic -c src/app/module/{{ module }}/infrastructure/alembic.ini downgrade -{{ steps }}
+    @uv run alembic -n {{ module }} downgrade -{{ steps }}
 
-# ── Platform Migrations ──────────────────────────────────────────────
+migration-current module:
+    @uv run alembic -n {{ module }} current
 
-platform-migration-create description:
-    @uv run alembic revision -m "{{ description }}"
-
-platform-migration-auto description:
-    @uv run alembic revision --autogenerate -m "{{ description }}"
-
-platform-migration-upgrade:
-    @uv run alembic upgrade head
-
-platform-migration-downgrade steps:
-    @uv run alembic downgrade -{{ steps }}
-
+migration-history module:
+    @uv run alembic -n {{ module }} history
 
 # ── Application ──────────────────────────────────────────────────────
 
