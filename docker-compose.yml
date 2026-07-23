@@ -51,8 +51,6 @@ services:
       mc alias set local http://minio:9000 admin password123;
       echo 'Creating buckets...';
       mc mb local/landsight-dem --ignore-existing;
-      mc mb local/landsight-satellite --ignore-existing;
-      mc mb local/landsight-cache --ignore-existing;
       echo 'Setting bucket policies (public read for DEM)...';
       mc anonymous set download local/landsight-dem;
       echo 'MinIO initialization completed.';
