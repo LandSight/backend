@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import override
 
 from app.module.shared.domain.value_object import BaseValueObject
-
-from .raster_data_array import RasterDataArray
-from .raster_resolution import RasterResolution
+from app.module.topography.domain.value_object.raster.raster_data_array import RasterDataArray
+from app.module.topography.domain.value_object.raster.raster_resolution import RasterResolution
 
 
 class RasterData(BaseValueObject[tuple[RasterDataArray, RasterResolution]]):
