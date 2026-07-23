@@ -16,6 +16,7 @@ from app.module.identity.di import identity_dependencies
 from app.module.identity.interface.internal.dto import GetCurrentUserByTokenInput
 from app.module.identity.interface.internal.port import IdentityInternalAPI
 from app.module.parcel.di import parcel_dependencies
+from app.module.topography.di import topography_dependencies
 from app.platform.di import platform_dependencies
 
 
@@ -66,6 +67,7 @@ def get_all_dependencies() -> dict[str, Provide]:
     dependencies.update(platform_dependencies)
     dependencies.update(identity_dependencies)
     dependencies.update(parcel_dependencies)
+    dependencies.update(topography_dependencies)
     dependencies["current_user"] = Provide(provide_current_user)
     return dependencies
 
