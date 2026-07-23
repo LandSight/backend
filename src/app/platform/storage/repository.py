@@ -30,7 +30,6 @@ class S3Repository:
 
     def __init__(self, s3_boto_client: BaseClient, s3_config: S3Config) -> None:
         self._s3_boto_client = s3_boto_client
-        self._bucket = s3_config.bucket
 
 
 class S3GeoRepository(S3Repository):

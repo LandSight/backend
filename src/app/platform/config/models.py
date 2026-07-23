@@ -196,15 +196,14 @@ class S3Config(BaseConfig):
     model_config = SettingsConfigDict(
         env_prefix="S3_",
     )
-
     endpoint: str = Field(
         default="http://localhost:9000",
         description="S3 endpoint URL",
         min_length=1,
     )
-    bucket: str = Field(
-        default="landsight",
-        description="Bucket name for raster storage",
+    dem_bucket: str = Field(
+        default="landsight-dem",
+        description="Bucket name for dem storage",
         min_length=1,
     )
     access_key: str = Field(
