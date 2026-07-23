@@ -1,6 +1,6 @@
 from functools import cache
 
-from app.platform.config.models import AppConfig, AuthConfig, DatabaseConfig, LoggingConfig
+from app.platform.config.models import AppConfig, AuthConfig, DatabaseConfig, LoggingConfig, S3Config
 
 
 @cache
@@ -48,9 +48,21 @@ def load_auth_config() -> AuthConfig:
     return load_app_config().auth
 
 
+def load_s3_config() -> S3Config:
+    """Load S3 storage settings from environment variables.
+
+    Returns
+    -------
+    S3Config
+        S3 configuration populated from the environment.
+    """
+    return load_app_config().s3
+
+
 __all__ = (
     "load_app_config",
     "load_auth_config",
     "load_database_config",
     "load_logging_config",
+    "load_s3_config",
 )
