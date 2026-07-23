@@ -108,9 +108,7 @@ class S3LocalDemRepository(S3GeoRepository, LocalDemRepository):
                 )
 
                 # Create RasterData VO
-                return RasterData(
-                    (RasterDataArray(data), RasterResolution(resolution))
-                )
+                return RasterData((RasterDataArray(data), RasterResolution(resolution)))
 
         except rasterio.errors.RasterioIOError:
             self._logger.debug("DEM raster not found in S3: %s", s3_uri)
