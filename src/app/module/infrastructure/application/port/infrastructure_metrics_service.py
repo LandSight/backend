@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.application.dto.response import CategoryMetricsResponse
+    from app.module.infrastructure.application.dto.response import (
+        CategoryMetricsResponse,
+        WaterBodyMetricsResponse,
+    )
     from app.module.infrastructure.domain.entity import InfrastructureObject
     from app.module.shared.domain.value_object import Polygon
 
@@ -57,6 +60,15 @@ class InfrastructureMetricsService(ABC):
         parcel_geometry: Polygon,
     ) -> CategoryMetricsResponse:
         """Compute metrics for the ``transit_stops`` category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def calculate_water_bodies(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: Polygon,
+    ) -> WaterBodyMetricsResponse:
+        """Compute metrics for the ``water_body`` category."""
         raise NotImplementedError
 
 

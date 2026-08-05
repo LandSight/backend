@@ -13,6 +13,7 @@ if TYPE_CHECKING:
         SchoolMetrics,
         ShopMetrics,
         TransitStopMetrics,
+        WaterBodyMetrics,
     )
     from app.module.infrastructure.domain.value_object import Category, ParcelId
 
@@ -45,6 +46,11 @@ class MetricsRepository(ABC):
     @abstractmethod
     async def save_transit_stops(self, metrics: TransitStopMetrics) -> None:
         """Persist transit stop metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save_water_bodies(self, metrics: WaterBodyMetrics) -> None:
+        """Persist water body metrics."""
         raise NotImplementedError
 
     @abstractmethod

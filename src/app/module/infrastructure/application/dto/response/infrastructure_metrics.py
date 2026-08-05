@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.infrastructure.application.dto.response.category_metrics_response import CategoryMetricsResponse
+    from app.module.infrastructure.application.dto.response.water_body_metrics_response import WaterBodyMetricsResponse
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,6 +29,8 @@ class InfrastructureMetricsResponse:
         Shop metrics, or ``None`` if not requested.
     transit_stop : CategoryMetricsResponse | None
         Transit stop metrics, or ``None`` if not requested.
+    water_body : WaterBodyMetricsResponse | None
+        Water body metrics, or ``None`` if not requested.
     """
 
     parcel_id: UUID
@@ -35,6 +38,7 @@ class InfrastructureMetricsResponse:
     hospital: CategoryMetricsResponse | None = None
     shop: CategoryMetricsResponse | None = None
     transit_stop: CategoryMetricsResponse | None = None
+    water_body: WaterBodyMetricsResponse | None = None
 
 
 __all__ = ("InfrastructureMetricsResponse",)

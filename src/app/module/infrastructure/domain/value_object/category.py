@@ -12,6 +12,7 @@ class Category(StrEnum):
     HOSPITAL = "hospital"
     SHOP = "shop"
     TRANSIT_STOP = "transit_stop"
+    WATER_BODY = "water_body"
 
 
 __all__ = ("Category",)
