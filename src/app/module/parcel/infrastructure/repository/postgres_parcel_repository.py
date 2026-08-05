@@ -14,10 +14,9 @@ from app.module.parcel.domain.value_object import (
     OwnerId,
     ParcelId,
     ParcelName,
-    Polygon,
 )
 from app.module.parcel.infrastructure.model import ParcelModel
-from app.module.shared.domain.value_object import GeoPoint
+from app.module.shared.domain.value_object import GeoPoint, Polygon
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -30,7 +29,7 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
     """Parcel repository backed by PostgreSQL with PostGIS extension.
 
     Stores polygon geometry in PostGIS ``Geometry(Polygon, 4326)`` column.
-    Converts between domain :class:`~app.module.parcel.domain.value_object.polygon.Polygon`
+    Converts between domain :class:`~app.module.shared.domain.value_object.Polygon`
     and Shapely/PostGIS formats directly using coordinate data from the domain object.
     """
 

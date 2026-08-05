@@ -9,8 +9,7 @@ from shapely.validation import explain_validity
 
 from app.module.parcel.application.error import InvalidGeoJsonError, InvalidPolygonError
 from app.module.parcel.application.port.polygon_service import PolygonService
-from app.module.parcel.domain.value_object import Polygon
-from app.module.shared.domain.value_object import GeoPoint
+from app.module.shared.domain.value_object import GeoPoint, Polygon
 
 
 class ShapelyPolygonService(PolygonService):

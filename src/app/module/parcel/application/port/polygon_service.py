@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from app.module.parcel.domain.value_object.polygon import Polygon
+    from app.module.shared.domain.value_object import Polygon
 
 
 class PolygonService(ABC):
