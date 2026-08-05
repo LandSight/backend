@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.module.infrastructure.application.dto.response import CategoryMetricsResponse
     from app.module.infrastructure.domain.entity import InfrastructureObject
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.domain.value_object import Polygon
 
 
 class InfrastructureMetricsService(ABC):
@@ -27,7 +27,7 @@ class InfrastructureMetricsService(ABC):
     def calculate_schools(
         self,
         objects: list[InfrastructureObject],
-        parcel_geometry: GeoJSONPolygon,
+        parcel_geometry: Polygon,
     ) -> CategoryMetricsResponse:
         """Compute metrics for the ``schools`` category."""
         raise NotImplementedError
@@ -36,7 +36,7 @@ class InfrastructureMetricsService(ABC):
     def calculate_hospitals(
         self,
         objects: list[InfrastructureObject],
-        parcel_geometry: GeoJSONPolygon,
+        parcel_geometry: Polygon,
     ) -> CategoryMetricsResponse:
         """Compute metrics for the ``hospitals`` category."""
         raise NotImplementedError
@@ -45,7 +45,7 @@ class InfrastructureMetricsService(ABC):
     def calculate_shops(
         self,
         objects: list[InfrastructureObject],
-        parcel_geometry: GeoJSONPolygon,
+        parcel_geometry: Polygon,
     ) -> CategoryMetricsResponse:
         """Compute metrics for the ``shops`` category."""
         raise NotImplementedError
@@ -54,7 +54,7 @@ class InfrastructureMetricsService(ABC):
     def calculate_transit_stops(
         self,
         objects: list[InfrastructureObject],
-        parcel_geometry: GeoJSONPolygon,
+        parcel_geometry: Polygon,
     ) -> CategoryMetricsResponse:
         """Compute metrics for the ``transit_stops`` category."""
         raise NotImplementedError

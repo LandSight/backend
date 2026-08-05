@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.infrastructure.domain.entity import InfrastructureObject
-    from app.module.infrastructure.domain.value_object import Category
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.infrastructure.domain.value_object import BufferZone, Category
 
 
 class LocalInfrastructureRepository(ABC):
@@ -22,14 +21,14 @@ class LocalInfrastructureRepository(ABC):
     @abstractmethod
     async def get_objects(
         self,
-        zone: GeoJSONPolygon,
+        zone: BufferZone,
         category: Category,
     ) -> list[InfrastructureObject]:
         """Return raw infrastructure objects of a category within a zone.
 
         Parameters
         ----------
-        zone : GeoJSONPolygon
+        zone : BufferZone
             Search zone (buffer ring) to query objects within.
         category : Category
             Infrastructure category to filter objects by.

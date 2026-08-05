@@ -28,7 +28,7 @@ from app.module.infrastructure.domain.value_object import (
     ParcelId,
 )
 from app.module.shared.application.use_case import BaseUseCase
-from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+from app.module.shared.domain.value_object import GeoPoint, Polygon
 from app.platform.logging import get_logger
 
 
@@ -80,7 +80,7 @@ class CalculateInfrastructureMetricsUseCase(
         self._handlers: dict[
             Category,
             Callable[
-                [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], GeoJSONPolygon],
+                [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], Polygon],
                 Awaitable[CategoryMetricsResponse],
             ],
         ] = {
@@ -95,9 +95,8 @@ class CalculateInfrastructureMetricsUseCase(
         self._logger.info("Calculating infrastructure metrics: parcel_id=%s", command.parcel_id)
 
         parcel_id = ParcelId(command.parcel_id)
-        polygon = GeoJSONPolygon(
-            type=command.polygon["type"],
-            coordinates=command.polygon["coordinates"],
+        polygon = Polygon(
+            tuple(GeoPoint.create(float(coord[1]), float(coord[0])) for coord in command.polygon["coordinates"][0])
         )
 
         results: dict[Category, CategoryMetricsResponse] = {}
@@ -138,7 +137,7 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: GeoJSONPolygon,
+        polygon: Polygon,
     ) -> CategoryMetricsResponse:
         result = self._infrastructure_metrics_service.calculate_schools(objects, polygon)
         metrics = SchoolMetrics(
@@ -157,7 +156,7 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: GeoJSONPolygon,
+        polygon: Polygon,
     ) -> CategoryMetricsResponse:
         result = self._infrastructure_metrics_service.calculate_hospitals(objects, polygon)
         metrics = HospitalMetrics(
@@ -176,7 +175,7 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: GeoJSONPolygon,
+        polygon: Polygon,
     ) -> CategoryMetricsResponse:
         result = self._infrastructure_metrics_service.calculate_shops(objects, polygon)
         metrics = ShopMetrics(
@@ -195,7 +194,7 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: GeoJSONPolygon,
+        polygon: Polygon,
     ) -> CategoryMetricsResponse:
         result = self._infrastructure_metrics_service.calculate_transit_stops(objects, polygon)
         metrics = TransitStopMetrics(

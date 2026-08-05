@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.domain.value_object import Buffer
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.infrastructure.domain.value_object import Buffer, BufferZone
+    from app.module.shared.domain.value_object import Polygon
 
 
 class BufferService(ABC):
@@ -23,20 +23,20 @@ class BufferService(ABC):
     """
 
     @abstractmethod
-    def create_zone(self, polygon: GeoJSONPolygon, buffer: Buffer) -> GeoJSONPolygon:
+    def create_zone(self, polygon: Polygon, buffer: Buffer) -> BufferZone:
         """Build the buffer zone (ring) around a parcel.
 
         Parameters
         ----------
-        polygon : GeoJSONPolygon
+        polygon : Polygon
             Parcel geometry.
         buffer : Buffer
             Buffer radius in meters around the parcel boundary.
 
         Returns
         -------
-        GeoJSONPolygon
-            The buffer ring polygon (buffer minus parcel).
+        BufferZone
+            The buffer ring (outer boundary and inner parcel to exclude).
         """
         raise NotImplementedError
 
