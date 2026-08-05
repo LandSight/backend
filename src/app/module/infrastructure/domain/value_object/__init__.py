@@ -1,3 +1,4 @@
+from .area import Area
 from .buffer import Buffer
 from .buffer_zone import BufferZone
 from .category import Category
@@ -9,6 +10,7 @@ from .parcel_id import ParcelId
 
 
 __all__ = (
+    "Area",
     "Buffer",
     "BufferZone",
     "Category",
