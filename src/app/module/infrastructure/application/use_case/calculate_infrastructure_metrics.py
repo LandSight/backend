@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 from uuid import uuid6
 
-from app.module.infrastructure.application.dto.command import CalculateInfrastructureMetricsCommand
+from app.module.infrastructure.application.dto.command import (
+    CalculateInfrastructureMetricsCommand,
+    CategoryRequest,
+)
 from app.module.infrastructure.application.dto.response import (
     CategoryMetricsResponse,
     InfrastructureMetricsResponse,
@@ -49,7 +52,17 @@ class CalculateInfrastructureMetricsUseCase(
     For each requested category, builds the buffer zone, fetches raw objects
     from the local data source, computes the metrics, persists them, and
     aggregates the results into a single response.
+
+    When no categories are requested, a default set of categories with default
+    buffer radii is used.
     """
+
+    _DEFAULT_CATEGORIES: ClassVar[dict[Category, int]] = {
+        Category.SCHOOL: 1000,
+        Category.HOSPITAL: 2000,
+        Category.SHOP: 500,
+        Category.TRANSIT_STOP: 500,
+    }
 
     def __init__(
         self,
@@ -89,7 +102,12 @@ class CalculateInfrastructureMetricsUseCase(
 
         results: dict[Category, CategoryMetricsResponse] = {}
 
-        for category_request in command.categories:
+        category_requests = command.categories or [
+            CategoryRequest(category=category.value, buffer=buffer)
+            for category, buffer in self._DEFAULT_CATEGORIES.items()
+        ]
+
+        for category_request in category_requests:
             category = Category(category_request.category)
             buffer = Buffer(category_request.buffer)
             zone = self._buffer_service.create_zone(polygon, buffer)
