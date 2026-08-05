@@ -8,10 +8,10 @@ from enum import StrEnum
 class Category(StrEnum):
     """Category of infrastructure objects."""
 
-    SCHOOLS = "schools"
-    HOSPITALS = "hospitals"
-    SHOPS = "shops"
-    TRANSIT_STOPS = "transit_stops"
+    SCHOOL = "school"
+    HOSPITAL = "hospital"
+    SHOP = "shop"
+    TRANSIT_STOP = "transit_stop"
 
 
 __all__ = ("Category",)
