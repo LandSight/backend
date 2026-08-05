@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 from uuid import uuid6
 
 from app.module.infrastructure.application.dto.command import (
@@ -12,14 +12,17 @@ from app.module.infrastructure.application.dto.command import (
 from app.module.infrastructure.application.dto.response import (
     CategoryMetricsResponse,
     InfrastructureMetricsResponse,
+    WaterBodyMetricsResponse,
 )
 from app.module.infrastructure.domain.entity import (
     HospitalMetrics,
     SchoolMetrics,
     ShopMetrics,
     TransitStopMetrics,
+    WaterBodyMetrics,
 )
 from app.module.infrastructure.domain.value_object import (
+    Area,
     Buffer,
     Category,
     Count,
@@ -62,6 +65,7 @@ class CalculateInfrastructureMetricsUseCase(
         Category.HOSPITAL: 2000,
         Category.SHOP: 500,
         Category.TRANSIT_STOP: 500,
+        Category.WATER_BODY: 1000,
     }
 
     def __init__(
@@ -81,13 +85,14 @@ class CalculateInfrastructureMetricsUseCase(
             Category,
             Callable[
                 [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], Polygon],
-                Awaitable[CategoryMetricsResponse],
+                Awaitable[Any],
             ],
         ] = {
             Category.SCHOOL: self._handle_schools,
             Category.HOSPITAL: self._handle_hospitals,
             Category.SHOP: self._handle_shops,
             Category.TRANSIT_STOP: self._handle_transit_stops,
+            Category.WATER_BODY: self._handle_water_bodies,
         }
 
     @override
@@ -99,7 +104,7 @@ class CalculateInfrastructureMetricsUseCase(
             tuple(GeoPoint.create(float(coord[1]), float(coord[0])) for coord in command.polygon["coordinates"][0])
         )
 
-        results: dict[Category, CategoryMetricsResponse] = {}
+        results: dict[Category, Any] = {}
 
         category_requests = command.categories or [
             CategoryRequest(category=category.value, buffer=buffer)
@@ -205,6 +210,26 @@ class CalculateInfrastructureMetricsUseCase(
             min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
         )
         await self._metrics_repository.save_transit_stops(metrics)
+        return result
+
+    async def _handle_water_bodies(
+        self,
+        id: InfrastructureMetricsId,
+        parcel_id: ParcelId,
+        buffer: Buffer,
+        objects: list[InfrastructureObject],
+        polygon: Polygon,
+    ) -> WaterBodyMetricsResponse:
+        result = self._infrastructure_metrics_service.calculate_water_bodies(objects, polygon)
+        metrics = WaterBodyMetrics(
+            id=id,
+            parcel_id=parcel_id,
+            buffer=buffer,
+            count=Count(result.count),
+            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
+            area=Area(result.area),
+        )
+        await self._metrics_repository.save_water_bodies(metrics)
         return result
 
 
