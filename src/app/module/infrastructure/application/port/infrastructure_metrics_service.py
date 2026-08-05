@@ -7,46 +7,56 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.application.dto.response import CategoryMetrics
+    from app.module.infrastructure.application.dto.response import CategoryMetricsResponse
     from app.module.infrastructure.domain.entity import InfrastructureObject
-    from app.module.infrastructure.domain.value_object import Category
     from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 
 
 class InfrastructureMetricsService(ABC):
     """Port for computing infrastructure metrics from raw objects.
 
-    Computes the metrics for a category given the raw objects found in the
-    buffer zone and the parcel geometry. The service is data-source agnostic:
-    it only needs the object locations and the parcel boundary.
+    Each category has its own method so that categories can compute different
+    metrics and validate their own invariants. The service is data-source
+    agnostic: it only needs the object locations and the parcel geometry.
 
     Implementations:
     - :class:`app.module.infrastructure.infrastructure.metrics.shapely_infrastructure_metrics_service.ShapelyInfrastructureMetricsService`
     """
 
     @abstractmethod
-    def calculate(
+    def calculate_schools(
         self,
         objects: list[InfrastructureObject],
         parcel_geometry: GeoJSONPolygon,
-        category: Category,
-    ) -> CategoryMetrics:
-        """Compute metrics for a category from the raw objects.
+    ) -> CategoryMetricsResponse:
+        """Compute metrics for the ``schools`` category."""
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        objects : list[InfrastructureObject]
-            Raw objects located within the buffer zone.
-        parcel_geometry : GeoJSONPolygon
-            Parcel geometry used to measure distances to objects.
-        category : Category
-            Infrastructure category the metrics are computed for.
+    @abstractmethod
+    def calculate_hospitals(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: GeoJSONPolygon,
+    ) -> CategoryMetricsResponse:
+        """Compute metrics for the ``hospitals`` category."""
+        raise NotImplementedError
 
-        Returns
-        -------
-        CategoryMetrics
-            Computed metrics for the category.
-        """
+    @abstractmethod
+    def calculate_shops(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: GeoJSONPolygon,
+    ) -> CategoryMetricsResponse:
+        """Compute metrics for the ``shops`` category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def calculate_transit_stops(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: GeoJSONPolygon,
+    ) -> CategoryMetricsResponse:
+        """Compute metrics for the ``transit_stops`` category."""
         raise NotImplementedError
 
 
