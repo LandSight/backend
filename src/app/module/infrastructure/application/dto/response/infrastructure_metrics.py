@@ -2,30 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.infrastructure.domain.value_object import Category
-
-
-@dataclass(frozen=True, slots=True)
-class CategoryMetrics:
-    """Metrics for a single infrastructure category.
-
-    Attributes
-    ----------
-    count : int
-        Number of objects within the buffer.
-    min_distance_to : float | None
-        Distance to the nearest object in meters, or ``None`` if none found.
-    """
-
-    count: int
-    min_distance_to: float | None
+    from app.module.infrastructure.application.dto.response.category_metrics_response import CategoryMetricsResponse
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,15 +20,21 @@ class InfrastructureMetricsResponse:
     ----------
     parcel_id : UUID
         ID of the parcel these metrics belong to.
-    metrics : dict[Category, CategoryMetrics]
-        Computed metrics keyed by infrastructure category.
+    school : CategoryMetricsResponse | None
+        School metrics, or ``None`` if not requested.
+    hospital : CategoryMetricsResponse | None
+        Hospital metrics, or ``None`` if not requested.
+    shop : CategoryMetricsResponse | None
+        Shop metrics, or ``None`` if not requested.
+    transit_stop : CategoryMetricsResponse | None
+        Transit stop metrics, or ``None`` if not requested.
     """
 
     parcel_id: UUID
-    metrics: dict[Category, CategoryMetrics] = field(default_factory=dict)
+    school: CategoryMetricsResponse | None = None
+    hospital: CategoryMetricsResponse | None = None
+    shop: CategoryMetricsResponse | None = None
+    transit_stop: CategoryMetricsResponse | None = None
 
 
-__all__ = (
-    "CategoryMetrics",
-    "InfrastructureMetricsResponse",
-)
+__all__ = ("InfrastructureMetricsResponse",)

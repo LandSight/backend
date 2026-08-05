@@ -1,7 +1,8 @@
-from .infrastructure_metrics import CategoryMetrics, InfrastructureMetricsResponse
+from .category_metrics_response import CategoryMetricsResponse
+from .infrastructure_metrics import InfrastructureMetricsResponse
 
 
 __all__ = (
-    "CategoryMetrics",
+    "CategoryMetricsResponse",
     "InfrastructureMetricsResponse",
 )

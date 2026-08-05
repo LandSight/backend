@@ -3,11 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    from app.module.infrastructure.domain.value_object import Category
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,13 +11,13 @@ class CategoryRequest:
 
     Attributes
     ----------
-    category : Category
-        Infrastructure object category to compute metrics for.
+    category : str
+        Category to compute metrics for.
     buffer : int
         Buffer radius in meters around the parcel boundary for this category.
     """
 
-    category: Category
+    category: str
     buffer: int
 
 
