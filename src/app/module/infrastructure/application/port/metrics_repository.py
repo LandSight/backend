@@ -7,29 +7,44 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.domain.entity import InfrastructureMetrics
+    from app.module.infrastructure.domain.entity import (
+        HospitalMetrics,
+        InfrastructureMetrics,
+        SchoolMetrics,
+        ShopMetrics,
+        TransitStopMetrics,
+    )
     from app.module.infrastructure.domain.value_object import Category, ParcelId
 
 
 class MetricsRepository(ABC):
     """Port for infrastructure metrics persistence.
 
-    Implementations dispatch to the per-category tables (e.g.
-    ``parcel_school_metrics``) based on the concrete entity type.
+    Each category has its own save method dispatching to its dedicated table
+    (e.g. ``parcel_school_metrics``).
 
     Implementations:
     - :class:`app.module.infrastructure.infrastructure.repository.postgres_metrics_repository.PostgresMetricsRepository`
     """
 
     @abstractmethod
-    async def save(self, metrics: InfrastructureMetrics) -> None:
-        """Persist infrastructure metrics.
+    async def save_schools(self, metrics: SchoolMetrics) -> None:
+        """Persist school metrics."""
+        raise NotImplementedError
 
-        Parameters
-        ----------
-        metrics : InfrastructureMetrics
-            Infrastructure metrics entity to save.
-        """
+    @abstractmethod
+    async def save_hospitals(self, metrics: HospitalMetrics) -> None:
+        """Persist hospital metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save_shops(self, metrics: ShopMetrics) -> None:
+        """Persist shop metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save_transit_stops(self, metrics: TransitStopMetrics) -> None:
+        """Persist transit stop metrics."""
         raise NotImplementedError
 
     @abstractmethod
