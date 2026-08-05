@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from app.module.shared.interface.internal.geojson import (
+    GeoJSONFeature,
+    GeoJSONFeatureCollection,
+)
 
 
 if TYPE_CHECKING:
@@ -45,20 +50,20 @@ class DeleteParcelInput:
 
 
 @dataclass(frozen=True, slots=True)
-class ParcelResult:
-    """Result of parcel operations."""
+class ParcelProperties:
+    """Typed properties of a parcel GeoJSON Feature."""
 
     id: UUID
     name: str
-    polygon: dict
     owner_id: UUID
 
 
-@dataclass(frozen=True, slots=True)
-class ParcelListResult:
-    """Result of listing parcels."""
+# Result of a single parcel operation: a GeoJSON Feature with typed properties.
+ParcelResult = GeoJSONFeature[ParcelProperties]
 
-    parcels: list[ParcelResult] = field(default_factory=list)
+
+# Result of listing parcels: a GeoJSON FeatureCollection with typed properties.
+ParcelListResult = GeoJSONFeatureCollection[ParcelProperties]
 
 
 __all__ = (
@@ -67,5 +72,6 @@ __all__ = (
     "GetParcelInput",
     "ListUserParcelsInput",
     "ParcelListResult",
+    "ParcelProperties",
     "ParcelResult",
 )

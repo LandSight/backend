@@ -56,11 +56,11 @@ class ParcelController(Controller):
             )
         )
         return ParcelFeature(
-            geometry=result.polygon,
+            geometry=result.geometry,
             properties=ParcelFeatureProperties(
-                id=result.id,
-                name=result.name,
-                owner_id=result.owner_id,
+                id=result.properties.id,
+                name=result.properties.name,
+                owner_id=result.properties.owner_id,
             ),
         )
 
@@ -78,14 +78,14 @@ class ParcelController(Controller):
         result = await parcel_api.list_user_parcels(ListUserParcelsInput(owner_id=current_user.id))
         features = [
             ParcelFeature(
-                geometry=r.polygon,
+                geometry=r.geometry,
                 properties=ParcelFeatureProperties(
-                    id=r.id,
-                    name=r.name,
-                    owner_id=r.owner_id,
+                    id=r.properties.id,
+                    name=r.properties.name,
+                    owner_id=r.properties.owner_id,
                 ),
             )
-            for r in result.parcels
+            for r in result.features
         ]
         return ParcelFeatureCollection(features=features, total=len(features))
 
@@ -108,11 +108,11 @@ class ParcelController(Controller):
             )
         )
         return ParcelFeature(
-            geometry=result.polygon,
+            geometry=result.geometry,
             properties=ParcelFeatureProperties(
-                id=result.id,
-                name=result.name,
-                owner_id=result.owner_id,
+                id=result.properties.id,
+                name=result.properties.name,
+                owner_id=result.properties.owner_id,
             ),
         )
 
