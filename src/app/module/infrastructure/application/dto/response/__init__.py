@@ -1,4 +1,5 @@
-from .category_metrics_response import (
+from .category_info import CategoryInfoResponse
+from .category_metrics import (
     HospitalMetricsResponse,
     SchoolMetricsResponse,
     ShopMetricsResponse,
@@ -9,6 +10,7 @@ from .infrastructure_metrics import InfrastructureMetricsResponse
 
 
 __all__ = (
+    "CategoryInfoResponse",
     "HospitalMetricsResponse",
     "InfrastructureMetricsResponse",
     "SchoolMetricsResponse",
