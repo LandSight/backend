@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid6
 
 from app.module.infrastructure.application.dto.command import (
     CalculateInfrastructureMetricsCommand,
-    CategoryRequest,
 )
 from app.module.infrastructure.application.dto.response import (
     HospitalMetricsResponse,
@@ -61,14 +60,6 @@ class CalculateInfrastructureMetricsUseCase(
     buffer radii is used.
     """
 
-    _DEFAULT_CATEGORY_BUFFER: ClassVar[dict[Category, int]] = {
-        Category.SCHOOL: 1000,
-        Category.HOSPITAL: 2000,
-        Category.SHOP: 500,
-        Category.TRANSIT_STOP: 500,
-        Category.WATER_BODY: 1000,
-    }
-
     def __init__(
         self,
         buffer_service: BufferService,
@@ -107,12 +98,7 @@ class CalculateInfrastructureMetricsUseCase(
 
         results: dict[Category, Any] = {}
 
-        category_requests = command.categories or [
-            CategoryRequest(category=category.value, buffer=buffer)
-            for category, buffer in self._DEFAULT_CATEGORY_BUFFER.items()
-        ]
-
-        for category_request in category_requests:
+        for category_request in command.categories:
             category = Category(category_request.category)
             buffer = Buffer(category_request.buffer)
             zone = self._buffer_service.create_zone(polygon, buffer)

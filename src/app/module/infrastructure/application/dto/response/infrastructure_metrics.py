@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.infrastructure.application.dto.response.category_metrics_response import (
+    from app.module.infrastructure.application.dto.response.category_metrics import (
         HospitalMetricsResponse,
         SchoolMetricsResponse,
         ShopMetricsResponse,

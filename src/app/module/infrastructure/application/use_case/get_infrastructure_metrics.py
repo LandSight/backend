@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, override
 
 from app.module.infrastructure.application.dto.command import (
-    CategoryRequest,
     GetInfrastructureMetricsCommand,
 )
 from app.module.infrastructure.application.dto.response import (
@@ -37,14 +36,6 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
     buffer radii is used.
     """
 
-    _DEFAULT_CATEGORY_BUFFER: ClassVar[dict[Category, int]] = {
-        Category.SCHOOL: 1000,
-        Category.HOSPITAL: 2000,
-        Category.SHOP: 500,
-        Category.TRANSIT_STOP: 500,
-        Category.WATER_BODY: 1000,
-    }
-
     def __init__(self, metrics_repository: MetricsRepository) -> None:
         self._metrics_repository = metrics_repository
         self._logger = get_logger("app.infrastructure.use_case.get_infrastructure_metrics")
@@ -66,14 +57,9 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
 
         parcel_id = ParcelId(command.parcel_id)
 
-        category_requests = command.categories or [
-            CategoryRequest(category=category.value, buffer=buffer)
-            for category, buffer in self._DEFAULT_CATEGORY_BUFFER.items()
-        ]
-
         results: dict[Category, Any] = {}
 
-        for category_request in category_requests:
+        for category_request in command.categories:
             category = Category(category_request.category)
             buffer = Buffer(category_request.buffer)
 

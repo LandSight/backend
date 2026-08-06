@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 
@@ -31,7 +31,7 @@ class CalculateInfrastructureMetricsCommand:
 
     parcel_id: UUID
     polygon: dict
-    categories: list[CategoryRequest] = field(default_factory=list)
+    categories: list[CategoryRequest]
 
 
 __all__ = ("CalculateInfrastructureMetricsCommand",)

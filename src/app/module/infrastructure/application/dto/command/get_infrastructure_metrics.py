@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 
@@ -28,7 +28,7 @@ class GetInfrastructureMetricsCommand:
     """
 
     parcel_id: UUID
-    categories: list[CategoryRequest] = field(default_factory=list)
+    categories: list[CategoryRequest]
 
 
 __all__ = ("GetInfrastructureMetricsCommand",)
