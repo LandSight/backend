@@ -3,6 +3,7 @@ from .buffer import Buffer
 from .buffer_zone import BufferZone
 from .category import Category
 from .count import Count
+from .coverage_ratio import CoverageRatio
 from .distance import Distance
 from .infrastructure_metrics_id import InfrastructureMetricsId
 from .infrastructure_object_id import InfrastructureObjectId
@@ -15,6 +16,7 @@ __all__ = (
     "BufferZone",
     "Category",
     "Count",
+    "CoverageRatio",
     "Distance",
     "InfrastructureMetricsId",
     "InfrastructureObjectId",
