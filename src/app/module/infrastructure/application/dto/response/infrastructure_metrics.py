@@ -9,8 +9,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.infrastructure.application.dto.response.category_metrics_response import CategoryMetricsResponse
-    from app.module.infrastructure.application.dto.response.water_body_metrics_response import WaterBodyMetricsResponse
+    from app.module.infrastructure.application.dto.response.category_metrics_response import (
+        HospitalMetricsResponse,
+        SchoolMetricsResponse,
+        ShopMetricsResponse,
+        TransitStopMetricsResponse,
+        WaterBodyMetricsResponse,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,23 +26,23 @@ class InfrastructureMetricsResponse:
     ----------
     parcel_id : UUID
         ID of the parcel these metrics belong to.
-    school : CategoryMetricsResponse | None
+    school : SchoolMetricsResponse | None
         School metrics, or ``None`` if not requested.
-    hospital : CategoryMetricsResponse | None
+    hospital : HospitalMetricsResponse | None
         Hospital metrics, or ``None`` if not requested.
-    shop : CategoryMetricsResponse | None
+    shop : ShopMetricsResponse | None
         Shop metrics, or ``None`` if not requested.
-    transit_stop : CategoryMetricsResponse | None
+    transit_stop : TransitStopMetricsResponse | None
         Transit stop metrics, or ``None`` if not requested.
     water_body : WaterBodyMetricsResponse | None
         Water body metrics, or ``None`` if not requested.
     """
 
     parcel_id: UUID
-    school: CategoryMetricsResponse | None = None
-    hospital: CategoryMetricsResponse | None = None
-    shop: CategoryMetricsResponse | None = None
-    transit_stop: CategoryMetricsResponse | None = None
+    school: SchoolMetricsResponse | None = None
+    hospital: HospitalMetricsResponse | None = None
+    shop: ShopMetricsResponse | None = None
+    transit_stop: TransitStopMetricsResponse | None = None
     water_body: WaterBodyMetricsResponse | None = None
 
 

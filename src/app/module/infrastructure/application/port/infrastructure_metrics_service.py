@@ -7,68 +7,44 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.application.dto.response import (
-        CategoryMetricsResponse,
-        WaterBodyMetricsResponse,
-    )
     from app.module.infrastructure.domain.entity import InfrastructureObject
+    from app.module.infrastructure.domain.value_object import (
+        BufferZone,
+        Count,
+        CoverageRatio,
+        Distance,
+    )
     from app.module.shared.domain.value_object import Polygon
 
 
 class InfrastructureMetricsService(ABC):
-    """Port for computing infrastructure metrics from raw objects.
+    """Port for computing individual infrastructure metrics.
 
-    Each category has its own method so that categories can compute different
-    metrics and validate their own invariants. The service is data-source
-    agnostic: it only needs the object locations and the parcel geometry.
-
-    Implementations:
-    - :class:`app.module.infrastructure.infrastructure.metrics.shapely_infrastructure_metrics_service.ShapelyInfrastructureMetricsService`
+    Each method performs a single action and returns a single value object.
+    The use case assembles the metrics entity and response from these values.
     """
 
     @abstractmethod
-    def calculate_schools(
-        self,
-        objects: list[InfrastructureObject],
-        parcel_geometry: Polygon,
-    ) -> CategoryMetricsResponse:
-        """Compute metrics for the ``schools`` category."""
+    def count_objects(self, objects: list[InfrastructureObject]) -> Count:
+        """Count the number of objects."""
         raise NotImplementedError
 
     @abstractmethod
-    def calculate_hospitals(
+    def min_distance(
         self,
         objects: list[InfrastructureObject],
         parcel_geometry: Polygon,
-    ) -> CategoryMetricsResponse:
-        """Compute metrics for the ``hospitals`` category."""
+    ) -> Distance | None:
+        """Compute the distance from the parcel to the nearest object."""
         raise NotImplementedError
 
     @abstractmethod
-    def calculate_shops(
+    def coverage_ratio(
         self,
         objects: list[InfrastructureObject],
-        parcel_geometry: Polygon,
-    ) -> CategoryMetricsResponse:
-        """Compute metrics for the ``shops`` category."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def calculate_transit_stops(
-        self,
-        objects: list[InfrastructureObject],
-        parcel_geometry: Polygon,
-    ) -> CategoryMetricsResponse:
-        """Compute metrics for the ``transit_stops`` category."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def calculate_water_bodies(
-        self,
-        objects: list[InfrastructureObject],
-        parcel_geometry: Polygon,
-    ) -> WaterBodyMetricsResponse:
-        """Compute metrics for the ``water_body`` category."""
+        buffer_zone: BufferZone,
+    ) -> CoverageRatio:
+        """Compute the coverage ratio of an objects in buffer zone."""
         raise NotImplementedError
 
 

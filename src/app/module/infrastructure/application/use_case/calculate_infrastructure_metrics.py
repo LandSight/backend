@@ -10,8 +10,11 @@ from app.module.infrastructure.application.dto.command import (
     CategoryRequest,
 )
 from app.module.infrastructure.application.dto.response import (
-    CategoryMetricsResponse,
+    HospitalMetricsResponse,
     InfrastructureMetricsResponse,
+    SchoolMetricsResponse,
+    ShopMetricsResponse,
+    TransitStopMetricsResponse,
     WaterBodyMetricsResponse,
 )
 from app.module.infrastructure.domain.entity import (
@@ -22,11 +25,9 @@ from app.module.infrastructure.domain.entity import (
     WaterBodyMetrics,
 )
 from app.module.infrastructure.domain.value_object import (
-    Area,
     Buffer,
+    BufferZone,
     Category,
-    Count,
-    Distance,
     InfrastructureMetricsId,
     ParcelId,
 )
@@ -60,7 +61,7 @@ class CalculateInfrastructureMetricsUseCase(
     buffer radii is used.
     """
 
-    _DEFAULT_CATEGORIES: ClassVar[dict[Category, int]] = {
+    _DEFAULT_CATEGORY_BUFFER: ClassVar[dict[Category, int]] = {
         Category.SCHOOL: 1000,
         Category.HOSPITAL: 2000,
         Category.SHOP: 500,
@@ -84,7 +85,7 @@ class CalculateInfrastructureMetricsUseCase(
         self._handlers: dict[
             Category,
             Callable[
-                [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], Polygon],
+                [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], BufferZone],
                 Awaitable[Any],
             ],
         ] = {
@@ -108,7 +109,7 @@ class CalculateInfrastructureMetricsUseCase(
 
         category_requests = command.categories or [
             CategoryRequest(category=category.value, buffer=buffer)
-            for category, buffer in self._DEFAULT_CATEGORIES.items()
+            for category, buffer in self._DEFAULT_CATEGORY_BUFFER.items()
         ]
 
         for category_request in category_requests:
@@ -121,7 +122,7 @@ class CalculateInfrastructureMetricsUseCase(
                 parcel_id,
                 buffer,
                 objects,
-                polygon,
+                zone,
             )
             results[category] = result
 
@@ -133,7 +134,11 @@ class CalculateInfrastructureMetricsUseCase(
 
         return InfrastructureMetricsResponse(
             parcel_id=command.parcel_id,
-            **{category.value: result for category, result in results.items()},
+            school=results.get(Category.SCHOOL),
+            hospital=results.get(Category.HOSPITAL),
+            shop=results.get(Category.SHOP),
+            transit_stop=results.get(Category.TRANSIT_STOP),
+            water_body=results.get(Category.WATER_BODY),
         )
 
     async def _handle_schools(
@@ -142,18 +147,24 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: Polygon,
-    ) -> CategoryMetricsResponse:
-        result = self._infrastructure_metrics_service.calculate_schools(objects, polygon)
+        buffer_zone: BufferZone,
+    ) -> SchoolMetricsResponse:
+        count = self._infrastructure_metrics_service.count_objects(objects)
+        min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = SchoolMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            count=Count(result.count),
-            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
+            count=count,
+            min_distance_to=min_distance_to,
         )
         await self._metrics_repository.save_schools(metrics)
-        return result
+        response = SchoolMetricsResponse(
+            buffer=buffer.unwrap(),
+            count=count.unwrap(),
+            min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+        )
+        return response
 
     async def _handle_hospitals(
         self,
@@ -161,18 +172,24 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: Polygon,
-    ) -> CategoryMetricsResponse:
-        result = self._infrastructure_metrics_service.calculate_hospitals(objects, polygon)
+        buffer_zone: BufferZone,
+    ) -> HospitalMetricsResponse:
+        count = self._infrastructure_metrics_service.count_objects(objects)
+        min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = HospitalMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            count=Count(result.count),
-            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
+            count=count,
+            min_distance_to=min_distance_to,
         )
         await self._metrics_repository.save_hospitals(metrics)
-        return result
+        response = HospitalMetricsResponse(
+            buffer=buffer.unwrap(),
+            count=count.unwrap(),
+            min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+        )
+        return response
 
     async def _handle_shops(
         self,
@@ -180,18 +197,24 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: Polygon,
-    ) -> CategoryMetricsResponse:
-        result = self._infrastructure_metrics_service.calculate_shops(objects, polygon)
+        buffer_zone: BufferZone,
+    ) -> ShopMetricsResponse:
+        count = self._infrastructure_metrics_service.count_objects(objects)
+        min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = ShopMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            count=Count(result.count),
-            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
+            count=count,
+            min_distance_to=min_distance_to,
         )
         await self._metrics_repository.save_shops(metrics)
-        return result
+        response = ShopMetricsResponse(
+            buffer=buffer.unwrap(),
+            count=count.unwrap(),
+            min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+        )
+        return response
 
     async def _handle_transit_stops(
         self,
@@ -199,18 +222,24 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: Polygon,
-    ) -> CategoryMetricsResponse:
-        result = self._infrastructure_metrics_service.calculate_transit_stops(objects, polygon)
+        buffer_zone: BufferZone,
+    ) -> TransitStopMetricsResponse:
+        count = self._infrastructure_metrics_service.count_objects(objects)
+        min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = TransitStopMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            count=Count(result.count),
-            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
+            count=count,
+            min_distance_to=min_distance_to,
         )
         await self._metrics_repository.save_transit_stops(metrics)
-        return result
+        response = TransitStopMetricsResponse(
+            buffer=buffer.unwrap(),
+            count=count.unwrap(),
+            min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+        )
+        return response
 
     async def _handle_water_bodies(
         self,
@@ -218,19 +247,27 @@ class CalculateInfrastructureMetricsUseCase(
         parcel_id: ParcelId,
         buffer: Buffer,
         objects: list[InfrastructureObject],
-        polygon: Polygon,
+        buffer_zone: BufferZone,
     ) -> WaterBodyMetricsResponse:
-        result = self._infrastructure_metrics_service.calculate_water_bodies(objects, polygon)
+        count = self._infrastructure_metrics_service.count_objects(objects)
+        min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
+        coverage_ratio = self._infrastructure_metrics_service.coverage_ratio(objects, buffer_zone)
         metrics = WaterBodyMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            count=Count(result.count),
-            min_distance_to=Distance(result.min_distance_to) if result.min_distance_to is not None else None,
-            area=Area(result.area),
+            count=count,
+            min_distance_to=min_distance_to,
+            coverage_ratio=coverage_ratio,
         )
         await self._metrics_repository.save_water_bodies(metrics)
-        return result
+        response = WaterBodyMetricsResponse(
+            buffer=buffer.unwrap(),
+            count=count.unwrap(),
+            min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+            coverage_ratio=coverage_ratio.unwrap(),
+        )
+        return response
 
 
 __all__ = ("CalculateInfrastructureMetricsUseCase",)

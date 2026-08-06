@@ -1,10 +1,18 @@
-from .category_metrics_response import CategoryMetricsResponse
+from .category_metrics_response import (
+    HospitalMetricsResponse,
+    SchoolMetricsResponse,
+    ShopMetricsResponse,
+    TransitStopMetricsResponse,
+    WaterBodyMetricsResponse,
+)
 from .infrastructure_metrics import InfrastructureMetricsResponse
-from .water_body_metrics_response import WaterBodyMetricsResponse
 
 
 __all__ = (
-    "CategoryMetricsResponse",
+    "HospitalMetricsResponse",
     "InfrastructureMetricsResponse",
+    "SchoolMetricsResponse",
+    "ShopMetricsResponse",
+    "TransitStopMetricsResponse",
     "WaterBodyMetricsResponse",
 )

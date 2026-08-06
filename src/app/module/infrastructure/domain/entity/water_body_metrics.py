@@ -9,9 +9,9 @@ from app.module.infrastructure.domain.entity import InfrastructureMetrics
 
 if TYPE_CHECKING:
     from app.module.infrastructure.domain.value_object import (
-        Area,
         Buffer,
         Count,
+        CoverageRatio,
         Distance,
         InfrastructureMetricsId,
         ParcelId,
@@ -31,11 +31,11 @@ class WaterBodyMetrics(InfrastructureMetrics):
         buffer: Buffer,
         count: Count,
         min_distance_to: Distance | None,
-        area: Area,
+        coverage_ratio: CoverageRatio,
     ) -> None:
         self._count: Count = count
         self._min_distance_to: Distance | None = min_distance_to
-        self._area: Area = area
+        self._coverage_ratio: CoverageRatio = coverage_ratio
 
         super().__init__(id=id, parcel_id=parcel_id, buffer=buffer)
 
@@ -50,9 +50,9 @@ class WaterBodyMetrics(InfrastructureMetrics):
         return self._min_distance_to
 
     @property
-    def area(self) -> Area:
-        """Area of water within the buffer in square meters."""
-        return self._area
+    def coverage_ratio(self) -> CoverageRatio:
+        """CoverageRatio of water within the buffer."""
+        return self._coverage_ratio
 
 
 __all__ = ("WaterBodyMetrics",)
