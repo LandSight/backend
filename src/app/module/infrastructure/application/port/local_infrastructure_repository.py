@@ -19,12 +19,12 @@ class LocalInfrastructureRepository(ABC):
     """
 
     @abstractmethod
-    async def get_objects(
+    async def get_point_objects(
         self,
         zone: BufferZone,
         category: Category,
     ) -> list[InfrastructureObject]:
-        """Return raw infrastructure objects of a category within a zone.
+        """Return point-based infrastructure objects of a category within a zone.
 
         Parameters
         ----------
@@ -36,7 +36,29 @@ class LocalInfrastructureRepository(ABC):
         Returns
         -------
         list[InfrastructureObject]
-            Raw objects of the category located within the zone.
+            Point-based objects of the category located within the zone.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_polygon_objects(
+        self,
+        zone: BufferZone,
+        category: Category,
+    ) -> list[InfrastructureObject]:
+        """Return polygon-based infrastructure objects of a category within a zone.
+
+        Parameters
+        ----------
+        zone : BufferZone
+            Search zone (buffer ring) to query objects within.
+        category : Category
+            Infrastructure category to filter objects by.
+
+        Returns
+        -------
+        list[InfrastructureObject]
+            Polygon-based objects of the category located within the zone.
         """
         raise NotImplementedError
 

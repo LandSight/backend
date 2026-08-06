@@ -44,7 +44,6 @@ if TYPE_CHECKING:
         LocalInfrastructureRepository,
         MetricsRepository,
     )
-    from app.module.infrastructure.domain.entity import InfrastructureObject
 
 
 class CalculateInfrastructureMetricsUseCase(
@@ -76,7 +75,7 @@ class CalculateInfrastructureMetricsUseCase(
         self._handlers: dict[
             Category,
             Callable[
-                [InfrastructureMetricsId, ParcelId, Buffer, list[InfrastructureObject], BufferZone],
+                [InfrastructureMetricsId, ParcelId, Buffer, BufferZone],
                 Awaitable[Any],
             ],
         ] = {
@@ -102,12 +101,10 @@ class CalculateInfrastructureMetricsUseCase(
             category = Category(category_request.category)
             buffer = Buffer(category_request.buffer)
             zone = self._buffer_service.create_zone(polygon, buffer)
-            objects = await self._local_infrastructure_repository.get_objects(zone, category)
             result = await self._handlers[category](
                 InfrastructureMetricsId(uuid6()),
                 parcel_id,
                 buffer,
-                objects,
                 zone,
             )
             results[category] = result
@@ -132,9 +129,9 @@ class CalculateInfrastructureMetricsUseCase(
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
         buffer: Buffer,
-        objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
     ) -> SchoolMetricsResponse:
+        objects = await self._local_infrastructure_repository.get_point_objects(buffer_zone, Category.SCHOOL)
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = SchoolMetrics(
@@ -157,9 +154,9 @@ class CalculateInfrastructureMetricsUseCase(
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
         buffer: Buffer,
-        objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
     ) -> HospitalMetricsResponse:
+        objects = await self._local_infrastructure_repository.get_point_objects(buffer_zone, Category.HOSPITAL)
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = HospitalMetrics(
@@ -182,9 +179,9 @@ class CalculateInfrastructureMetricsUseCase(
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
         buffer: Buffer,
-        objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
     ) -> ShopMetricsResponse:
+        objects = await self._local_infrastructure_repository.get_point_objects(buffer_zone, Category.SHOP)
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = ShopMetrics(
@@ -207,9 +204,9 @@ class CalculateInfrastructureMetricsUseCase(
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
         buffer: Buffer,
-        objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
     ) -> TransitStopMetricsResponse:
+        objects = await self._local_infrastructure_repository.get_point_objects(buffer_zone, Category.TRANSIT_STOP)
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         metrics = TransitStopMetrics(
@@ -232,9 +229,9 @@ class CalculateInfrastructureMetricsUseCase(
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
         buffer: Buffer,
-        objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
     ) -> WaterBodyMetricsResponse:
+        objects = await self._local_infrastructure_repository.get_polygon_objects(buffer_zone, Category.WATER_BODY)
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
         coverage_ratio = self._infrastructure_metrics_service.coverage_ratio(objects, buffer_zone)
