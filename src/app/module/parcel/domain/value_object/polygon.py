@@ -49,12 +49,12 @@ class Polygon(BaseValueObject[tuple[GeoPoint, ...]]):
 
     @property
     def points(self) -> tuple[GeoPoint, ...]:
-        """Return all points including closing point."""
+        """All points including closing point."""
         return self._value
 
     @property
     def distinct_points(self) -> tuple[GeoPoint, ...]:
-        """Return points without the closing duplicate."""
+        """Points without the closing duplicate."""
         return self._value[:-1] if len(self._value) > 1 else self._value
 
 

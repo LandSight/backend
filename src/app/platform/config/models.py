@@ -174,9 +174,66 @@ class AuthConfig(BaseConfig):
     )
 
 
+class S3Config(BaseConfig):
+    """S3-compatible storage configuration for geospatial rasters.
+
+    Attributes
+    ----------
+    endpoint : str
+        S3 endpoint URL (e.g., http://localhost:9000 for MinIO).
+    bucket : str
+        Bucket name for raster storage.
+    access_key : str
+        S3 access key.
+    secret_key : SecretStr
+        S3 secret key.
+    secure : bool
+        Use HTTPS (False for local MinIO).
+    region : str
+        S3 region (us-east-1 by default).
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="S3_",
+    )
+    endpoint: str = Field(
+        default="http://localhost:9000",
+        description="S3 endpoint URL",
+        min_length=1,
+    )
+    dem_bucket: str = Field(
+        default="landsight-dem",
+        description="Bucket name for dem storage",
+        min_length=1,
+    )
+    access_key: str = Field(
+        default="admin",
+        description="S3 access key",
+        min_length=1,
+    )
+    secret_key: SecretStr = Field(
+        default=SecretStr("password123"),
+        description="S3 secret key",
+    )
+    secure: bool = Field(
+        default=False,
+        description="Use HTTPS",
+    )
+    region: str = Field(
+        default="us-east-1",
+        description="S3 region",
+        min_length=1,
+    )
+
+    def get_endpoint_url(self) -> str:
+        """Get endpoint URL without protocol."""
+        return self.endpoint.replace("http://", "").replace("https://", "")
+
+
 class AppConfig(BaseConfig):
     """Application configuration — root config."""
 
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    s3: S3Config = Field(default_factory=S3Config)

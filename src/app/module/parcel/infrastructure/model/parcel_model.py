@@ -1,17 +1,12 @@
 """SQLAlchemy ORM model for Parcel."""
 
-from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID  # noqa: TC003
 
 from geoalchemy2 import Geometry
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.database.base import TimestampedModel
-
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 
 class ParcelModel(TimestampedModel):

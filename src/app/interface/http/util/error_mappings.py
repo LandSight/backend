@@ -25,6 +25,11 @@ from app.module.parcel.application.error import (
 )
 from app.module.shared.application.error import ApplicationError
 from app.module.shared.domain.error import DomainError, InvariantViolationError, ValidationError
+from app.module.topography.application.error import (
+    DemNotFoundError,
+    RasterProcessingError,
+    TopographyMetricsNotFoundError,
+)
 
 
 #  Shared module
@@ -71,6 +76,18 @@ def _get_parcel_application_error_mappings() -> dict[type[ApplicationError], int
     }
 
 
+# Topography module
+
+
+def _get_topography_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Topography module."""
+    return {
+        TopographyMetricsNotFoundError: HTTP_404_NOT_FOUND,
+        DemNotFoundError: HTTP_404_NOT_FOUND,
+        RasterProcessingError: HTTP_400_BAD_REQUEST,
+    }
+
+
 #  Public API
 
 
@@ -99,6 +116,7 @@ def get_all_application_error_mappings() -> dict[type[ApplicationError], int]:
     mappings.update(_get_shared_application_error_mappings())
     mappings.update(_get_identity_application_error_mappings())
     mappings.update(_get_parcel_application_error_mappings())
+    mappings.update(_get_topography_application_error_mappings())
     return mappings
 
 
