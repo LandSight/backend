@@ -57,22 +57,29 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
         self._logger = get_logger("app.topography.use_case.calculate_topography_metrics")
 
     @override
-    async def __call__(self, command: CalculateTopographyMetricsCommand) -> TopographyMetricsResponse:
+    async def __call__(
+        self,
+        command: CalculateTopographyMetricsCommand,
+    ) -> TopographyMetricsResponse:
         self._logger.info("Calculating topography metrics: parcel_id=%s", command.parcel_id)
 
         # Calculate bounding box from polygon coordinates
         bounds = self._compute_bounding_box(command.polygon)
 
-        # Check if DEM exists in cache
+        # Check whether DEM data is available for the requested bounds.
+        # The repository reports a boolean signal; raising the application-level
+        # DemNotFoundError is the responsibility of this use case.
         if not await self._local_dem_repository.exists(bounds):
             reason = f"There is no data for the requested parcel boundaries: {bounds}"
+            self._logger.warning("No DEM data for parcel_id=%s: %s", command.parcel_id, reason)
             raise DemNotFoundError(reason)
 
-        # Get DEM as RasterData (contains data + resolution)
+        # Fetch the DEM sub-region for the requested bounds.
         raster = await self._local_dem_repository.get_elevation_raster(bounds)
 
         if raster is None:
             reason = f"There is no data for the requested parcel boundaries: {bounds}"
+            self._logger.warning("No DEM data for parcel_id=%s: %s", command.parcel_id, reason)
             raise DemNotFoundError(reason)
 
         # Elevation metrics
@@ -127,28 +134,31 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
             elongation_index=ElongationIndex(elongation),
         )
 
-        await self._metrics_repository.save(metrics)
+        persisted_metrics = await self._metrics_repository.save(metrics)
 
-        self._logger.info("Topography metrics calculated: id=%s parcel_id=%s", metrics.id, command.parcel_id)
+        self._logger.info(
+            "Topography metrics calculated: id=%s parcel_id=%s", persisted_metrics.id, persisted_metrics.parcel_id
+        )
 
         return TopographyMetricsResponse(
-            id=metrics.id.unwrap(),
-            parcel_id=command.parcel_id,
-            mean_elevation=metrics.mean_elevation.unwrap(),
-            max_elevation=metrics.max_elevation.unwrap(),
-            min_elevation=metrics.min_elevation.unwrap(),
-            elevation_range=metrics.elevation_range.unwrap(),
-            elevation_std=metrics.elevation_std.unwrap(),
-            mean_slope=metrics.mean_slope.unwrap(),
-            max_slope=metrics.max_slope.unwrap(),
-            slope_percentiles=metrics.slope_percentiles.to_float_dict(),
-            slope_distribution=metrics.slope_distribution.to_float_list(),
-            aspect=metrics.aspect.value,
-            south_aspect_percentage=metrics.south_aspect_percentage.unwrap(),
-            area=metrics.area.unwrap(),
-            perimeter=metrics.perimeter.unwrap(),
-            compactness_index=metrics.compactness_index.unwrap(),
-            elongation_index=metrics.elongation_index.unwrap(),
+            id=persisted_metrics.id.unwrap(),
+            parcel_id=persisted_metrics.parcel_id.unwrap(),
+            mean_elevation=persisted_metrics.mean_elevation.unwrap(),
+            max_elevation=persisted_metrics.max_elevation.unwrap(),
+            min_elevation=persisted_metrics.min_elevation.unwrap(),
+            elevation_range=persisted_metrics.elevation_range.unwrap(),
+            elevation_std=persisted_metrics.elevation_std.unwrap(),
+            mean_slope=persisted_metrics.mean_slope.unwrap(),
+            max_slope=persisted_metrics.max_slope.unwrap(),
+            slope_percentiles=persisted_metrics.slope_percentiles.to_float_dict(),
+            slope_distribution=persisted_metrics.slope_distribution.to_float_list(),
+            aspect=persisted_metrics.aspect.value,
+            south_aspect_percentage=persisted_metrics.south_aspect_percentage.unwrap(),
+            area=persisted_metrics.area.unwrap(),
+            perimeter=persisted_metrics.perimeter.unwrap(),
+            compactness_index=persisted_metrics.compactness_index.unwrap(),
+            elongation_index=persisted_metrics.elongation_index.unwrap(),
+            created_at=persisted_metrics.created_at,
         )
 
     @staticmethod

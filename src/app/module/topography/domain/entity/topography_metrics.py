@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
@@ -20,6 +20,10 @@ from app.module.topography.domain.value_object.metric import (
     SlopePercentiles,
     TopographyMetricsId,
 )
+
+
+if TYPE_CHECKING:
+    import datetime
 
 
 class TopographyMetrics(BaseEntity[TopographyMetricsId]):
@@ -61,6 +65,8 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         Compactness index (4πA/P²), dimensionless.
     elongation_index : ElongationIndex
         Elongation index (width/length), dimensionless.
+    created_at : datetime | None
+        When these metrics were created (UTC); ``None`` if not yet persisted.
     """
 
     _ELEVATION_RANGE_TOLERANCE = 0.01
@@ -84,6 +90,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         perimeter: Perimeter,
         compactness_index: CompactnessIndex,
         elongation_index: ElongationIndex,
+        created_at: datetime.datetime | None = None,
     ) -> None:
         self._parcel_id: ParcelId = parcel_id
         self._mean_elevation: Elevation = mean_elevation
@@ -101,6 +108,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         self._perimeter: Perimeter = perimeter
         self._compactness_index: CompactnessIndex = compactness_index
         self._elongation_index: ElongationIndex = elongation_index
+        self._created_at: datetime.datetime | None = created_at
 
         super().__init__(id)
 
@@ -191,6 +199,11 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
     def elongation_index(self) -> ElongationIndex:
         """Elongation index (width/length), dimensionless."""
         return self._elongation_index
+
+    @property
+    def created_at(self) -> datetime.datetime | None:
+        """When these metrics were created (UTC)."""
+        return self._created_at
 
 
 __all__ = ("TopographyMetrics",)

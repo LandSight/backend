@@ -20,6 +20,10 @@ class RasterData(BaseValueObject[tuple[RasterDataArray, RasterResolution]]):
     def _normalize(self, value: tuple[RasterDataArray, RasterResolution]) -> tuple[RasterDataArray, RasterResolution]:
         return value
 
+    @override
+    def _validate(self) -> None:
+        return None
+
     @property
     def array(self) -> RasterDataArray:
         """Raster data array."""

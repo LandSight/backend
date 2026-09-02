@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from boto3 import Session as BotoSession
-from botocore.client import BaseClient
+from botocore.client import BaseClient as BotoClient
 from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
 from rasterio.session import AWSSession
@@ -65,23 +65,17 @@ async def provide_async_session(
 
 
 # ----- Storage -----
-def provide_boto_session(
-    state: State
-) -> BotoSession:
+def provide_boto_session(state: State) -> BotoSession:
     """Provide the boto session from application state."""
     return state.boto_session
 
 
-def provide_s3_boto_client(
-    state: State
-) -> BaseClient:
+def provide_s3_boto_client(state: State) -> BotoClient:
     """Provide the s3 boto client from application state."""
     return state.s3_boto_client
 
 
-def provide_aws_session(
-    boto_session: NamedDependency[BotoSession]
-) -> AWSSession:
+def provide_aws_session(boto_session: NamedDependency[BotoSession]) -> AWSSession:
     """Provide the aws session."""
     return create_aws_session(boto_session)
 

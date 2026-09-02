@@ -1,44 +1,47 @@
-"""Get topography metrics use case."""
+"""List parcel topography metrics use case."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
 from app.module.shared.application.use_case import BaseUseCase
-from app.module.topography.application.dto.command import GetTopographyMetricsCommand
+from app.module.topography.application.dto.command import ListParcelTopographyMetricsCommand
 from app.module.topography.application.dto.response import TopographyMetricsResponse
-from app.module.topography.application.error import TopographyMetricsNotFoundError
-from app.module.topography.domain.value_object.metric import TopographyMetricsId
+from app.module.topography.domain.value_object.metric import ParcelId
 from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
     from app.module.topography.application.port import MetricsRepository
+    from app.module.topography.domain.entity import TopographyMetrics
 
 
-class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, TopographyMetricsResponse]):
-    """Retrieve a specific topography metrics snapshot by its ID."""
+class ListParcelTopographyMetricsUseCase(
+    BaseUseCase[ListParcelTopographyMetricsCommand, list[TopographyMetricsResponse]]
+):
+    """List all topography metrics snapshots for a parcel, newest first."""
 
     def __init__(
         self,
         metrics_repository: MetricsRepository,
     ) -> None:
         self._metrics_repository = metrics_repository
-        self._logger = get_logger("app.topography.use_case.get_topography_metrics")
+        self._logger = get_logger("app.topography.use_case.list_parcel_topography_metrics")
 
     @override
-    async def __call__(self, command: GetTopographyMetricsCommand) -> TopographyMetricsResponse:
-        self._logger.info("Getting topography metrics: metrics_id=%s", command.metrics_id)
+    async def __call__(self, command: ListParcelTopographyMetricsCommand) -> list[TopographyMetricsResponse]:
+        self._logger.info("Listing topography metrics: parcel_id=%s", command.parcel_id)
 
-        metrics_id = TopographyMetricsId(command.metrics_id)
-        metrics = await self._metrics_repository.get(metrics_id)
+        parcel_id = ParcelId(command.parcel_id)
+        metrics_list = await self._metrics_repository.get_list(parcel_id)
 
-        if metrics is None:
-            self._logger.warning("Topography metrics not found: metrics_id=%s", command.metrics_id)
-            raise TopographyMetricsNotFoundError(str(command.metrics_id))
+        self._logger.info("Found %d metrics snapshots: parcel_id=%s", len(metrics_list), command.parcel_id)
 
-        self._logger.info("Topography metrics found: id=%s parcel_id=%s", metrics.id, metrics.parcel_id)
+        return [self._to_response(metrics) for metrics in metrics_list]
 
+    @staticmethod
+    def _to_response(metrics: TopographyMetrics) -> TopographyMetricsResponse:
+        """Map a domain entity to a response DTO."""
         return TopographyMetricsResponse(
             id=metrics.id.unwrap(),
             parcel_id=metrics.parcel_id.unwrap(),
@@ -61,4 +64,4 @@ class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, Topog
         )
 
 
-__all__ = ("GetTopographyMetricsUseCase",)
+__all__ = ("ListParcelTopographyMetricsUseCase",)

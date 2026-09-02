@@ -40,7 +40,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         super().__init__(session)
 
     @override
-    async def save(self, metrics: TopographyMetrics) -> None:
+    async def save(self, metrics: TopographyMetrics) -> TopographyMetrics:
         """See :class:`app.module.topography.application.port.MetricsRepository.save`."""
         model = TopographyMetricsModel(
             id=metrics.id.unwrap(),
@@ -62,10 +62,13 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             elongation_index=metrics.elongation_index.unwrap(),
         )
         self._session.add(model)
+        await self._session.flush()
+
+        return self._to_domain(model)
 
     @override
-    async def get_by_id(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:
-        """See :class:`app.module.topography.application.port.MetricsRepository.get_by_id`."""
+    async def get(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:
+        """See :class:`app.module.topography.application.port.MetricsRepository.get`."""
         result = await self._session.execute(
             select(TopographyMetricsModel).where(TopographyMetricsModel.id == metrics_id.unwrap()),
         )
@@ -74,14 +77,29 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         return self._to_domain(model) if model is not None else None
 
     @override
-    async def get_by_parcel_id(self, parcel_id: ParcelId) -> TopographyMetrics | None:
-        """See :class:`app.module.topography.application.port.MetricsRepository.get_by_parcel_id`."""
+    async def get_latest(self, parcel_id: ParcelId) -> TopographyMetrics | None:
+        """See :class:`app.module.topography.application.port.MetricsRepository.get_latest`."""
         result = await self._session.execute(
-            select(TopographyMetricsModel).where(TopographyMetricsModel.parcel_id == parcel_id.unwrap()),
+            select(TopographyMetricsModel)
+            .where(TopographyMetricsModel.parcel_id == parcel_id.unwrap())
+            .order_by(TopographyMetricsModel.created_at.desc())
+            .limit(1),
         )
         model = result.scalar_one_or_none()
 
         return self._to_domain(model) if model is not None else None
+
+    @override
+    async def get_list(self, parcel_id: ParcelId) -> list[TopographyMetrics]:
+        """See :class:`app.module.topography.application.port.MetricsRepository.list`."""
+        result = await self._session.execute(
+            select(TopographyMetricsModel)
+            .where(TopographyMetricsModel.parcel_id == parcel_id.unwrap())
+            .order_by(TopographyMetricsModel.created_at.desc()),
+        )
+        models = result.scalars().all()
+
+        return [self._to_domain(model) for model in models]
 
     @staticmethod
     def _to_domain(model: TopographyMetricsModel) -> TopographyMetrics:
@@ -97,7 +115,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             mean_slope=Slope(model.mean_slope),
             max_slope=Slope(model.max_slope),
             slope_percentiles=SlopePercentiles(
-                {Percentage(k): Slope(v) for k, v in model.slope_percentiles.items()},
+                {Percentage(float(k)): Slope(v) for k, v in model.slope_percentiles.items()},
             ),
             slope_distribution=SlopeDistribution(
                 [Percentage(v) for v in model.slope_distribution],
@@ -108,6 +126,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             perimeter=Perimeter(model.perimeter),
             compactness_index=CompactnessIndex(model.compactness_index),
             elongation_index=ElongationIndex(model.elongation_index),
+            created_at=model.created_at,
         )
 
 

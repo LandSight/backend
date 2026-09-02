@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    import datetime
     from uuid import UUID
 
     from app.module.shared.interface.internal.geojson import GeoJSONPolygon
@@ -22,7 +23,21 @@ class CalculateMetricsInput:
 
 @dataclass(frozen=True, slots=True)
 class GetMetricsInput:
-    """Input for retrieving topography metrics by parcel ID."""
+    """Input for retrieving a specific topography metrics snapshot by its ID."""
+
+    metrics_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class GetLatestParcelMetricsInput:
+    """Input for retrieving the latest topography metrics for a parcel."""
+
+    parcel_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class ListParcelMetricsInput:
+    """Input for listing all topography metrics snapshots for a parcel."""
 
     parcel_id: UUID
 
@@ -33,6 +48,7 @@ class TopographyMetricsResult:
 
     id: UUID
     parcel_id: UUID
+    created_at: datetime.datetime | None
     mean_elevation: float
     max_elevation: float
     min_elevation: float
@@ -52,6 +68,8 @@ class TopographyMetricsResult:
 
 __all__ = (
     "CalculateMetricsInput",
+    "GetLatestParcelMetricsInput",
     "GetMetricsInput",
+    "ListParcelMetricsInput",
     "TopographyMetricsResult",
 )

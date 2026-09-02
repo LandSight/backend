@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from litestar.handlers.base import BaseRouteHandler
 
 
-async def require_authorization(
+def require_authorization(
     connection: ASGIConnection,
     _handler: BaseRouteHandler,
 ) -> None:

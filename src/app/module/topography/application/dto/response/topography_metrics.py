@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    import datetime
     from uuid import UUID
 
 
@@ -50,10 +51,13 @@ class TopographyMetricsResponse:
         Compactness index (4πA/P²), dimensionless.
     elongation_index : float
         Elongation index (width/length), dimensionless.
+    created_at : datetime | None
+        When these metrics were created (UTC); ``None`` if not yet persisted.
     """
 
     id: UUID
     parcel_id: UUID
+    created_at: datetime.datetime | None
     mean_elevation: float
     max_elevation: float
     min_elevation: float

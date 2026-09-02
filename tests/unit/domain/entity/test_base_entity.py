@@ -29,7 +29,7 @@ class DummyWithExtraEntity(BaseEntity[int]):
 
     @property
     def extra(self) -> str:
-        """Returns the extra value of the entity."""
+        """Extra value of the entity."""
         return self._extra
 
 

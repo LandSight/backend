@@ -15,6 +15,7 @@ def load_app_config() -> AppConfig:
     return AppConfig()
 
 
+@cache
 def load_logging_config() -> LoggingConfig:
     """Load logging settings from environment variables.
 

@@ -31,7 +31,7 @@ async def lifespan(app: Litestar) -> AsyncGenerator[None]:
     app.state.boto_session = boto_session
 
     # s3 boto client
-    s3_boto_client = create_s3_boto_client(boto_session)
+    s3_boto_client = create_s3_boto_client(boto_session, config.s3)
     app.state.s3_boto_client = s3_boto_client
 
     try:

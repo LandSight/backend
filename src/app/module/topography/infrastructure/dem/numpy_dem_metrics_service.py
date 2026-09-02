@@ -160,7 +160,8 @@ class NumpyDemMetricsService(DemMetricsService):
 
         return Percentage(float(south_count / total_valid * 100))
 
-    def _calculate_slope_array(self, elevation: np.ndarray, resolution: float) -> np.ndarray:
+    @staticmethod
+    def _calculate_slope_array(elevation: np.ndarray, resolution: float) -> np.ndarray:
         """Calculate slope in degrees using the Horn (1981) algorithm."""
         padded = np.pad(elevation, 1, mode="edge")
 

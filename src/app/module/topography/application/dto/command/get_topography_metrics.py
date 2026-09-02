@@ -12,15 +12,15 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class GetTopographyMetricsCommand:
-    """Command for retrieving topography metrics by parcel ID.
+    """Command for retrieving a specific topography metrics snapshot by its ID.
 
     Attributes
     ----------
-    parcel_id : UUID
-        ID of the parcel to get metrics for.
+    metrics_id : UUID
+        ID of the metrics snapshot to retrieve.
     """
 
-    parcel_id: UUID
+    metrics_id: UUID
 
 
 __all__ = ("GetTopographyMetricsCommand",)

@@ -4,6 +4,11 @@ from abc import ABC, abstractmethod
 class BaseEntity[IdT](ABC):
     """Base class for all entities.
 
+    Attributes
+    ----------
+    id : IdT
+        The entity's ID.
+
     Notes
     -----
     When overriding ``__init__`` in a subclass, call ``super().__init__(id)``
@@ -12,11 +17,6 @@ class BaseEntity[IdT](ABC):
     1. All subclass attributes are set before ``_validate()`` runs
     2. The ``_id`` field is properly initialized
     3. The overridden ``_validate()`` method can access all attributes
-
-    Attributes
-    ----------
-    id : IdT
-        The entity's ID.
 
 
     Example

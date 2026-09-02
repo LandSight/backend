@@ -1,14 +1,14 @@
-"""Get topography metrics use case."""
+"""Get latest parcel topography metrics use case."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
 from app.module.shared.application.use_case import BaseUseCase
-from app.module.topography.application.dto.command import GetTopographyMetricsCommand
+from app.module.topography.application.dto.command import GetLatestParcelTopographyMetricsCommand
 from app.module.topography.application.dto.response import TopographyMetricsResponse
 from app.module.topography.application.error import TopographyMetricsNotFoundError
-from app.module.topography.domain.value_object.metric import TopographyMetricsId
+from app.module.topography.domain.value_object.metric import ParcelId
 from app.platform.logging import get_logger
 
 
@@ -16,28 +16,30 @@ if TYPE_CHECKING:
     from app.module.topography.application.port import MetricsRepository
 
 
-class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, TopographyMetricsResponse]):
-    """Retrieve a specific topography metrics snapshot by its ID."""
+class GetLatestParcelTopographyMetricsUseCase(
+    BaseUseCase[GetLatestParcelTopographyMetricsCommand, TopographyMetricsResponse]
+):
+    """Retrieve the most recent topography metrics for a parcel."""
 
     def __init__(
         self,
         metrics_repository: MetricsRepository,
     ) -> None:
         self._metrics_repository = metrics_repository
-        self._logger = get_logger("app.topography.use_case.get_topography_metrics")
+        self._logger = get_logger("app.topography.use_case.get_latest_parcel_topography_metrics")
 
     @override
-    async def __call__(self, command: GetTopographyMetricsCommand) -> TopographyMetricsResponse:
-        self._logger.info("Getting topography metrics: metrics_id=%s", command.metrics_id)
+    async def __call__(self, command: GetLatestParcelTopographyMetricsCommand) -> TopographyMetricsResponse:
+        self._logger.info("Getting latest topography metrics: parcel_id=%s", command.parcel_id)
 
-        metrics_id = TopographyMetricsId(command.metrics_id)
-        metrics = await self._metrics_repository.get(metrics_id)
+        parcel_id = ParcelId(command.parcel_id)
+        metrics = await self._metrics_repository.get_latest(parcel_id)
 
         if metrics is None:
-            self._logger.warning("Topography metrics not found: metrics_id=%s", command.metrics_id)
-            raise TopographyMetricsNotFoundError(str(command.metrics_id))
+            self._logger.warning("Topography metrics not found: parcel_id=%s", command.parcel_id)
+            raise TopographyMetricsNotFoundError(str(command.parcel_id))
 
-        self._logger.info("Topography metrics found: id=%s parcel_id=%s", metrics.id, metrics.parcel_id)
+        self._logger.info("Latest topography metrics found: id=%s parcel_id=%s", metrics.id, metrics.parcel_id)
 
         return TopographyMetricsResponse(
             id=metrics.id.unwrap(),
@@ -61,4 +63,4 @@ class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, Topog
         )
 
 
-__all__ = ("GetTopographyMetricsUseCase",)
+__all__ = ("GetLatestParcelTopographyMetricsUseCase",)

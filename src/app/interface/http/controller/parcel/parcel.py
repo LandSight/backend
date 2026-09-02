@@ -9,6 +9,7 @@ from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from app.interface.http.schema.current_user import CurrentUser
+from app.interface.http.schema.geojson import GeoJSONPolygon as GeoJSONPolygonSchema
 from app.interface.http.schema.parcel import (
     CreateParcelRequest,
     ParcelFeature,
@@ -56,7 +57,10 @@ class ParcelController(Controller):
             )
         )
         return ParcelFeature(
-            geometry=result.geometry,
+            geometry=GeoJSONPolygonSchema(
+                type=result.geometry.type,
+                coordinates=result.geometry.coordinates,
+            ),
             properties=ParcelFeatureProperties(
                 id=result.properties.id,
                 name=result.properties.name,
@@ -78,7 +82,10 @@ class ParcelController(Controller):
         result = await parcel_api.list_user_parcels(ListUserParcelsInput(owner_id=current_user.id))
         features = [
             ParcelFeature(
-                geometry=r.geometry,
+                geometry=GeoJSONPolygonSchema(
+                    type=r.geometry.type,
+                    coordinates=r.geometry.coordinates,
+                ),
                 properties=ParcelFeatureProperties(
                     id=r.properties.id,
                     name=r.properties.name,
@@ -108,7 +115,10 @@ class ParcelController(Controller):
             )
         )
         return ParcelFeature(
-            geometry=result.geometry,
+            geometry=GeoJSONPolygonSchema(
+                type=result.geometry.type,
+                coordinates=result.geometry.coordinates,
+            ),
             properties=ParcelFeatureProperties(
                 id=result.properties.id,
                 name=result.properties.name,

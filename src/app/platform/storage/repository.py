@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from botocore.client import BaseClient
+    from botocore.client import BaseClient as BotoClient
     from rasterio.session import AWSSession
 
     from app.platform.config.models import S3Config
@@ -22,14 +22,15 @@ class S3Repository:
 
     Parameters
     ----------
-    s3_boto_client : BaseClient
-        Pre-configured boto3 S3 client (created once at application startup).
+    s3_client : BotoClient
+        Pre-configured S3 client (created once at application startup).
     s3_config : S3Config
         S3-compatible storage configuration.
     """
 
-    def __init__(self, s3_boto_client: BaseClient, s3_config: S3Config) -> None:
-        self._s3_boto_client = s3_boto_client
+    def __init__(self, s3_client: BotoClient, s3_config: S3Config) -> None:
+        self._s3_client = s3_client
+        self._s3_config = s3_config
 
 
 class S3GeoRepository(S3Repository):
@@ -39,14 +40,14 @@ class S3GeoRepository(S3Repository):
     ----------
     aws_session : AWSSession
         Pre-configured aws session for rasterio.
-    s3_boto_client : BaseClient
-            Pre-configured boto3 S3 client (created once at application startup).
+    s3_client : BotoClient
+            Pre-configured S3 client (created once at application startup).
     s3_config : S3Config
         S3-compatible storage configuration.
     """
 
-    def __init__(self, aws_session: AWSSession, s3_boto_client: BaseClient, s3_config: S3Config) -> None:
-        super().__init__(s3_boto_client, s3_config)
+    def __init__(self, aws_session: AWSSession, s3_client: BotoClient, s3_config: S3Config) -> None:
+        super().__init__(s3_client, s3_config)
         self._aws_session = aws_session
 
 

@@ -1,17 +1,12 @@
 """SQLAlchemy ORM model for TopographyMetrics."""
 
-from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID  # noqa: TC003
 
 from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.database.base import TimestampedModel
-
-
-if TYPE_CHECKING:
-    from uuid import UUID
 
 
 class TopographyMetricsModel(TimestampedModel):

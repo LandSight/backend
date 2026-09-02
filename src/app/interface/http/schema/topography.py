@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,6 +26,7 @@ class TopographyMetricsResponse(BaseModel):
 
     id: UUID = Field(description="Topography metrics identifier.")
     parcel_id: UUID = Field(description="ID of the parcel these metrics belong to.")
+    created_at: datetime.datetime | None = Field(description="When these metrics were created (UTC).")
     mean_elevation: float = Field(description="Mean elevation in meters.")
     max_elevation: float = Field(description="Maximum elevation in meters.")
     min_elevation: float = Field(description="Minimum elevation in meters.")
@@ -57,7 +59,17 @@ class TopographyMetricsResponse(BaseModel):
     )
 
 
+class TopographyMetricsHistoryResponse(BaseModel):
+    """Response body listing topography metrics snapshots for a parcel."""
+
+    items: list[TopographyMetricsResponse] = Field(
+        default_factory=list,
+        description="Topography metrics snapshots, newest first.",
+    )
+
+
 __all__ = (
     "CalculateTopographyMetricsRequest",
+    "TopographyMetricsHistoryResponse",
     "TopographyMetricsResponse",
 )

@@ -40,16 +40,16 @@ class SlopeDistribution(BaseValueObject[list[Percentage]]):
 
     @property
     def bins(self) -> list[Percentage]:
-        """Return the histogram bins."""
+        """Histogram bins."""
         return list(self._value)
 
     def to_float_list(self) -> list[float]:
-        """Return the underlying values as a plain float list."""
+        """Underlying values as a plain float list."""
         return [p.unwrap() for p in self._value]
 
     @property
     def bin_edges(self) -> list[float]:
-        """Return the edges of each bin in degrees.
+        """Edges of each bin in degrees.
 
         Returns 11 edges for 10 bins: [0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 90].
         """

@@ -19,18 +19,23 @@ class MetricsRepository(ABC):
     """
 
     @abstractmethod
-    async def save(self, metrics: TopographyMetrics) -> None:
-        """Persist topography metrics.
+    async def save(self, metrics: TopographyMetrics) -> TopographyMetrics:
+        """Persist topography metrics and return the persisted entity.
 
         Parameters
         ----------
         metrics : TopographyMetrics
             Topography metrics entity to save.
+
+        Returns
+        -------
+        TopographyMetrics
+            The persisted entity.
         """
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_id(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:
+    async def get(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:
         """Retrieve topography metrics by their ID.
 
         Parameters
@@ -46,8 +51,11 @@ class MetricsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_parcel_id(self, parcel_id: ParcelId) -> TopographyMetrics | None:
-        """Retrieve topography metrics by parcel ID.
+    async def get_latest(self, parcel_id: ParcelId) -> TopographyMetrics | None:
+        """Retrieve the most recent topography metrics for a parcel.
+
+        Since a parcel can accumulate multiple snapshots over time, this returns
+        the latest one (ordered by creation time).
 
         Parameters
         ----------
@@ -57,7 +65,24 @@ class MetricsRepository(ABC):
         Returns
         -------
         TopographyMetrics | None
-            The metrics if found, ``None`` otherwise.
+            The latest metrics if any exist, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_list(self, parcel_id: ParcelId) -> list[TopographyMetrics]:
+        """List all topography metrics snapshots for a parcel, newest first.
+
+        Parameters
+        ----------
+        parcel_id : ParcelId
+            Parcel identifier.
+
+        Returns
+        -------
+        list[TopographyMetrics]
+            All metrics snapshots for the parcel ordered by creation time
+            descending.
         """
         raise NotImplementedError
 
