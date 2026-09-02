@@ -1,7 +1,7 @@
 """Add topography metrics table.
 
 Revision ID: 674e5b6df11e
-Revises: 15c4a02c5334
+Revises:
 Create Date: 2026-07-22 14:28:47.854495
 
 """
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 # revision identifiers, used by Alembic.
 revision: str = "674e5b6df11e"
-down_revision: str | Sequence[str] | None = "15c4a02c5334"
+down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
