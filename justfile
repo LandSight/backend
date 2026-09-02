@@ -11,7 +11,7 @@ APP_PORT := env("APP_PORT", "8000")
 DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env("DOCS_PORT", "8008")
 
-COMPOSE_CMD := env("COMPOSE_CMD", "docker-compose")
+COMPOSE_CMD := env("COMPOSE_CMD", "docker compose")
 
 
 default:
