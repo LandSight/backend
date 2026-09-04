@@ -67,7 +67,7 @@ class InfrastructureMetricsController(Controller):
         )
         return InfrastructureMetricsController._to_response(result)
 
-    @get(
+    @post(
         "/{parcel_id:uuid}",
         status_code=HTTP_200_OK,
         description="Get infrastructure metrics for a parcel.",
