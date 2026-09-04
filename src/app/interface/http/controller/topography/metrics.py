@@ -65,10 +65,12 @@ class TopographyMetricsController(Controller):
         self,
         metrics_id: UUID,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
         """Get a specific topography metrics snapshot by its ID."""
-        result = await topography_api.get_metrics(GetMetricsInput(metrics_id=metrics_id))
+        result = await topography_api.get_metrics(
+            GetMetricsInput(metrics_id=metrics_id, current_user_id=current_user.id)
+        )
         return self._to_schema(result)
 
     @get(
@@ -80,11 +82,11 @@ class TopographyMetricsController(Controller):
         self,
         parcel_id: UUID,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
         """Get the latest topography metrics for a parcel."""
         result = await topography_api.get_latest_parcel_metrics(
-            GetLatestParcelMetricsInput(parcel_id=parcel_id),
+            GetLatestParcelMetricsInput(parcel_id=parcel_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)
 
@@ -97,10 +99,12 @@ class TopographyMetricsController(Controller):
         self,
         parcel_id: UUID,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsHistoryResponse:
         """List all topography metrics snapshots for a parcel, newest first."""
-        results = await topography_api.list_parcel_metrics(ListParcelMetricsInput(parcel_id=parcel_id))
+        results = await topography_api.list_parcel_metrics(
+            ListParcelMetricsInput(parcel_id=parcel_id, current_user_id=current_user.id)
+        )
         return TopographyMetricsHistoryResponse(items=[self._to_schema(result) for result in results])
 
     @staticmethod

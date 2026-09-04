@@ -18,9 +18,12 @@ class GetLatestParcelTopographyMetricsCommand:
     ----------
     parcel_id : UUID
         ID of the parcel to get the latest metrics for.
+    current_user_id : UUID
+        ID of the user performing the request.
     """
 
     parcel_id: UUID
+    current_user_id: UUID
 
 
 __all__ = ("GetLatestParcelTopographyMetricsCommand",)

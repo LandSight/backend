@@ -5,6 +5,7 @@ from litestar.di import NamedDependency, Provide
 from rasterio.session import AWSSession
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.topography.application.use_case import (
     CalculateTopographyMetricsUseCase,
     GetLatestParcelTopographyMetricsUseCase,
@@ -13,6 +14,7 @@ from app.module.topography.application.use_case import (
 )
 from app.module.topography.infrastructure.dem import NumpyDemMetricsService
 from app.module.topography.infrastructure.geo import ShapelyGeometryMetricsService
+from app.module.topography.infrastructure.permission import MetricsPermissionServiceImpl
 from app.module.topography.infrastructure.repository import (
     PostgresMetricsRepository,
     S3LocalDemRepository,
@@ -61,22 +63,31 @@ def provide_calculate_topography_metrics_use_case(
     )
 
 
+def provide_metrics_permission_service(
+    parcel_api: NamedDependency[ParcelInternalAPI],
+) -> MetricsPermissionServiceImpl:
+    return MetricsPermissionServiceImpl(parcel_api)
+
+
 def provide_get_topography_metrics_use_case(
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> GetTopographyMetricsUseCase:
-    return GetTopographyMetricsUseCase(metrics_repository)
+    return GetTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
 
 
 def provide_get_latest_parcel_topography_metrics_use_case(
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> GetLatestParcelTopographyMetricsUseCase:
-    return GetLatestParcelTopographyMetricsUseCase(metrics_repository)
+    return GetLatestParcelTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
 
 
 def provide_list_parcel_topography_metrics_use_case(
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> ListParcelTopographyMetricsUseCase:
-    return ListParcelTopographyMetricsUseCase(metrics_repository)
+    return ListParcelTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
 
 
 # ----- Internal API -----
@@ -96,6 +107,7 @@ def provide_topography_internal(
 
 topography_dependencies = {
     "metrics_repository": Provide(provide_postgres_metrics_repository, sync_to_thread=False),
+    "metrics_permission_service": Provide(provide_metrics_permission_service, sync_to_thread=False),
     "local_dem_repository": Provide(provide_s3_local_dem_repository, sync_to_thread=False),
     "dem_metrics_service": Provide(provide_numpy_dem_metrics_service, sync_to_thread=False),
     "geometry_metrics_service": Provide(provide_shapely_geometry_metrics_service, sync_to_thread=False),

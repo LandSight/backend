@@ -7,25 +7,31 @@ from typing import TYPE_CHECKING, override
 from app.module.shared.application.use_case import BaseUseCase
 from app.module.topography.application.dto.command import ListParcelTopographyMetricsCommand
 from app.module.topography.application.dto.response import TopographyMetricsResponse
+from app.module.topography.application.error import TopographyMetricsNotFoundError
 from app.module.topography.domain.value_object.metric import ParcelId
 from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
-    from app.module.topography.application.port import MetricsRepository
+    from app.module.topography.application.port import MetricsPermissionService, MetricsRepository
     from app.module.topography.domain.entity import TopographyMetrics
 
 
 class ListParcelTopographyMetricsUseCase(
     BaseUseCase[ListParcelTopographyMetricsCommand, list[TopographyMetricsResponse]]
 ):
-    """List all topography metrics snapshots for a parcel, newest first."""
+    """List all topography metrics snapshots for a parcel, newest first.
+
+    Access is granted only when the current user owns the parcel.
+    """
 
     def __init__(
         self,
         metrics_repository: MetricsRepository,
+        metrics_permission_service: MetricsPermissionService,
     ) -> None:
         self._metrics_repository = metrics_repository
+        self._metrics_permission_service = metrics_permission_service
         self._logger = get_logger("app.topography.use_case.list_parcel_topography_metrics")
 
     @override
@@ -33,6 +39,18 @@ class ListParcelTopographyMetricsUseCase(
         self._logger.info("Listing topography metrics: parcel_id=%s", command.parcel_id)
 
         parcel_id = ParcelId(command.parcel_id)
+
+        if not await self._metrics_permission_service.user_can_view_parcel_metrics(
+            command.current_user_id,
+            command.parcel_id,
+        ):
+            self._logger.warning(
+                "User %s is not allowed to list metrics for parcel %s",
+                command.current_user_id,
+                command.parcel_id,
+            )
+            raise TopographyMetricsNotFoundError(str(command.parcel_id))
+
         metrics_list = await self._metrics_repository.get_list(parcel_id)
 
         self._logger.info("Found %d metrics snapshots: parcel_id=%s", len(metrics_list), command.parcel_id)

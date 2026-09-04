@@ -18,9 +18,12 @@ class ListParcelTopographyMetricsCommand:
     ----------
     parcel_id : UUID
         ID of the parcel whose metrics history to list.
+    current_user_id : UUID
+        ID of the user performing the request.
     """
 
     parcel_id: UUID
+    current_user_id: UUID
 
 
 __all__ = ("ListParcelTopographyMetricsCommand",)

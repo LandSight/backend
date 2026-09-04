@@ -26,6 +26,7 @@ class GetMetricsInput:
     """Input for retrieving a specific topography metrics snapshot by its ID."""
 
     metrics_id: UUID
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,6 +34,7 @@ class GetLatestParcelMetricsInput:
     """Input for retrieving the latest topography metrics for a parcel."""
 
     parcel_id: UUID
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +42,7 @@ class ListParcelMetricsInput:
     """Input for listing all topography metrics snapshots for a parcel."""
 
     parcel_id: UUID
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)

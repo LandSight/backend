@@ -70,19 +70,34 @@ class TopographyInternal(TopographyInternalAPI):
     @override
     async def get_metrics(self, input_data: GetMetricsInput) -> TopographyMetricsResult:
         """See :meth:`TopographyInternalAPI.get_metrics`."""
-        result = await self._get(GetTopographyMetricsCommand(metrics_id=input_data.metrics_id))
+        result = await self._get(
+            GetTopographyMetricsCommand(
+                metrics_id=input_data.metrics_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
         return self._to_result(result)
 
     @override
     async def get_latest_parcel_metrics(self, input_data: GetLatestParcelMetricsInput) -> TopographyMetricsResult:
         """See :meth:`TopographyInternalAPI.get_latest_parcel_metrics`."""
-        result = await self._get_latest_parcel(GetLatestParcelTopographyMetricsCommand(parcel_id=input_data.parcel_id))
+        result = await self._get_latest_parcel(
+            GetLatestParcelTopographyMetricsCommand(
+                parcel_id=input_data.parcel_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
         return self._to_result(result)
 
     @override
     async def list_parcel_metrics(self, input_data: ListParcelMetricsInput) -> list[TopographyMetricsResult]:
         """See :meth:`TopographyInternalAPI.list_parcel_metrics`."""
-        results = await self._list_parcel(ListParcelTopographyMetricsCommand(parcel_id=input_data.parcel_id))
+        results = await self._list_parcel(
+            ListParcelTopographyMetricsCommand(
+                parcel_id=input_data.parcel_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
         return [self._to_result(result) for result in results]
 
     @staticmethod
