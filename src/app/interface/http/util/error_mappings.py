@@ -5,7 +5,6 @@ from __future__ import annotations
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -19,7 +18,6 @@ from app.module.identity.application.error import (
 from app.module.parcel.application.error import (
     InvalidGeoJsonError,
     InvalidPolygonError,
-    NotParcelOwnerError,
     ParcelAlreadyExistsError,
     ParcelNotFoundError,
 )
@@ -72,7 +70,6 @@ def _get_parcel_application_error_mappings() -> dict[type[ApplicationError], int
         ParcelAlreadyExistsError: HTTP_409_CONFLICT,
         InvalidGeoJsonError: HTTP_400_BAD_REQUEST,
         InvalidPolygonError: HTTP_400_BAD_REQUEST,
-        NotParcelOwnerError: HTTP_403_FORBIDDEN,
     }
 
 
