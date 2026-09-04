@@ -37,7 +37,7 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
         super().__init__(session)
 
     @override
-    async def save(self, parcel: Parcel) -> None:
+    async def save(self, parcel: Parcel) -> Parcel:
         """See :class:`app.module.parcel.application.port.ParcelRepository.save`."""
         shapely_geom = self._domain_to_shapely(parcel.polygon)
         wkb_element = from_shape(shapely_geom, srid=4326)
@@ -49,6 +49,9 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
             owner_id=parcel.owner_id.unwrap(),
         )
         self._session.add(model)
+        await self._session.flush()
+
+        return self._to_domain(model)
 
     @override
     async def get_by_id(self, parcel_id: ParcelId) -> Parcel | None:
