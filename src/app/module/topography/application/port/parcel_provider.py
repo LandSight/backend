@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
 
 
 class ParcelProvider(ABC):

@@ -24,7 +24,7 @@ from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
     from app.module.topography.application.port import (
         DemMetricsService,
         GeometryMetricsService,

@@ -12,7 +12,7 @@ from app.module.topography.application.port.geometry_metrics_service import Geom
 
 
 if TYPE_CHECKING:
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
 
 
 class ShapelyGeometryMetricsService(GeometryMetricsService):

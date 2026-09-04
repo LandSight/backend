@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.parcel.interface.internal.dto import GetParcelInput
+from app.module.shared.application.dto.geojson import GeoJSONPolygon
 from app.module.topography.application.port import ParcelProvider
 
 
@@ -12,15 +13,14 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.parcel.interface.internal.port import ParcelInternalAPI
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 
 
 class ParcelProviderImpl(ParcelProvider):
     """Parcel geometry provider backed by the Parcel module's Internal API.
 
     Delegates to ``get_parcel``, which resolves the parcel and enforces
-    ownership. This way the Parcel module remains the single source of truth
-    for both the geometry and the access rule.
+    ownership. The interface-level GeoJSON geometry is translated into the
+    application-layer GeoJSON DTO used by Topography.
     """
 
     def __init__(self, parcel_api: ParcelInternalAPI) -> None:
@@ -32,7 +32,7 @@ class ParcelProviderImpl(ParcelProvider):
         result = await self._parcel_api.get_parcel(
             GetParcelInput(parcel_id=parcel_id, current_user_id=user_id),
         )
-        return result.geometry
+        return GeoJSONPolygon(type=result.geometry.type, coordinates=result.geometry.coordinates)
 
 
 __all__ = ("ParcelProviderImpl",)

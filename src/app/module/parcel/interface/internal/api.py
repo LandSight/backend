@@ -6,7 +6,6 @@ for the abstract interface.
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING, override
 
 from app.module.parcel.application.dto.command import (
@@ -27,6 +26,7 @@ from app.module.parcel.interface.internal.dto import (
     ParcelResult,
 )
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
+from app.module.shared.application.dto.geojson import GeoJSONPolygon as GeoJSONPolygonDTO
 from app.module.shared.interface.internal.geojson import GeoJSONFeature, GeoJSONPolygon
 
 
@@ -64,7 +64,7 @@ class ParcelInternal(ParcelInternalAPI):
         result = await self._create_parcel(
             CreateParcelCommand(
                 name=input_data.name,
-                polygon=asdict(input_data.polygon),
+                polygon=self._to_dto_polygon(input_data.polygon),
                 owner_id=input_data.owner_id,
             )
         )
@@ -106,12 +106,17 @@ class ParcelInternal(ParcelInternalAPI):
         )
 
     @staticmethod
+    def _to_dto_polygon(polygon: GeoJSONPolygon) -> GeoJSONPolygonDTO:
+        """Translate an interface-level GeoJSON polygon to an application DTO."""
+        return GeoJSONPolygonDTO(type=polygon.type, coordinates=polygon.coordinates)
+
+    @staticmethod
     def _to_feature(result: ParcelResponse) -> ParcelResult:
-        """Convert an application-layer parcel response into a GeoJSON Feature."""
+        """Convert an application-layer parcel response into an interface GeoJSON Feature."""
         return GeoJSONFeature[ParcelProperties](
             geometry=GeoJSONPolygon(
-                type=result.polygon["type"],
-                coordinates=result.polygon["coordinates"],
+                type=result.polygon.type,
+                coordinates=result.polygon.coordinates,
             ),
             properties=ParcelProperties(
                 id=result.id,

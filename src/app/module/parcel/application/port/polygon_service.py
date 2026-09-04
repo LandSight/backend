@@ -3,31 +3,35 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
     from app.module.shared.domain.value_object import Polygon
 
 
 class PolygonService(ABC):
     """Port for polygon geometry operations.
 
-    Provides GeoJSON conversion, advanced geospatial validation,
-    and analysis using external libraries (e.g. Shapely).
+    Bridges the shared GeoJSON interchange format (the world-standard wire
+    representation used across module boundaries) and the parcel domain
+    :class:`~app.module.shared.domain.value_object.Polygon` value object.
+    Also provides advanced geospatial validation via external libraries
+    (e.g. Shapely).
 
     Implementations:
     - :class:`app.module.parcel.infrastructure.geo.shapely_polygon_service.ShapelyPolygonService`
     """
 
     @abstractmethod
-    def to_domain(self, geojson: dict[str, Any]) -> Polygon:
+    def to_domain(self, geojson: GeoJSONPolygon) -> Polygon:
         """Convert a GeoJSON Polygon geometry to a domain Polygon.
 
         Parameters
         ----------
-        geojson : dict[str, Any]
-            GeoJSON Polygon geometry.
+        geojson : GeoJSONPolygon
+            Typed GeoJSON Polygon geometry.
 
         Returns
         -------
@@ -42,8 +46,8 @@ class PolygonService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def from_domain(self, polygon: Polygon) -> dict[str, Any]:
-        """Convert a domain Polygon to a GeoJSON Polygon geometry dict.
+    def from_domain(self, polygon: Polygon) -> GeoJSONPolygon:
+        """Convert a domain Polygon to a GeoJSON Polygon geometry.
 
         Parameters
         ----------
@@ -52,8 +56,8 @@ class PolygonService(ABC):
 
         Returns
         -------
-        dict[str, Any]
-            GeoJSON Polygon geometry.
+        GeoJSONPolygon
+            Typed GeoJSON Polygon geometry.
         """
         raise NotImplementedError
 
