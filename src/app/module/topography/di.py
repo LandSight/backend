@@ -50,14 +50,14 @@ def provide_shapely_geometry_metrics_service() -> ShapelyGeometryMetricsService:
 
 
 # ----- Parcel integration -----
-def provide_parcel_provider(
+def provide_topography_parcel_provider(
     parcel_api: NamedDependency[ParcelInternalAPI],
 ) -> ParcelProviderImpl:
     return ParcelProviderImpl(parcel_api)
 
 
 # ----- Services -----
-def provide_metrics_permission_service(
+def provide_topography_metrics_permission_service(
     parcel_api: NamedDependency[ParcelInternalAPI],
 ) -> MetricsPermissionServiceImpl:
     return MetricsPermissionServiceImpl(parcel_api)
@@ -68,37 +68,37 @@ def provide_calculate_topography_metrics_use_case(
     local_dem_repository: NamedDependency[S3LocalDemRepository],
     dem_metrics_service: NamedDependency[NumpyDemMetricsService],
     geometry_metrics_service: NamedDependency[ShapelyGeometryMetricsService],
-    metrics_repository: NamedDependency[PostgresMetricsRepository],
-    parcel_provider: NamedDependency[ParcelProviderImpl],
+    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
+    topography_parcel_provider: NamedDependency[ParcelProviderImpl],
 ) -> CalculateTopographyMetricsUseCase:
     return CalculateTopographyMetricsUseCase(
         local_dem_repository=local_dem_repository,
         dem_metrics_service=dem_metrics_service,
         geometry_metrics_service=geometry_metrics_service,
-        metrics_repository=metrics_repository,
-        parcel_provider=parcel_provider,
+        metrics_repository=topography_metrics_repository,
+        parcel_provider=topography_parcel_provider,
     )
 
 
 def provide_get_topography_metrics_use_case(
-    metrics_repository: NamedDependency[PostgresMetricsRepository],
-    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
+    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
+    topography_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> GetTopographyMetricsUseCase:
-    return GetTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
+    return GetTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
 def provide_get_latest_parcel_topography_metrics_use_case(
-    metrics_repository: NamedDependency[PostgresMetricsRepository],
-    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
+    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
+    topography_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> GetLatestParcelTopographyMetricsUseCase:
-    return GetLatestParcelTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
+    return GetLatestParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
 def provide_list_parcel_topography_metrics_use_case(
-    metrics_repository: NamedDependency[PostgresMetricsRepository],
-    metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
+    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
+    topography_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> ListParcelTopographyMetricsUseCase:
-    return ListParcelTopographyMetricsUseCase(metrics_repository, metrics_permission_service)
+    return ListParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
 # ----- Internal API -----
@@ -117,9 +117,11 @@ def provide_topography_internal(
 
 
 topography_dependencies = {
-    "metrics_repository": Provide(provide_postgres_metrics_repository, sync_to_thread=False),
-    "metrics_permission_service": Provide(provide_metrics_permission_service, sync_to_thread=False),
-    "parcel_provider": Provide(provide_parcel_provider, sync_to_thread=False),
+    "topography_metrics_repository": Provide(provide_postgres_metrics_repository, sync_to_thread=False),
+    "topography_metrics_permission_service": Provide(
+        provide_topography_metrics_permission_service, sync_to_thread=False
+    ),
+    "topography_parcel_provider": Provide(provide_topography_parcel_provider, sync_to_thread=False),
     "local_dem_repository": Provide(provide_s3_local_dem_repository, sync_to_thread=False),
     "dem_metrics_service": Provide(provide_numpy_dem_metrics_service, sync_to_thread=False),
     "geometry_metrics_service": Provide(provide_shapely_geometry_metrics_service, sync_to_thread=False),
