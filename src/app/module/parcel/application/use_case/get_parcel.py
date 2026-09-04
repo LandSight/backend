@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from app.module.parcel.application.dto.command import GetParcelCommand
 from app.module.parcel.application.dto.response import ParcelResponse
-from app.module.parcel.application.error import NotParcelOwnerError, ParcelNotFoundError
+from app.module.parcel.application.error import ParcelNotFoundError
 from app.module.parcel.domain.value_object import OwnerId, ParcelId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
@@ -49,7 +49,7 @@ class GetParcelUseCase(BaseUseCase[GetParcelCommand, ParcelResponse]):
                 command.current_user_id,
                 command.parcel_id,
             )
-            raise NotParcelOwnerError(str(command.parcel_id))
+            raise ParcelNotFoundError(str(command.parcel_id))
 
         self._logger.info("Parcel found: id=%s name=%s", command.parcel_id, parcel.name.unwrap())
 
