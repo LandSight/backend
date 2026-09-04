@@ -79,21 +79,5 @@ class PolygonService(ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def calculate_area(self, polygon: Polygon) -> float:
-        """Calculate the area of a polygon in square meters.
-
-        Parameters
-        ----------
-        polygon : Polygon
-            Domain polygon value object.
-
-        Returns
-        -------
-        float
-            Area in square meters.
-        """
-        raise NotImplementedError
-
 
 __all__ = ("PolygonService",)

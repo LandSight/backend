@@ -65,15 +65,6 @@ class ShapelyPolygonService(PolygonService):
             reason = "Polygon is not simple (self-intersections detected)."
             raise InvalidPolygonError(reason)
 
-    @override
-    def calculate_area(self, polygon: Polygon) -> float:
-        shapely_geom = self._to_shapely(polygon)
-
-        area_deg = shapely_geom.area
-        area_m2 = area_deg * (111_320**2)
-
-        return area_m2
-
     @staticmethod
     def _to_shapely(polygon: Polygon) -> ShapelyPolygon:
         """Convert domain Polygon to Shapely Polygon.
