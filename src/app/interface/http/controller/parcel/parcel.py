@@ -15,9 +15,11 @@ from app.interface.http.schema.parcel import (
     ParcelFeature,
     ParcelFeatureCollection,
     ParcelFeatureProperties,
+    ParcelOwnershipResponse,
 )
 from app.interface.http.util.guards import require_authorization
 from app.module.parcel.interface.internal.dto import (
+    CheckParcelOwnershipInput,
     CreateParcelInput,
     DeleteParcelInput,
     GetParcelInput,
@@ -144,6 +146,26 @@ class ParcelController(Controller):
                 current_user_id=current_user.id,
             )
         )
+
+    @get(
+        "/{parcel_id:uuid}/ownership",
+        status_code=HTTP_200_OK,
+        description="Check whether the current user owns the given parcel.",
+    )
+    async def check_parcel_ownership(
+        self,
+        parcel_id: UUID,
+        parcel_api: ParcelInternalAPI,
+        current_user: CurrentUser,
+    ) -> ParcelOwnershipResponse:
+        """Check whether the current user owns the given parcel."""
+        owned = await parcel_api.is_user_owns_parcel(
+            CheckParcelOwnershipInput(
+                user_id=current_user.id,
+                parcel_id=parcel_id,
+            )
+        )
+        return ParcelOwnershipResponse(owned=owned)
 
 
 __all__ = ("ParcelController",)
