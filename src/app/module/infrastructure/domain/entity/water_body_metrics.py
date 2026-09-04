@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from app.module.infrastructure.domain.entity import InfrastructureMetrics
+from app.module.infrastructure.domain.entity.infrastructure_metrics import InfrastructureMetrics
 
 
 if TYPE_CHECKING:

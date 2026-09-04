@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import override
 
 from app.module.shared.domain.error import InvariantViolationError
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object.base import BaseValueObject
 from app.module.shared.domain.value_object.latitude import Latitude
 from app.module.shared.domain.value_object.longitude import Longitude
 

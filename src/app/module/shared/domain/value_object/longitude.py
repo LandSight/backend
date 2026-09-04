@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import override
 
 from app.module.shared.domain.error import ValidationError
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object.base import BaseValueObject
 
 
 class Longitude(BaseValueObject[float]):

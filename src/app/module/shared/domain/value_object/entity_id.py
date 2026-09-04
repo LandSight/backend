@@ -2,7 +2,7 @@ from typing import override
 from uuid import UUID
 
 from app.module.shared.domain.error import ValidationError
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object.base import BaseValueObject
 
 
 class EntityIdUUID6ValueObject(BaseValueObject[UUID]):
