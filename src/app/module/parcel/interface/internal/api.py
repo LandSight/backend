@@ -15,7 +15,9 @@ from app.module.parcel.application.dto.command import (
     GetParcelCommand,
     ListUserParcelsCommand,
 )
+from app.module.parcel.domain.value_object import OwnerId, ParcelId
 from app.module.parcel.interface.internal.dto import (
+    CheckParcelOwnershipInput,
     CreateParcelInput,
     DeleteParcelInput,
     GetParcelInput,
@@ -36,6 +38,7 @@ if TYPE_CHECKING:
         GetParcelUseCase,
         ListUserParcelsUseCase,
     )
+    from app.module.parcel.infrastructure.permission import ParcelPermissionServiceImpl
 
 
 class ParcelInternal(ParcelInternalAPI):
@@ -47,11 +50,13 @@ class ParcelInternal(ParcelInternalAPI):
         get_parcel_use_case: GetParcelUseCase,
         list_user_parcels_use_case: ListUserParcelsUseCase,
         delete_parcel_use_case: DeleteParcelUseCase,
+        parcel_permission_service: ParcelPermissionServiceImpl,
     ) -> None:
         self._create_parcel = create_parcel_use_case
         self._get_parcel = get_parcel_use_case
         self._list_user_parcels = list_user_parcels_use_case
         self._delete_parcel = delete_parcel_use_case
+        self._parcel_permission_service = parcel_permission_service
 
     @override
     async def create_parcel(self, input_data: CreateParcelInput) -> ParcelResult:
@@ -90,6 +95,14 @@ class ParcelInternal(ParcelInternalAPI):
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
             )
+        )
+
+    @override
+    async def is_user_owns_parcel(self, input_data: CheckParcelOwnershipInput) -> bool:
+        """See :meth:`ParcelInternalAPI.is_user_owns_parcel`."""
+        return await self._parcel_permission_service.is_owner(
+            OwnerId(input_data.user_id),
+            ParcelId(input_data.parcel_id),
         )
 
     @staticmethod

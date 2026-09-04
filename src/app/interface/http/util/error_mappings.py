@@ -5,6 +5,7 @@ from __future__ import annotations
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -21,7 +22,7 @@ from app.module.parcel.application.error import (
     ParcelAlreadyExistsError,
     ParcelNotFoundError,
 )
-from app.module.shared.application.error import ApplicationError
+from app.module.shared.application.error import ApplicationError, ForbiddenError
 from app.module.shared.domain.error import DomainError, InvariantViolationError, ValidationError
 from app.module.topography.application.error import (
     DemNotFoundError,
@@ -45,6 +46,7 @@ def _get_shared_application_error_mappings() -> dict[type[ApplicationError], int
     """Return application error mappings for shared application errors."""
     return {
         ApplicationError: HTTP_500_INTERNAL_SERVER_ERROR,
+        ForbiddenError: HTTP_403_FORBIDDEN,
     }
 
 

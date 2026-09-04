@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.parcel.interface.internal.dto import (
+        CheckParcelOwnershipInput,
         CreateParcelInput,
         DeleteParcelInput,
         GetParcelInput,
@@ -42,6 +43,11 @@ class ParcelInternalAPI(ABC):
     @abstractmethod
     async def delete_parcel(self, input_data: DeleteParcelInput) -> None:
         """Delete a parcel by ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def is_user_owns_parcel(self, input_data: CheckParcelOwnershipInput) -> bool:
+        """Check whether the given user owns the parcel."""
         raise NotImplementedError
 
 
