@@ -10,15 +10,13 @@ if TYPE_CHECKING:
     import datetime
     from uuid import UUID
 
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
-
 
 @dataclass(frozen=True, slots=True)
 class CalculateMetricsInput:
     """Input for calculating topography metrics."""
 
     parcel_id: UUID
-    polygon: GeoJSONPolygon
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)

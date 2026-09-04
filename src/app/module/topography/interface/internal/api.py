@@ -59,10 +59,7 @@ class TopographyInternal(TopographyInternalAPI):
         result = await self._calculate(
             CalculateTopographyMetricsCommand(
                 parcel_id=input_data.parcel_id,
-                polygon={
-                    "type": input_data.polygon.type,
-                    "coordinates": input_data.polygon.coordinates,
-                },
+                current_user_id=input_data.current_user_id,
             )
         )
         return self._to_result(result)

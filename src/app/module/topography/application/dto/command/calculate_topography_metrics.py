@@ -18,12 +18,12 @@ class CalculateTopographyMetricsCommand:
     ----------
     parcel_id : UUID
         ID of the parcel to calculate metrics for.
-    polygon : dict
-        GeoJSON Polygon geometry defining the area of interest.
+    current_user_id : UUID
+        ID of the user performing the request.
     """
 
     parcel_id: UUID
-    polygon: dict
+    current_user_id: UUID
 
 
 __all__ = ("CalculateTopographyMetricsCommand",)

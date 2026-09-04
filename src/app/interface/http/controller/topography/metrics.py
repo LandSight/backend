@@ -15,7 +15,6 @@ from app.interface.http.schema.topography import (
     TopographyMetricsResponse as TopographyMetricsSchema,
 )
 from app.interface.http.util.guards import require_authorization
-from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 from app.module.topography.interface.internal.dto import (
     CalculateMetricsInput,
     GetLatestParcelMetricsInput,
@@ -42,16 +41,13 @@ class TopographyMetricsController(Controller):
         self,
         data: CalculateTopographyMetricsRequest,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
         """Calculate topography metrics for a parcel."""
         result = await topography_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
-                polygon=GeoJSONPolygon(
-                    type=data.polygon.type,
-                    coordinates=data.polygon.coordinates,
-                ),
+                current_user_id=current_user.id,
             )
         )
         return self._to_schema(result)

@@ -14,6 +14,7 @@ from app.module.topography.application.use_case import (
 )
 from app.module.topography.infrastructure.dem import NumpyDemMetricsService
 from app.module.topography.infrastructure.geo import ShapelyGeometryMetricsService
+from app.module.topography.infrastructure.parcel import ParcelProviderImpl
 from app.module.topography.infrastructure.permission import MetricsPermissionServiceImpl
 from app.module.topography.infrastructure.repository import (
     PostgresMetricsRepository,
@@ -48,25 +49,35 @@ def provide_shapely_geometry_metrics_service() -> ShapelyGeometryMetricsService:
     return ShapelyGeometryMetricsService()
 
 
+# ----- Parcel integration -----
+def provide_parcel_provider(
+    parcel_api: NamedDependency[ParcelInternalAPI],
+) -> ParcelProviderImpl:
+    return ParcelProviderImpl(parcel_api)
+
+
+# ----- Services -----
+def provide_metrics_permission_service(
+    parcel_api: NamedDependency[ParcelInternalAPI],
+) -> MetricsPermissionServiceImpl:
+    return MetricsPermissionServiceImpl(parcel_api)
+
+
 # ----- Use Cases -----
 def provide_calculate_topography_metrics_use_case(
     local_dem_repository: NamedDependency[S3LocalDemRepository],
     dem_metrics_service: NamedDependency[NumpyDemMetricsService],
     geometry_metrics_service: NamedDependency[ShapelyGeometryMetricsService],
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    parcel_provider: NamedDependency[ParcelProviderImpl],
 ) -> CalculateTopographyMetricsUseCase:
     return CalculateTopographyMetricsUseCase(
         local_dem_repository=local_dem_repository,
         dem_metrics_service=dem_metrics_service,
         geometry_metrics_service=geometry_metrics_service,
         metrics_repository=metrics_repository,
+        parcel_provider=parcel_provider,
     )
-
-
-def provide_metrics_permission_service(
-    parcel_api: NamedDependency[ParcelInternalAPI],
-) -> MetricsPermissionServiceImpl:
-    return MetricsPermissionServiceImpl(parcel_api)
 
 
 def provide_get_topography_metrics_use_case(
@@ -108,6 +119,7 @@ def provide_topography_internal(
 topography_dependencies = {
     "metrics_repository": Provide(provide_postgres_metrics_repository, sync_to_thread=False),
     "metrics_permission_service": Provide(provide_metrics_permission_service, sync_to_thread=False),
+    "parcel_provider": Provide(provide_parcel_provider, sync_to_thread=False),
     "local_dem_repository": Provide(provide_s3_local_dem_repository, sync_to_thread=False),
     "dem_metrics_service": Provide(provide_numpy_dem_metrics_service, sync_to_thread=False),
     "geometry_metrics_service": Provide(provide_shapely_geometry_metrics_service, sync_to_thread=False),

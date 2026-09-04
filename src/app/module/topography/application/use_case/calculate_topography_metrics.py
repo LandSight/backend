@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
 from app.module.shared.application.use_case import BaseUseCase
 from app.module.shared.domain.value_object import BoundingBox
-from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 from app.module.topography.application.dto.command import CalculateTopographyMetricsCommand
 from app.module.topography.application.dto.response import TopographyMetricsResponse
 from app.module.topography.application.error import DemNotFoundError
@@ -25,19 +24,22 @@ from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
+    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
     from app.module.topography.application.port import (
         DemMetricsService,
         GeometryMetricsService,
         LocalDemRepository,
         MetricsRepository,
+        ParcelProvider,
     )
 
 
 class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCommand, TopographyMetricsResponse]):
     """Calculate topography metrics for a given parcel.
 
-    Downloads DEM data, computes metrics, caches the DEM locally,
-    persists the metrics, and returns the result.
+    Fetches the authoritative parcel geometry from the Parcel module (which
+    enforces access), downloads DEM data, computes metrics, caches the DEM
+    locally, persists the metrics, and returns the result.
     """
 
     _SLOPE_PERCENTILES: tuple[int, ...] = (25, 50, 75, 90)
@@ -49,11 +51,13 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
         dem_metrics_service: DemMetricsService,
         geometry_metrics_service: GeometryMetricsService,
         metrics_repository: MetricsRepository,
+        parcel_provider: ParcelProvider,
     ) -> None:
         self._local_dem_repository = local_dem_repository
         self._dem_metrics_service = dem_metrics_service
         self._geometry_metrics_service = geometry_metrics_service
         self._metrics_repository = metrics_repository
+        self._parcel_provider = parcel_provider
         self._logger = get_logger("app.topography.use_case.calculate_topography_metrics")
 
     @override
@@ -63,8 +67,15 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
     ) -> TopographyMetricsResponse:
         self._logger.info("Calculating topography metrics: parcel_id=%s", command.parcel_id)
 
+        # The Parcel module returns the geometry only for authorized users,
+        # so this doubles as the access control gate for the calculation.
+        polygon = await self._parcel_provider.get_parcel_polygon(
+            command.parcel_id,
+            command.current_user_id,
+        )
+
         # Calculate bounding box from polygon coordinates
-        bounds = self._compute_bounding_box(command.polygon)
+        bounds = self._compute_bounding_box(polygon)
 
         # Check whether DEM data is available for the requested bounds.
         # The repository reports a boolean signal; raising the application-level
@@ -104,10 +115,6 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
         south_aspect_percent = self._dem_metrics_service.calculate_south_aspect_percent(raster)
 
         # Geometry metrics
-        polygon = GeoJSONPolygon(
-            type=command.polygon["type"],
-            coordinates=command.polygon["coordinates"],
-        )
         area = self._geometry_metrics_service.calculate_area(polygon)
         perimeter = self._geometry_metrics_service.calculate_perimeter(polygon)
         compactness = self._geometry_metrics_service.calculate_compactness(area, perimeter)
@@ -162,20 +169,20 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
         )
 
     @staticmethod
-    def _compute_bounding_box(polygon: dict[str, Any]) -> BoundingBox:
+    def _compute_bounding_box(polygon: GeoJSONPolygon) -> BoundingBox:
         """Compute the bounding box from a GeoJSON Polygon geometry.
 
         Parameters
         ----------
-        polygon : dict[str, Any]
-            GeoJSON Polygon geometry dict with ``coordinates`` key.
+        polygon : GeoJSONPolygon
+            GeoJSON Polygon geometry.
 
         Returns
         -------
         BoundingBox
             Bounding box covering the polygon extent.
         """
-        coordinates = polygon["coordinates"][0]
+        coordinates = polygon.coordinates[0]
         lons = [coord[0] for coord in coordinates]
         lats = [coord[1] for coord in coordinates]
 

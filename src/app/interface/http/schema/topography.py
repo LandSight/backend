@@ -7,17 +7,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.interface.http.schema.geojson import GeoJSONPolygon
-
 
 class CalculateTopographyMetricsRequest(BaseModel):
     """Request body for calculating topography metrics."""
 
     parcel_id: UUID = Field(
         description="ID of the parcel to calculate metrics for.",
-    )
-    polygon: GeoJSONPolygon = Field(
-        description="Parcel geometry in GeoJSON Polygon format.",
     )
 
 
