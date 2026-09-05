@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from typing import override
 
 from app.module.infrastructure.domain.value_object import (
     Buffer,
@@ -48,6 +49,15 @@ class InfrastructureMetrics(BaseEntity[InfrastructureMetricsId], ABC):
     def buffer(self) -> Buffer:
         """Buffer radius in meters around the parcel boundary."""
         return self._buffer
+
+    @override
+    def _validate(self) -> None:
+        """Validate the entity's state.
+
+        Per-field invariants are enforced by the wrapped value objects, so this
+        entity adds no further checks of its own.
+        """
+        pass
 
 
 __all__ = ("InfrastructureMetrics",)
