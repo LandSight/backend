@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.module.topography.application.port import MetricsRepository
 from app.module.topography.domain.entity import TopographyMetrics
@@ -61,6 +61,11 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             compactness_index=metrics.compactness_index.unwrap(),
             elongation_index=metrics.elongation_index.unwrap(),
         )
+        # MVP keeps at most one row per parcel: recalculating overwrites the
+        # previous snapshot instead of accumulating history.
+        await self._session.execute(
+            delete(TopographyMetricsModel).where(TopographyMetricsModel.parcel_id == metrics.parcel_id.unwrap())
+        )
         self._session.add(model)
         await self._session.flush()
 
@@ -77,8 +82,8 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         return self._to_domain(model) if model is not None else None
 
     @override
-    async def get_latest(self, parcel_id: ParcelId) -> TopographyMetrics | None:
-        """See :class:`app.module.topography.application.port.MetricsRepository.get_latest`."""
+    async def get_parcel_metrics(self, parcel_id: ParcelId) -> TopographyMetrics | None:
+        """See :class:`app.module.topography.application.port.MetricsRepository.get_parcel_metrics`."""
         result = await self._session.execute(
             select(TopographyMetricsModel)
             .where(TopographyMetricsModel.parcel_id == parcel_id.unwrap())
@@ -88,18 +93,6 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         model = result.scalar_one_or_none()
 
         return self._to_domain(model) if model is not None else None
-
-    @override
-    async def get_list(self, parcel_id: ParcelId) -> list[TopographyMetrics]:
-        """See :class:`app.module.topography.application.port.MetricsRepository.list`."""
-        result = await self._session.execute(
-            select(TopographyMetricsModel)
-            .where(TopographyMetricsModel.parcel_id == parcel_id.unwrap())
-            .order_by(TopographyMetricsModel.created_at.desc()),
-        )
-        models = result.scalars().all()
-
-        return [self._to_domain(model) for model in models]
 
     @staticmethod
     def _to_domain(model: TopographyMetricsModel) -> TopographyMetrics:

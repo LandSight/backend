@@ -12,13 +12,11 @@ from app.module.topography.application.dto.command import (
     CalculateTopographyMetricsCommand,
     GetLatestParcelTopographyMetricsCommand,
     GetTopographyMetricsCommand,
-    ListParcelTopographyMetricsCommand,
 )
 from app.module.topography.interface.internal.dto import (
     CalculateMetricsInput,
-    GetLatestParcelMetricsInput,
     GetMetricsInput,
-    ListParcelMetricsInput,
+    GetParcelMetricsInput,
     TopographyMetricsResult,
 )
 from app.module.topography.interface.internal.port import TopographyInternalAPI
@@ -28,9 +26,8 @@ if TYPE_CHECKING:
     from app.module.topography.application.dto.response import TopographyMetricsResponse
     from app.module.topography.application.use_case import (
         CalculateTopographyMetricsUseCase,
-        GetLatestParcelTopographyMetricsUseCase,
+        GetParcelTopographyMetricsUseCase,
         GetTopographyMetricsUseCase,
-        ListParcelTopographyMetricsUseCase,
     )
 
 
@@ -43,20 +40,18 @@ class TopographyInternal(TopographyInternalAPI):
 
     def __init__(
         self,
-        calculate_use_case: CalculateTopographyMetricsUseCase,
-        get_use_case: GetTopographyMetricsUseCase,
-        get_latest_parcel_use_case: GetLatestParcelTopographyMetricsUseCase,
-        list_parcel_use_case: ListParcelTopographyMetricsUseCase,
+        calculate_metrics_use_case: CalculateTopographyMetricsUseCase,
+        get_metrics_use_case: GetTopographyMetricsUseCase,
+        get_parcel_metrics_use_case: GetParcelTopographyMetricsUseCase,
     ) -> None:
-        self._calculate = calculate_use_case
-        self._get = get_use_case
-        self._get_latest_parcel = get_latest_parcel_use_case
-        self._list_parcel = list_parcel_use_case
+        self._calculate_metrics = calculate_metrics_use_case
+        self._get_metrics = get_metrics_use_case
+        self._get_parcel_metrics = get_parcel_metrics_use_case
 
     @override
     async def calculate_metrics(self, input_data: CalculateMetricsInput) -> TopographyMetricsResult:
         """See :meth:`TopographyInternalAPI.calculate_metrics`."""
-        result = await self._calculate(
+        result = await self._calculate_metrics(
             CalculateTopographyMetricsCommand(
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
@@ -67,7 +62,7 @@ class TopographyInternal(TopographyInternalAPI):
     @override
     async def get_metrics(self, input_data: GetMetricsInput) -> TopographyMetricsResult:
         """See :meth:`TopographyInternalAPI.get_metrics`."""
-        result = await self._get(
+        result = await self._get_metrics(
             GetTopographyMetricsCommand(
                 metrics_id=input_data.metrics_id,
                 current_user_id=input_data.current_user_id,
@@ -76,26 +71,15 @@ class TopographyInternal(TopographyInternalAPI):
         return self._to_result(result)
 
     @override
-    async def get_latest_parcel_metrics(self, input_data: GetLatestParcelMetricsInput) -> TopographyMetricsResult:
+    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> TopographyMetricsResult:
         """See :meth:`TopographyInternalAPI.get_latest_parcel_metrics`."""
-        result = await self._get_latest_parcel(
+        result = await self._get_parcel_metrics(
             GetLatestParcelTopographyMetricsCommand(
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
             )
         )
         return self._to_result(result)
-
-    @override
-    async def list_parcel_metrics(self, input_data: ListParcelMetricsInput) -> list[TopographyMetricsResult]:
-        """See :meth:`TopographyInternalAPI.list_parcel_metrics`."""
-        results = await self._list_parcel(
-            ListParcelTopographyMetricsCommand(
-                parcel_id=input_data.parcel_id,
-                current_user_id=input_data.current_user_id,
-            )
-        )
-        return [self._to_result(result) for result in results]
 
     @staticmethod
     def _to_result(result: TopographyMetricsResponse) -> TopographyMetricsResult:

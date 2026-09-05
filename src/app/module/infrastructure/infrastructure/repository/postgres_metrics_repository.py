@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.module.infrastructure.application.port import MetricsRepository
 from app.module.infrastructure.domain.entity import (
@@ -33,10 +33,17 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
 ModelT = TypeVar("ModelT")
+
+# Union of all per-category metrics ORM models.
+MetricsModel = (
+    SchoolMetricsModel | HospitalMetricsModel | ShopMetricsModel | TransitStopMetricsModel | WaterBodyMetricsModel
+)
 
 
 class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
@@ -61,7 +68,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        self._session.add(model)
+        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
 
     @override
     async def get_schools(
@@ -85,7 +92,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        self._session.add(model)
+        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
 
     @override
     async def get_hospitals(
@@ -109,7 +116,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        self._session.add(model)
+        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
 
     @override
     async def get_shops(
@@ -133,7 +140,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        self._session.add(model)
+        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
 
     @override
     async def get_transit_stops(
@@ -158,7 +165,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
             coverage_ratio=metrics.coverage_ratio.unwrap(),
         )
-        self._session.add(model)
+        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
 
     @override
     async def get_water_bodies(
@@ -171,6 +178,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         return self._water_body_to_domain(model) if model is not None else None
 
     # ----- Helpers -----
+
+    async def _replace(self, model: MetricsModel, parcel_id: UUID, buffer: int) -> None:
+        """Replace any existing metrics row for the (parcel, buffer) pair.
+
+        MVP keeps at most one row per (parcel, category, buffer): recalculating
+        overwrites the previous result instead of accumulating history.
+        """
+        model_cls = type(model)
+        stmt = delete(model_cls).where(
+            model_cls.parcel_id == parcel_id,
+            model_cls.buffer == buffer,
+        )
+        await self._session.execute(stmt)
+        self._session.add(model)
 
     async def _get_latest(
         self,

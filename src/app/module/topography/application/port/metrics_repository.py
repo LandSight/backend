@@ -51,11 +51,11 @@ class MetricsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_latest(self, parcel_id: ParcelId) -> TopographyMetrics | None:
-        """Retrieve the most recent topography metrics for a parcel.
+    async def get_parcel_metrics(self, parcel_id: ParcelId) -> TopographyMetrics | None:
+        """Retrieve the current topography metrics for a parcel.
 
-        Since a parcel can accumulate multiple snapshots over time, this returns
-        the latest one (ordered by creation time).
+        MVP keeps a single metrics snapshot per parcel, overwritten on each
+        recalculation.
 
         Parameters
         ----------
@@ -65,24 +65,7 @@ class MetricsRepository(ABC):
         Returns
         -------
         TopographyMetrics | None
-            The latest metrics if any exist, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_list(self, parcel_id: ParcelId) -> list[TopographyMetrics]:
-        """List all topography metrics snapshots for a parcel, newest first.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-
-        Returns
-        -------
-        list[TopographyMetrics]
-            All metrics snapshots for the parcel ordered by creation time
-            descending.
+            The current metrics if any exist, ``None`` otherwise.
         """
         raise NotImplementedError
 

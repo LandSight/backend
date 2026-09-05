@@ -54,17 +54,7 @@ class TopographyMetricsResponse(BaseModel):
     )
 
 
-class TopographyMetricsHistoryResponse(BaseModel):
-    """Response body listing topography metrics snapshots for a parcel."""
-
-    items: list[TopographyMetricsResponse] = Field(
-        default_factory=list,
-        description="Topography metrics snapshots, newest first.",
-    )
-
-
 __all__ = (
     "CalculateTopographyMetricsRequest",
-    "TopographyMetricsHistoryResponse",
     "TopographyMetricsResponse",
 )

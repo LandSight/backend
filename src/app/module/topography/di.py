@@ -8,9 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.topography.application.use_case import (
     CalculateTopographyMetricsUseCase,
-    GetLatestParcelTopographyMetricsUseCase,
+    GetParcelTopographyMetricsUseCase,
     GetTopographyMetricsUseCase,
-    ListParcelTopographyMetricsUseCase,
 )
 from app.module.topography.infrastructure.dem import NumpyDemMetricsService
 from app.module.topography.infrastructure.geo import ShapelyGeometryMetricsService
@@ -87,32 +86,23 @@ def provide_get_topography_metrics_use_case(
     return GetTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
-def provide_get_latest_parcel_topography_metrics_use_case(
+def provide_get_parcel_topography_metrics_use_case(
     topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
     topography_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
-) -> GetLatestParcelTopographyMetricsUseCase:
-    return GetLatestParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
-
-
-def provide_list_parcel_topography_metrics_use_case(
-    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
-    topography_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
-) -> ListParcelTopographyMetricsUseCase:
-    return ListParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
+) -> GetParcelTopographyMetricsUseCase:
+    return GetParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
 # ----- Internal API -----
 def provide_topography_internal(
     calculate_topography_metrics_use_case: NamedDependency[CalculateTopographyMetricsUseCase],
     get_topography_metrics_use_case: NamedDependency[GetTopographyMetricsUseCase],
-    get_latest_parcel_topography_metrics_use_case: NamedDependency[GetLatestParcelTopographyMetricsUseCase],
-    list_parcel_topography_metrics_use_case: NamedDependency[ListParcelTopographyMetricsUseCase],
+    get_parcel_topography_metrics_use_case: NamedDependency[GetParcelTopographyMetricsUseCase],
 ) -> TopographyInternal:
     return TopographyInternal(
-        calculate_use_case=calculate_topography_metrics_use_case,
-        get_use_case=get_topography_metrics_use_case,
-        get_latest_parcel_use_case=get_latest_parcel_topography_metrics_use_case,
-        list_parcel_use_case=list_parcel_topography_metrics_use_case,
+        calculate_metrics_use_case=calculate_topography_metrics_use_case,
+        get_metrics_use_case=get_topography_metrics_use_case,
+        get_parcel_metrics_use_case=get_parcel_topography_metrics_use_case,
     )
 
 
@@ -129,12 +119,8 @@ topography_dependencies = {
         provide_calculate_topography_metrics_use_case, sync_to_thread=False
     ),
     "get_topography_metrics_use_case": Provide(provide_get_topography_metrics_use_case, sync_to_thread=False),
-    "get_latest_parcel_topography_metrics_use_case": Provide(
-        provide_get_latest_parcel_topography_metrics_use_case,
-        sync_to_thread=False,
-    ),
-    "list_parcel_topography_metrics_use_case": Provide(
-        provide_list_parcel_topography_metrics_use_case,
+    "get_parcel_topography_metrics_use_case": Provide(
+        provide_get_parcel_topography_metrics_use_case,
         sync_to_thread=False,
     ),
     "topography_api": Provide(provide_topography_internal, sync_to_thread=False),

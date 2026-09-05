@@ -28,16 +28,8 @@ class GetMetricsInput:
 
 
 @dataclass(frozen=True, slots=True)
-class GetLatestParcelMetricsInput:
-    """Input for retrieving the latest topography metrics for a parcel."""
-
-    parcel_id: UUID
-    current_user_id: UUID
-
-
-@dataclass(frozen=True, slots=True)
-class ListParcelMetricsInput:
-    """Input for listing all topography metrics snapshots for a parcel."""
+class GetParcelMetricsInput:
+    """Input for retrieving the topography metrics for a parcel."""
 
     parcel_id: UUID
     current_user_id: UUID
@@ -69,8 +61,7 @@ class TopographyMetricsResult:
 
 __all__ = (
     "CalculateMetricsInput",
-    "GetLatestParcelMetricsInput",
     "GetMetricsInput",
-    "ListParcelMetricsInput",
+    "GetParcelMetricsInput",
     "TopographyMetricsResult",
 )
