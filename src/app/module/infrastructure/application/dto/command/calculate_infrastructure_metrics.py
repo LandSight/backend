@@ -17,20 +17,21 @@ class CalculateInfrastructureMetricsCommand:
     """Command for calculating infrastructure metrics for a parcel.
 
     Computes metrics for a variadic set of categories, each with its own
-    buffer radius, in a single request.
+    buffer radius, in a single request. The parcel geometry is fetched
+    internally (from the Parcel module) rather than supplied by the caller.
 
     Attributes
     ----------
     parcel_id : UUID
         ID of the parcel to calculate metrics for.
-    polygon : dict
-        GeoJSON Polygon geometry defining the area of interest.
+    current_user_id : UUID
+        ID of the user performing the calculation.
     categories : list[CategoryRequest]
         Requested categories with their buffer radii.
     """
 
     parcel_id: UUID
-    polygon: dict
+    current_user_id: UUID
     categories: list[CategoryRequest]
 
 

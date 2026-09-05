@@ -12,11 +12,14 @@ from app.module.infrastructure.infrastructure.geo import (
     ShapelyBufferService,
     ShapelyInfrastructureMetricsService,
 )
+from app.module.infrastructure.infrastructure.parcel import ParcelProviderImpl
+from app.module.infrastructure.infrastructure.permission import MetricsPermissionServiceImpl
 from app.module.infrastructure.infrastructure.repository import (
     PostgresLocalInfrastructureRepository,
     PostgresMetricsRepository,
 )
 from app.module.infrastructure.interface.internal.api import InfrastructureInternal
+from app.module.parcel.interface.internal.port import ParcelInternalAPI
 
 
 # ----- Repositories -----
@@ -41,25 +44,41 @@ def provide_shapely_infrastructure_metrics_service() -> ShapelyInfrastructureMet
     return ShapelyInfrastructureMetricsService()
 
 
+# ----- Parcel integration -----
+def provide_infrastructure_parcel_provider(
+    parcel_api: NamedDependency[ParcelInternalAPI],
+) -> ParcelProviderImpl:
+    return ParcelProviderImpl(parcel_api)
+
+
+def provide_infrastructure_metrics_permission_service(
+    parcel_api: NamedDependency[ParcelInternalAPI],
+) -> MetricsPermissionServiceImpl:
+    return MetricsPermissionServiceImpl(parcel_api)
+
+
 # ----- Use Cases -----
 def provide_calculate_infrastructure_metrics_use_case(
     buffer_service: NamedDependency[ShapelyBufferService],
     local_infrastructure_repository: NamedDependency[PostgresLocalInfrastructureRepository],
     infrastructure_metrics_service: NamedDependency[ShapelyInfrastructureMetricsService],
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    infrastructure_parcel_provider: NamedDependency[ParcelProviderImpl],
 ) -> CalculateInfrastructureMetricsUseCase:
     return CalculateInfrastructureMetricsUseCase(
         buffer_service=buffer_service,
         local_infrastructure_repository=local_infrastructure_repository,
         infrastructure_metrics_service=infrastructure_metrics_service,
         metrics_repository=metrics_repository,
+        parcel_provider=infrastructure_parcel_provider,
     )
 
 
 def provide_get_infrastructure_metrics_use_case(
     metrics_repository: NamedDependency[PostgresMetricsRepository],
+    infrastructure_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
 ) -> GetInfrastructureMetricsUseCase:
-    return GetInfrastructureMetricsUseCase(metrics_repository)
+    return GetInfrastructureMetricsUseCase(metrics_repository, infrastructure_metrics_permission_service)
 
 
 def provide_get_available_categories_use_case() -> GetAvailableCategoriesUseCase:
@@ -88,6 +107,14 @@ infrastructure_dependencies = {
     "buffer_service": Provide(provide_shapely_buffer_service, sync_to_thread=False),
     "infrastructure_metrics_service": Provide(
         provide_shapely_infrastructure_metrics_service,
+        sync_to_thread=False,
+    ),
+    "infrastructure_parcel_provider": Provide(
+        provide_infrastructure_parcel_provider,
+        sync_to_thread=False,
+    ),
+    "infrastructure_metrics_permission_service": Provide(
+        provide_infrastructure_metrics_permission_service,
         sync_to_thread=False,
     ),
     "calculate_infrastructure_metrics_use_case": Provide(

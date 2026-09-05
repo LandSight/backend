@@ -23,11 +23,14 @@ class GetInfrastructureMetricsCommand:
     ----------
     parcel_id : UUID
         ID of the parcel of calculated metrics.
+    current_user_id : UUID
+        ID of the user requesting the metrics.
     categories : list[CategoryRequest]
         Requested categories with their buffer radii.
     """
 
     parcel_id: UUID
+    current_user_id: UUID
     categories: list[CategoryRequest]
 
 

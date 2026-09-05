@@ -6,8 +6,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.interface.http.schema.geojson import GeoJSONPolygon
-
 
 class CategoryRequestSchema(BaseModel):
     """Requested infrastructure category with its own buffer radius."""
@@ -27,9 +25,6 @@ class CalculateInfrastructureMetricsRequest(BaseModel):
 
     parcel_id: UUID = Field(
         description="ID of the parcel to calculate metrics for.",
-    )
-    polygon: GeoJSONPolygon = Field(
-        description="Parcel geometry in GeoJSON Polygon format.",
     )
     categories: list[CategoryRequestSchema] = Field(
         default_factory=list,

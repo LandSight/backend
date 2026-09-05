@@ -16,6 +16,7 @@ from app.module.infrastructure.application.dto.response import (
     WaterBodyMetricsResponse,
 )
 from app.module.infrastructure.domain.value_object import Buffer, Category, ParcelId
+from app.module.shared.application.error import ForbiddenError
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -23,7 +24,7 @@ from app.platform.logging import get_logger
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from app.module.infrastructure.application.port import MetricsRepository
+    from app.module.infrastructure.application.port import MetricsPermissionService, MetricsRepository
 
 
 class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsCommand, InfrastructureMetricsResponse]):
@@ -36,8 +37,13 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
     buffer radii is used.
     """
 
-    def __init__(self, metrics_repository: MetricsRepository) -> None:
+    def __init__(
+        self,
+        metrics_repository: MetricsRepository,
+        metrics_permission_service: MetricsPermissionService,
+    ) -> None:
         self._metrics_repository = metrics_repository
+        self._metrics_permission_service = metrics_permission_service
         self._logger = get_logger("app.infrastructure.use_case.get_infrastructure_metrics")
 
         self._handlers: dict[
@@ -54,6 +60,13 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
     @override
     async def __call__(self, command: GetInfrastructureMetricsCommand) -> InfrastructureMetricsResponse:
         self._logger.info("Getting infrastructure metrics: parcel_id=%s", command.parcel_id)
+
+        if not await self._metrics_permission_service.user_can_view_parcel_metrics(
+            command.current_user_id,
+            command.parcel_id,
+        ):
+            reason = f"User is not allowed to view metrics for parcel '{command.parcel_id}'"
+            raise ForbiddenError(reason)
 
         parcel_id = ParcelId(command.parcel_id)
 

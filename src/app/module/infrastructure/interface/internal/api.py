@@ -66,10 +66,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         result = await self._calculate(
             CalculateInfrastructureMetricsCommand(
                 parcel_id=input_data.parcel_id,
-                polygon={
-                    "type": input_data.polygon.type,
-                    "coordinates": input_data.polygon.coordinates,
-                },
+                current_user_id=input_data.current_user_id,
                 categories=[CategoryRequest(c.category, c.buffer) for c in input_data.categories],
             )
         )
@@ -81,6 +78,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         result = await self._get(
             GetInfrastructureMetricsCommand(
                 parcel_id=input_data.parcel_id,
+                current_user_id=input_data.current_user_id,
                 categories=[CategoryRequest(c.category, c.buffer) for c in input_data.categories],
             )
         )

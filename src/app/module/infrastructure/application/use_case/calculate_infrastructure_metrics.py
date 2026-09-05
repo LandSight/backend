@@ -43,6 +43,7 @@ if TYPE_CHECKING:
         InfrastructureMetricsService,
         LocalInfrastructureRepository,
         MetricsRepository,
+        ParcelProvider,
     )
 
 
@@ -65,11 +66,13 @@ class CalculateInfrastructureMetricsUseCase(
         local_infrastructure_repository: LocalInfrastructureRepository,
         infrastructure_metrics_service: InfrastructureMetricsService,
         metrics_repository: MetricsRepository,
+        parcel_provider: ParcelProvider,
     ) -> None:
         self._buffer_service = buffer_service
         self._local_infrastructure_repository = local_infrastructure_repository
         self._infrastructure_metrics_service = infrastructure_metrics_service
         self._metrics_repository = metrics_repository
+        self._parcel_provider = parcel_provider
         self._logger = get_logger("app.infrastructure.use_case.calculate_infrastructure_metrics")
 
         self._handlers: dict[
@@ -91,8 +94,15 @@ class CalculateInfrastructureMetricsUseCase(
         self._logger.info("Calculating infrastructure metrics: parcel_id=%s", command.parcel_id)
 
         parcel_id = ParcelId(command.parcel_id)
+
+        # The Parcel module returns the geometry only for authorized users,
+        # so this doubles as the access control gate for the calculation.
+        geo_polygon = await self._parcel_provider.get_parcel_polygon(
+            command.parcel_id,
+            command.current_user_id,
+        )
         polygon = Polygon(
-            tuple(GeoPoint.create(float(coord[1]), float(coord[0])) for coord in command.polygon["coordinates"][0])
+            tuple(GeoPoint.create(float(coord[1]), float(coord[0])) for coord in geo_polygon.coordinates[0])
         )
 
         results: dict[Category, Any] = {}

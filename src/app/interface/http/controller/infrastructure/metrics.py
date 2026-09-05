@@ -33,7 +33,6 @@ from app.module.infrastructure.interface.internal.dto import (
     WaterBodyMetricsResult,
 )
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
-from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 
 
 class InfrastructureMetricsController(Controller):
@@ -52,16 +51,13 @@ class InfrastructureMetricsController(Controller):
         self,
         data: CalculateInfrastructureMetricsRequest,
         infrastructure_api: InfrastructureInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> InfrastructureMetricsResponse:
         """Calculate infrastructure metrics for a parcel."""
         result = await infrastructure_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
-                polygon=GeoJSONPolygon(
-                    type=data.polygon.type,
-                    coordinates=data.polygon.coordinates,
-                ),
+                current_user_id=current_user.id,
                 categories=[CategoryRequestInput(c.category, c.buffer) for c in data.categories],
             )
         )
@@ -77,12 +73,13 @@ class InfrastructureMetricsController(Controller):
         parcel_id: UUID,
         data: GetInfrastructureMetricsRequest,
         infrastructure_api: InfrastructureInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> InfrastructureMetricsResponse:
         """Get infrastructure metrics for a parcel by its ID."""
         result = await infrastructure_api.get_metrics(
             GetMetricsInput(
                 parcel_id=parcel_id,
+                current_user_id=current_user.id,
                 categories=[CategoryRequestInput(c.category, c.buffer) for c in data.categories],
             )
         )
