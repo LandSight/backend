@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from uuid import UUID
-
 from litestar import get, post
 from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
@@ -64,13 +62,12 @@ class InfrastructureMetricsController(Controller):
         return InfrastructureMetricsController._to_response(result)
 
     @post(
-        "/{parcel_id:uuid}",
+        "/",
         status_code=HTTP_200_OK,
         description="Get infrastructure metrics for a parcel.",
     )
     async def get_infrastructure_metrics(
         self,
-        parcel_id: UUID,
         data: GetInfrastructureMetricsRequest,
         infrastructure_api: InfrastructureInternalAPI,
         current_user: CurrentUser,
@@ -78,7 +75,7 @@ class InfrastructureMetricsController(Controller):
         """Get infrastructure metrics for a parcel by its ID."""
         result = await infrastructure_api.get_metrics(
             GetMetricsInput(
-                parcel_id=parcel_id,
+                parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 categories=[CategoryRequestInput(c.category, c.buffer) for c in data.categories],
             )
