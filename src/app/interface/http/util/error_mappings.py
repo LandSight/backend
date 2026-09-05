@@ -19,11 +19,10 @@ from app.module.identity.application.error import (
 from app.module.parcel.application.error import (
     InvalidGeoJsonError,
     InvalidPolygonError,
-    NotParcelOwnerError,
     ParcelAlreadyExistsError,
     ParcelNotFoundError,
 )
-from app.module.shared.application.error import ApplicationError
+from app.module.shared.application.error import ApplicationError, ForbiddenError
 from app.module.shared.domain.error import DomainError, InvariantViolationError, ValidationError
 from app.module.topography.application.error import (
     DemNotFoundError,
@@ -47,6 +46,7 @@ def _get_shared_application_error_mappings() -> dict[type[ApplicationError], int
     """Return application error mappings for shared application errors."""
     return {
         ApplicationError: HTTP_500_INTERNAL_SERVER_ERROR,
+        ForbiddenError: HTTP_403_FORBIDDEN,
     }
 
 
@@ -72,7 +72,6 @@ def _get_parcel_application_error_mappings() -> dict[type[ApplicationError], int
         ParcelAlreadyExistsError: HTTP_409_CONFLICT,
         InvalidGeoJsonError: HTTP_400_BAD_REQUEST,
         InvalidPolygonError: HTTP_400_BAD_REQUEST,
-        NotParcelOwnerError: HTTP_403_FORBIDDEN,
     }
 
 

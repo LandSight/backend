@@ -13,19 +13,24 @@ from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
-    from app.module.topography.application.port import MetricsRepository
+    from app.module.topography.application.port import MetricsPermissionService, MetricsRepository
 
 
-class GetLatestParcelTopographyMetricsUseCase(
+class GetParcelTopographyMetricsUseCase(
     BaseUseCase[GetLatestParcelTopographyMetricsCommand, TopographyMetricsResponse]
 ):
-    """Retrieve the most recent topography metrics for a parcel."""
+    """Retrieve the topography metrics for a parcel.
+
+    Access is granted only when the current user owns the parcel.
+    """
 
     def __init__(
         self,
         metrics_repository: MetricsRepository,
+        metrics_permission_service: MetricsPermissionService,
     ) -> None:
         self._metrics_repository = metrics_repository
+        self._metrics_permission_service = metrics_permission_service
         self._logger = get_logger("app.topography.use_case.get_latest_parcel_topography_metrics")
 
     @override
@@ -33,7 +38,19 @@ class GetLatestParcelTopographyMetricsUseCase(
         self._logger.info("Getting latest topography metrics: parcel_id=%s", command.parcel_id)
 
         parcel_id = ParcelId(command.parcel_id)
-        metrics = await self._metrics_repository.get_latest(parcel_id)
+
+        if not await self._metrics_permission_service.user_can_view_parcel_metrics(
+            command.current_user_id,
+            command.parcel_id,
+        ):
+            self._logger.warning(
+                "User %s is not allowed to view metrics for parcel %s",
+                command.current_user_id,
+                command.parcel_id,
+            )
+            raise TopographyMetricsNotFoundError(str(command.parcel_id))
+
+        metrics = await self._metrics_repository.get_parcel_metrics(parcel_id)
 
         if metrics is None:
             self._logger.warning("Topography metrics not found: parcel_id=%s", command.parcel_id)
@@ -63,4 +80,4 @@ class GetLatestParcelTopographyMetricsUseCase(
         )
 
 
-__all__ = ("GetLatestParcelTopographyMetricsUseCase",)
+__all__ = ("GetParcelTopographyMetricsUseCase",)

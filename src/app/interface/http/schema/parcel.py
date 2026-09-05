@@ -46,9 +46,18 @@ class ParcelFeatureCollection(GeoJSONFeatureCollection):
     features: list[ParcelFeature] = Field(description="List of parcel features.")
 
 
+class ParcelOwnershipResponse(BaseModel):
+    """Result of checking whether the current user owns a parcel."""
+
+    owned: bool = Field(
+        description="Whether the current user owns the given parcel.",
+    )
+
+
 __all__ = (
     "CreateParcelRequest",
     "ParcelFeature",
     "ParcelFeatureCollection",
     "ParcelFeatureProperties",
+    "ParcelOwnershipResponse",
 )

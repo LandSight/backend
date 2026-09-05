@@ -19,13 +19,18 @@ class ParcelRepository(ABC):
     """
 
     @abstractmethod
-    async def save(self, parcel: Parcel) -> None:
-        """Persist a parcel.
+    async def save(self, parcel: Parcel) -> Parcel:
+        """Persist a parcel and return the saved entity.
 
         Parameters
         ----------
         parcel : Parcel
             Parcel entity to save.
+
+        Returns
+        -------
+        Parcel
+            The parcel exactly as persisted by the underlying storage.
         """
         raise NotImplementedError
 

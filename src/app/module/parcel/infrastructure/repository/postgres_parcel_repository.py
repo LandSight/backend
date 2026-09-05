@@ -11,13 +11,12 @@ from sqlalchemy import select
 from app.module.parcel.application.port import ParcelRepository
 from app.module.parcel.domain.entity import Parcel
 from app.module.parcel.domain.value_object import (
-    GeoPoint,
     OwnerId,
     ParcelId,
     ParcelName,
-    Polygon,
 )
 from app.module.parcel.infrastructure.model import ParcelModel
+from app.module.shared.domain.value_object import GeoPoint, Polygon
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -30,7 +29,7 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
     """Parcel repository backed by PostgreSQL with PostGIS extension.
 
     Stores polygon geometry in PostGIS ``Geometry(Polygon, 4326)`` column.
-    Converts between domain :class:`~app.module.parcel.domain.value_object.polygon.Polygon`
+    Converts between domain :class:`~app.module.shared.domain.value_object.Polygon`
     and Shapely/PostGIS formats directly using coordinate data from the domain object.
     """
 
@@ -38,7 +37,7 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
         super().__init__(session)
 
     @override
-    async def save(self, parcel: Parcel) -> None:
+    async def save(self, parcel: Parcel) -> Parcel:
         """See :class:`app.module.parcel.application.port.ParcelRepository.save`."""
         shapely_geom = self._domain_to_shapely(parcel.polygon)
         wkb_element = from_shape(shapely_geom, srid=4326)
@@ -50,6 +49,9 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
             owner_id=parcel.owner_id.unwrap(),
         )
         self._session.add(model)
+        await self._session.flush()
+
+        return self._to_domain(model)
 
     @override
     async def get_by_id(self, parcel_id: ParcelId) -> Parcel | None:

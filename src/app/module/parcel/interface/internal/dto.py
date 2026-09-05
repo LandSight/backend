@@ -50,6 +50,14 @@ class DeleteParcelInput:
 
 
 @dataclass(frozen=True, slots=True)
+class CheckParcelOwnershipInput:
+    """Input for checking whether a user owns a parcel."""
+
+    user_id: UUID
+    parcel_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
 class ParcelProperties:
     """Typed properties of a parcel GeoJSON Feature."""
 
@@ -67,6 +75,7 @@ ParcelListResult = GeoJSONFeatureCollection[ParcelProperties]
 
 
 __all__ = (
+    "CheckParcelOwnershipInput",
     "CreateParcelInput",
     "DeleteParcelInput",
     "GetParcelInput",

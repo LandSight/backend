@@ -13,17 +13,22 @@ from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
-    from app.module.topography.application.port import MetricsRepository
+    from app.module.topography.application.port import MetricsPermissionService, MetricsRepository
 
 
 class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, TopographyMetricsResponse]):
-    """Retrieve a specific topography metrics snapshot by its ID."""
+    """Retrieve a specific topography metrics snapshot by its ID.
+
+    Access is granted only when the current user owns the underlying parcel.
+    """
 
     def __init__(
         self,
         metrics_repository: MetricsRepository,
+        metrics_permission_service: MetricsPermissionService,
     ) -> None:
         self._metrics_repository = metrics_repository
+        self._metrics_permission_service = metrics_permission_service
         self._logger = get_logger("app.topography.use_case.get_topography_metrics")
 
     @override
@@ -35,6 +40,17 @@ class GetTopographyMetricsUseCase(BaseUseCase[GetTopographyMetricsCommand, Topog
 
         if metrics is None:
             self._logger.warning("Topography metrics not found: metrics_id=%s", command.metrics_id)
+            raise TopographyMetricsNotFoundError(str(command.metrics_id))
+
+        if not await self._metrics_permission_service.user_can_view_parcel_metrics(
+            command.current_user_id,
+            metrics.parcel_id.unwrap(),
+        ):
+            self._logger.warning(
+                "User %s is not allowed to view metrics %s",
+                command.current_user_id,
+                command.metrics_id,
+            )
             raise TopographyMetricsNotFoundError(str(command.metrics_id))
 
         self._logger.info("Topography metrics found: id=%s parcel_id=%s", metrics.id, metrics.parcel_id)

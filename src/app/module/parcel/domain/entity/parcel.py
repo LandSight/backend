@@ -1,14 +1,17 @@
 """Parcel entity representing a land plot."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from app.module.parcel.domain.value_object import (
     OwnerId,
     ParcelId,
     ParcelName,
-    Polygon,
 )
 from app.module.shared.domain.entity import BaseEntity
+
+
+if TYPE_CHECKING:
+    from app.module.shared.domain.value_object import Polygon
 
 
 class Parcel(BaseEntity[ParcelId]):

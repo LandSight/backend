@@ -10,15 +10,13 @@ if TYPE_CHECKING:
     import datetime
     from uuid import UUID
 
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
-
 
 @dataclass(frozen=True, slots=True)
 class CalculateMetricsInput:
     """Input for calculating topography metrics."""
 
     parcel_id: UUID
-    polygon: GeoJSONPolygon
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,20 +24,15 @@ class GetMetricsInput:
     """Input for retrieving a specific topography metrics snapshot by its ID."""
 
     metrics_id: UUID
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
-class GetLatestParcelMetricsInput:
-    """Input for retrieving the latest topography metrics for a parcel."""
+class GetParcelMetricsInput:
+    """Input for retrieving the topography metrics for a parcel."""
 
     parcel_id: UUID
-
-
-@dataclass(frozen=True, slots=True)
-class ListParcelMetricsInput:
-    """Input for listing all topography metrics snapshots for a parcel."""
-
-    parcel_id: UUID
+    current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,8 +61,7 @@ class TopographyMetricsResult:
 
 __all__ = (
     "CalculateMetricsInput",
-    "GetLatestParcelMetricsInput",
     "GetMetricsInput",
-    "ListParcelMetricsInput",
+    "GetParcelMetricsInput",
     "TopographyMetricsResult",
 )

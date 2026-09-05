@@ -10,6 +10,7 @@ Usage
     alembic -n identity revision --autogenerate -m "..."
     alembic -n parcel revision --autogenerate -m "..."
     alembic -n topography revision --autogenerate -m "..."
+    alembic -n infrastructure revision --autogenerate -m "..."
 """
 
 from __future__ import annotations
@@ -76,8 +77,22 @@ elif service == "topography":
     schema_name = "topography"
     include_schema = "topography"
 
+elif service == "infrastructure":
+    # Infrastructure FK: *_metrics.parcel_id -> parcel.parcels.id
+    # The external OSM layers (planet_osm_*) are created by osm2pgsql and are
+    # intentionally NOT managed by Alembic autogenerate.
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "infrastructure"
+    schema_name = "infrastructure"
+    include_schema = "infrastructure"
+
 else:
-    message = f"Unknown Alembic service target: '{service}'. Expected one of: platform, identity, parcel, topography."
+    message = (
+        f"Unknown Alembic service target: '{service}'. "
+        "Expected one of: platform, identity, parcel, topography, infrastructure."
+    )
     raise ValueError(message)
 
 

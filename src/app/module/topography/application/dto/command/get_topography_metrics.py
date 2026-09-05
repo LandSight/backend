@@ -18,9 +18,12 @@ class GetTopographyMetricsCommand:
     ----------
     metrics_id : UUID
         ID of the metrics snapshot to retrieve.
+    current_user_id : UUID
+        ID of the user performing the request.
     """
 
     metrics_id: UUID
+    current_user_id: UUID
 
 
 __all__ = ("GetTopographyMetricsCommand",)

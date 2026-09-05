@@ -88,13 +88,28 @@ def not_authorized_handler(
 def http_exception_handler(request: Request, exc: HTTPException) -> Response:
     """Handle any HTTP exception."""
     logger = get_logger("app.interface.http.exception_handlers")
-    logger.warning(
-        "HTTP exception %s: %s while processing %s %s",
-        exc.status_code,
-        exc.detail,
-        request.method,
-        request.url,
-    )
+
+    # For server-side errors (>=500) the underlying cause is usually the
+    # interesting part. Litestar wraps unhandled exceptions into an
+    # ``HTTPException(500, "Internal Server Error")`` while preserving the
+    # original as ``__cause__``, so we must log the full chain to see where
+    # the failure actually happened.
+    if exc.status_code >= status_codes.HTTP_500_INTERNAL_SERVER_ERROR:
+        logger.exception(
+            "HTTP exception %s: %s while processing %s %s",
+            exc.status_code,
+            exc.detail,
+            request.method,
+            request.url,
+        )
+    else:
+        logger.warning(
+            "HTTP exception %s: %s while processing %s %s",
+            exc.status_code,
+            exc.detail,
+            request.method,
+            request.url,
+        )
     return make_error_response(exc.status_code, exc.detail or "HTTP error")
 
 

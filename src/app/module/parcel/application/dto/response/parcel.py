@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
+
 
 @dataclass(frozen=True, slots=True)
 class ParcelResponse:
@@ -20,7 +22,7 @@ class ParcelResponse:
         Parcel identifier.
     name : str
         Human-readable name of the parcel.
-    polygon : dict
+    polygon : GeoJSONPolygon
         GeoJSON Polygon geometry.
     owner_id : UUID
         ID of the user who owns this parcel.
@@ -28,7 +30,7 @@ class ParcelResponse:
 
     id: UUID
     name: str
-    polygon: dict
+    polygon: GeoJSONPolygon
     owner_id: UUID
 
 

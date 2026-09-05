@@ -11,16 +11,13 @@ from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.topography import (
     CalculateTopographyMetricsRequest,
-    TopographyMetricsHistoryResponse,
     TopographyMetricsResponse as TopographyMetricsSchema,
 )
 from app.interface.http.util.guards import require_authorization
-from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 from app.module.topography.interface.internal.dto import (
     CalculateMetricsInput,
-    GetLatestParcelMetricsInput,
     GetMetricsInput,
-    ListParcelMetricsInput,
+    GetParcelMetricsInput,
     TopographyMetricsResult,
 )
 from app.module.topography.interface.internal.port import TopographyInternalAPI
@@ -42,16 +39,13 @@ class TopographyMetricsController(Controller):
         self,
         data: CalculateTopographyMetricsRequest,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
         """Calculate topography metrics for a parcel."""
         result = await topography_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
-                polygon=GeoJSONPolygon(
-                    type=data.polygon.type,
-                    coordinates=data.polygon.coordinates,
-                ),
+                current_user_id=current_user.id,
             )
         )
         return self._to_schema(result)
@@ -65,43 +59,30 @@ class TopographyMetricsController(Controller):
         self,
         metrics_id: UUID,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
         """Get a specific topography metrics snapshot by its ID."""
-        result = await topography_api.get_metrics(GetMetricsInput(metrics_id=metrics_id))
+        result = await topography_api.get_metrics(
+            GetMetricsInput(metrics_id=metrics_id, current_user_id=current_user.id)
+        )
         return self._to_schema(result)
 
     @get(
         "/parcel/{parcel_id:uuid}",
         status_code=HTTP_200_OK,
-        description="Get the latest topography metrics for a parcel.",
+        description="Get the topography metrics for a parcel.",
     )
-    async def get_latest_parcel_topography_metrics(
+    async def get_parcel_topography_metrics(
         self,
         parcel_id: UUID,
         topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
+        current_user: CurrentUser,
     ) -> TopographyMetricsSchema:
-        """Get the latest topography metrics for a parcel."""
-        result = await topography_api.get_latest_parcel_metrics(
-            GetLatestParcelMetricsInput(parcel_id=parcel_id),
+        """Get the topography metrics for a parcel."""
+        result = await topography_api.get_parcel_metrics(
+            GetParcelMetricsInput(parcel_id=parcel_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)
-
-    @get(
-        "/parcel/{parcel_id:uuid}/history",
-        status_code=HTTP_200_OK,
-        description="List all topography metrics snapshots for a parcel, newest first.",
-    )
-    async def list_parcel_topography_metrics(
-        self,
-        parcel_id: UUID,
-        topography_api: TopographyInternalAPI,
-        current_user: CurrentUser,  # noqa: ARG002
-    ) -> TopographyMetricsHistoryResponse:
-        """List all topography metrics snapshots for a parcel, newest first."""
-        results = await topography_api.list_parcel_metrics(ListParcelMetricsInput(parcel_id=parcel_id))
-        return TopographyMetricsHistoryResponse(items=[self._to_schema(result) for result in results])
 
     @staticmethod
     def _to_schema(result: TopographyMetricsResult) -> TopographyMetricsSchema:

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, override
+from typing import override
 
 from shapely.geometry import Polygon as ShapelyPolygon, mapping
 from shapely.validation import explain_validity
 
 from app.module.parcel.application.error import InvalidGeoJsonError, InvalidPolygonError
 from app.module.parcel.application.port.polygon_service import PolygonService
-from app.module.parcel.domain.value_object import GeoPoint, Polygon
+from app.module.shared.application.dto.geojson import GeoJSONPolygon
+from app.module.shared.domain.value_object import GeoPoint, Polygon
 
 
 class ShapelyPolygonService(PolygonService):
@@ -20,18 +21,14 @@ class ShapelyPolygonService(PolygonService):
     """
 
     @override
-    def to_domain(self, geojson: dict[str, Any]) -> Polygon:
-        """See :class:`app.module.parcel.application.port.polygon_service.PolygonService.to_domain`."""
-        if not isinstance(geojson, dict):
-            reason = "GeoJSON must be a dict"
+    def to_domain(self, geojson: GeoJSONPolygon) -> Polygon:
+        """See :class:`app.module.parcel.application.port.PolygonService.to_domain`."""
+        if geojson.type != "Polygon":
+            reason = f"Expected Polygon geometry, got '{geojson.type}'"
             raise InvalidGeoJsonError(reason)
 
-        if geojson.get("type") != "Polygon":
-            reason = f"Expected Polygon geometry, got '{geojson.get('type')}'"
-            raise InvalidGeoJsonError(reason)
-
-        coordinates = geojson.get("coordinates")
-        if not isinstance(coordinates, list) or len(coordinates) == 0:
+        coordinates = geojson.coordinates
+        if len(coordinates) == 0:
             reason = "GeoJSON Polygon must have a non-empty coordinates array"
             raise InvalidGeoJsonError(reason)
 
@@ -45,13 +42,14 @@ class ShapelyPolygonService(PolygonService):
         return Polygon(tuple(points))
 
     @override
-    def from_domain(self, polygon: Polygon) -> dict[str, Any]:
-        """See :class:`app.module.parcel.application.port.polygon_service.PolygonService.from_domain`."""
+    def from_domain(self, polygon: Polygon) -> GeoJSONPolygon:
+        """See :class:`app.module.parcel.application.port.PolygonService.from_domain`."""
         coords = [(point.longitude.unwrap(), point.latitude.unwrap()) for point in polygon.points]
 
         shapely_geom = ShapelyPolygon(coords)
+        mapped = mapping(shapely_geom)
 
-        return mapping(shapely_geom)
+        return GeoJSONPolygon(type=mapped["type"], coordinates=mapped["coordinates"])
 
     @override
     def validate(self, polygon: Polygon) -> None:
@@ -64,15 +62,6 @@ class ShapelyPolygonService(PolygonService):
         if not shapely_geom.is_simple:
             reason = "Polygon is not simple (self-intersections detected)."
             raise InvalidPolygonError(reason)
-
-    @override
-    def calculate_area(self, polygon: Polygon) -> float:
-        shapely_geom = self._to_shapely(polygon)
-
-        area_deg = shapely_geom.area
-        area_m2 = area_deg * (111_320**2)
-
-        return area_m2
 
     @staticmethod
     def _to_shapely(polygon: Polygon) -> ShapelyPolygon:

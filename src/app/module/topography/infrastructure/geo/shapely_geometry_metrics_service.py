@@ -5,14 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 import numpy as np
-from pyproj import Geod, Transformer
+from pyproj import Geod
 from shapely import Polygon as ShapelyPolygon, minimum_rotated_rectangle
 
+from app.module.shared.infrastructure.geo.projection import to_local_utm
 from app.module.topography.application.port.geometry_metrics_service import GeometryMetricsService
 
 
 if TYPE_CHECKING:
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
 
 
 class ShapelyGeometryMetricsService(GeometryMetricsService):
@@ -31,14 +32,6 @@ class ShapelyGeometryMetricsService(GeometryMetricsService):
 
     # WGS84 ellipsoid for geodesic measurements (shared across instances).
     _GEOD = Geod(ellps="WGS84")
-
-    # UTM zone width in degrees.
-    _UTM_ZONE_WIDTH = 6.0
-    # Longitude offset used to compute the UTM zone number.
-    _UTM_LON_OFFSET = 180.0
-    # EPSG code bases for northern/southern hemisphere UTM zones.
-    _UTM_NORTH_EPSG_BASE = 32600
-    _UTM_SOUTH_EPSG_BASE = 32700
 
     @override
     def calculate_area(self, polygon: GeoJSONPolygon) -> float:
@@ -76,7 +69,7 @@ class ShapelyGeometryMetricsService(GeometryMetricsService):
         if shapely_poly.is_empty or shapely_poly.area <= 0:
             return 0.0
 
-        utm_poly = self._to_local_utm(shapely_poly)
+        utm_poly, _ = to_local_utm(shapely_poly)
         mbr = minimum_rotated_rectangle(utm_poly)
         mbr_coords = list(mbr.exterior.coords)  # type: ignore[union-attr]
 
@@ -104,62 +97,6 @@ class ShapelyGeometryMetricsService(GeometryMetricsService):
         """Convert a GeoJSONPolygon DTO to a Shapely Polygon."""
         coords = polygon.coordinates[0]
         return ShapelyPolygon(coords)
-
-    def _to_local_utm(self, polygon: ShapelyPolygon) -> ShapelyPolygon:
-        """Reproject a lon/lat polygon to a local UTM zone in meters.
-
-        The UTM zone is chosen from the polygon centroid so the projection is
-        valid across a wide range of longitudes.
-
-        Parameters
-        ----------
-        polygon : ShapelyPolygon
-            Polygon in geographic coordinates (EPSG:4326).
-
-        Returns
-        -------
-        ShapelyPolygon
-            The same polygon in projected meter coordinates.
-        """
-        centroid = polygon.centroid
-        lon, lat = centroid.x, centroid.y
-
-        epsg = self._utm_epsg(lon, lat)
-
-        transformer = Transformer.from_crs("EPSG:4326", f"EPSG:{epsg}", always_xy=True)
-
-        xs, ys = polygon.exterior.xy
-        proj_xs, proj_ys = transformer.transform(list(xs), list(ys))
-        proj_coords = list(zip(proj_xs, proj_ys, strict=True))
-
-        return ShapelyPolygon(proj_coords)
-
-    @staticmethod
-    def _utm_epsg(lon: float, lat: float) -> int:
-        """Compute the local UTM zone EPSG code for the given coordinates.
-
-        Parameters
-        ----------
-        lon : float
-            Longitude in degrees.
-        lat : float
-            Latitude in degrees.
-
-        Returns
-        -------
-        int
-            EPSG code of the UTM zone covering the coordinates.
-        """
-        zone = (
-            int((lon + ShapelyGeometryMetricsService._UTM_LON_OFFSET) / ShapelyGeometryMetricsService._UTM_ZONE_WIDTH)
-            + 1
-        )
-        base = (
-            ShapelyGeometryMetricsService._UTM_NORTH_EPSG_BASE
-            if lat >= 0
-            else ShapelyGeometryMetricsService._UTM_SOUTH_EPSG_BASE
-        )
-        return base + zone
 
 
 __all__ = ("ShapelyGeometryMetricsService",)

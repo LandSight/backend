@@ -9,9 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.module.topography.interface.internal.dto import (
         CalculateMetricsInput,
-        GetLatestParcelMetricsInput,
         GetMetricsInput,
-        ListParcelMetricsInput,
+        GetParcelMetricsInput,
         TopographyMetricsResult,
     )
 
@@ -37,13 +36,8 @@ class TopographyInternalAPI(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_latest_parcel_metrics(self, input_data: GetLatestParcelMetricsInput) -> TopographyMetricsResult:
-        """Retrieve the latest topography metrics for a parcel."""
-        raise NotImplementedError
-
-    @abstractmethod
-    async def list_parcel_metrics(self, input_data: ListParcelMetricsInput) -> list[TopographyMetricsResult]:
-        """List all topography metrics snapshots for a parcel, newest first."""
+    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> TopographyMetricsResult:
+        """Retrieve the current topography metrics for a parcel."""
         raise NotImplementedError
 
 

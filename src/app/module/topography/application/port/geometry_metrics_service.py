@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
+    from app.module.shared.application.dto.geojson import GeoJSONPolygon
 
 
 class GeometryMetricsService(ABC):

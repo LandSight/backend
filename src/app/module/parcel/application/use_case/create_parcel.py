@@ -45,15 +45,16 @@ class CreateParcelUseCase(BaseUseCase[CreateParcelCommand, ParcelResponse]):
         owner_id = OwnerId(command.owner_id)
         parcel = Parcel(id=parcel_id, name=name, polygon=polygon, owner_id=owner_id)
 
-        await self._parcel_repository.save(parcel)
+        saved_parcel = await self._parcel_repository.save(parcel)
+        saved_polygon = self._polygon_service.from_domain(saved_parcel.polygon)
 
         self._logger.info("Parcel created: id=%s name=%s", parcel_id, command.name)
 
         return ParcelResponse(
-            id=parcel.id.unwrap(),
-            name=name.unwrap(),
-            polygon=command.polygon,
-            owner_id=owner_id.unwrap(),
+            id=saved_parcel.id.unwrap(),
+            name=saved_parcel.name.unwrap(),
+            polygon=saved_polygon,
+            owner_id=saved_parcel.owner_id.unwrap(),
         )
 
 

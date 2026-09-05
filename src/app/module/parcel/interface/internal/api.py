@@ -6,7 +6,6 @@ for the abstract interface.
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING, override
 
 from app.module.parcel.application.dto.command import (
@@ -15,7 +14,9 @@ from app.module.parcel.application.dto.command import (
     GetParcelCommand,
     ListUserParcelsCommand,
 )
+from app.module.parcel.domain.value_object import OwnerId, ParcelId
 from app.module.parcel.interface.internal.dto import (
+    CheckParcelOwnershipInput,
     CreateParcelInput,
     DeleteParcelInput,
     GetParcelInput,
@@ -25,6 +26,7 @@ from app.module.parcel.interface.internal.dto import (
     ParcelResult,
 )
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
+from app.module.shared.application.dto.geojson import GeoJSONPolygon as GeoJSONPolygonDTO
 from app.module.shared.interface.internal.geojson import GeoJSONFeature, GeoJSONPolygon
 
 
@@ -36,6 +38,7 @@ if TYPE_CHECKING:
         GetParcelUseCase,
         ListUserParcelsUseCase,
     )
+    from app.module.parcel.infrastructure.permission import ParcelPermissionServiceImpl
 
 
 class ParcelInternal(ParcelInternalAPI):
@@ -47,11 +50,13 @@ class ParcelInternal(ParcelInternalAPI):
         get_parcel_use_case: GetParcelUseCase,
         list_user_parcels_use_case: ListUserParcelsUseCase,
         delete_parcel_use_case: DeleteParcelUseCase,
+        parcel_permission_service: ParcelPermissionServiceImpl,
     ) -> None:
         self._create_parcel = create_parcel_use_case
         self._get_parcel = get_parcel_use_case
         self._list_user_parcels = list_user_parcels_use_case
         self._delete_parcel = delete_parcel_use_case
+        self._parcel_permission_service = parcel_permission_service
 
     @override
     async def create_parcel(self, input_data: CreateParcelInput) -> ParcelResult:
@@ -59,7 +64,7 @@ class ParcelInternal(ParcelInternalAPI):
         result = await self._create_parcel(
             CreateParcelCommand(
                 name=input_data.name,
-                polygon=asdict(input_data.polygon),
+                polygon=self._to_dto_polygon(input_data.polygon),
                 owner_id=input_data.owner_id,
             )
         )
@@ -92,13 +97,26 @@ class ParcelInternal(ParcelInternalAPI):
             )
         )
 
+    @override
+    async def is_user_owns_parcel(self, input_data: CheckParcelOwnershipInput) -> bool:
+        """See :meth:`ParcelInternalAPI.is_user_owns_parcel`."""
+        return await self._parcel_permission_service.is_owner(
+            OwnerId(input_data.user_id),
+            ParcelId(input_data.parcel_id),
+        )
+
+    @staticmethod
+    def _to_dto_polygon(polygon: GeoJSONPolygon) -> GeoJSONPolygonDTO:
+        """Translate an interface-level GeoJSON polygon to an application DTO."""
+        return GeoJSONPolygonDTO(type=polygon.type, coordinates=polygon.coordinates)
+
     @staticmethod
     def _to_feature(result: ParcelResponse) -> ParcelResult:
-        """Convert an application-layer parcel response into a GeoJSON Feature."""
+        """Convert an application-layer parcel response into an interface GeoJSON Feature."""
         return GeoJSONFeature[ParcelProperties](
             geometry=GeoJSONPolygon(
-                type=result.polygon["type"],
-                coordinates=result.polygon["coordinates"],
+                type=result.polygon.type,
+                coordinates=result.polygon.coordinates,
             ),
             properties=ParcelProperties(
                 id=result.id,
