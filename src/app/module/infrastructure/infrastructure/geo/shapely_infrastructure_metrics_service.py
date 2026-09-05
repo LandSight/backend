@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from shapely.geometry import Point as ShapelyPoint, Polygon as ShapelyPolygon
+from shapely.ops import unary_union
 
 from app.module.infrastructure.application.port import InfrastructureMetricsService
 from app.module.infrastructure.domain.value_object import (
@@ -14,6 +15,7 @@ from app.module.infrastructure.domain.value_object import (
     Distance,
 )
 from app.module.shared.domain.value_object import GeoPoint, Polygon
+from app.module.shared.infrastructure.geo.projection import reproject_to, to_local_utm
 
 
 if TYPE_CHECKING:
@@ -21,13 +23,13 @@ if TYPE_CHECKING:
 
 
 class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
-    """Infrastructure metrics service implementation using Shapely.
+    """Infrastructure metrics service using Shapely in a local UTM projection.
 
     Computes object counts, minimum distances, and coverage ratios from raw
-    infrastructure objects using Shapely spatial operations.
+    infrastructure objects. Distances and areas are measured in meters inside a
+    local UTM zone derived from the parcel/ring centroid; all projection math is
+    delegated to ``pyproj``.
     """
-
-    _METERS_PER_DEGREE = 111_320.0
 
     @override
     def count_objects(self, objects: list[InfrastructureObject]) -> Count:
@@ -48,18 +50,20 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
             return None
 
         parcel_shapely = self._polygon_to_shapely(parcel_geometry)
+        parcel_utm, epsg = to_local_utm(parcel_shapely)
 
-        min_distance_deg: float | None = None
+        min_distance_m: float | None = None
         for obj in objects:
             obj_shapely = self._geometry_to_shapely(obj.geometry)
-            distance_deg = parcel_shapely.distance(obj_shapely)
-            if min_distance_deg is None or distance_deg < min_distance_deg:
-                min_distance_deg = distance_deg
+            obj_utm = reproject_to(obj_shapely, epsg)
+            distance_m = parcel_utm.distance(obj_utm)
+            if min_distance_m is None or distance_m < min_distance_m:
+                min_distance_m = distance_m
 
-        if min_distance_deg is None:
+        if min_distance_m is None:
             return None
 
-        return Distance(min_distance_deg * self._METERS_PER_DEGREE)
+        return Distance(min_distance_m)
 
     @override
     def coverage_ratio(
@@ -69,23 +73,35 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
     ) -> CoverageRatio:
         """See :class:`app.module.infrastructure.application.port.InfrastructureMetricsService.coverage_ratio`.
 
-        Computes the fraction of the buffer ring covered by the objects.
-        Returns ``0.0`` when the zone has no area or there are no objects.
+        Computes the fraction of the buffer ring covered by the objects. The
+        covered area is the area of the *union* of the individual intersections
+        so overlapping objects are not double-counted. Returns ``0.0`` when the
+        zone has no area or there are no objects.
         """
         outer_shapely = self._polygon_to_shapely(buffer_zone.outer)
         inner_shapely = self._polygon_to_shapely(buffer_zone.inner)
 
         ring = outer_shapely.difference(inner_shapely)
-        ring_area = ring.area
+        if ring.is_empty or ring.area <= 0:
+            return CoverageRatio(0.0)
+
+        ring_utm, epsg = to_local_utm(ring)
+        ring_area = ring_utm.area
         if ring_area <= 0:
             return CoverageRatio(0.0)
 
-        covered_area = 0.0
+        intersections = []
         for obj in objects:
             obj_shapely = self._geometry_to_shapely(obj.geometry)
-            intersection = ring.intersection(obj_shapely)
-            covered_area += intersection.area
+            obj_utm = reproject_to(obj_shapely, epsg)
+            intersection = ring_utm.intersection(obj_utm)
+            if not intersection.is_empty:
+                intersections.append(intersection)
 
+        if not intersections:
+            return CoverageRatio(0.0)
+
+        covered_area = unary_union(intersections).area
         ratio = min(covered_area / ring_area, 1.0)
         return CoverageRatio(ratio)
 

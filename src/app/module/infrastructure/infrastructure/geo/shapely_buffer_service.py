@@ -9,22 +9,28 @@ from shapely.geometry import Polygon as ShapelyPolygon
 from app.module.infrastructure.application.port import BufferService
 from app.module.infrastructure.domain.value_object import Buffer, BufferZone
 from app.module.shared.domain.value_object import GeoPoint, Polygon
+from app.module.shared.infrastructure.geo.projection import to_local_utm, to_wgs84
 
 
 class ShapelyBufferService(BufferService):
-    """Buffer zone service implementation using Shapely."""
+    """Buffer zone service implementation using Shapely and a local UTM projection.
 
-    _METERS_PER_DEGREE = 111_320.0
+    The buffer radius is applied in meters inside a local UTM zone derived from
+    the parcel centroid, so the resulting ring is a true buffer of constant
+    ground distance regardless of latitude. All projection math is delegated to
+    ``pyproj``.
+    """
 
     @override
     def create_zone(self, polygon: Polygon, buffer: Buffer) -> BufferZone:
         """See :class:`app.module.infrastructure.application.port.BufferService.create_zone`."""
         shapely_poly = self._to_shapely(polygon)
 
-        buffer_deg = buffer.unwrap() / self._METERS_PER_DEGREE
-        outer_shapely = shapely_poly.buffer(buffer_deg)
+        utm_poly, epsg = to_local_utm(shapely_poly)
+        outer_utm = utm_poly.buffer(buffer.unwrap())
+        outer_wgs = to_wgs84(outer_utm, epsg)
 
-        outer = self._from_shapely(outer_shapely)
+        outer = self._from_shapely(outer_wgs)
         inner = polygon
 
         return BufferZone((outer, inner))
