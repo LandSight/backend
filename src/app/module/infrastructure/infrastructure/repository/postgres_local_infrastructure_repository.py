@@ -5,7 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast, override
 
 from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import Point as ShapelyPoint, Polygon as ShapelyPolygon
+from shapely.geometry import (
+    MultiPolygon as ShapelyMultiPolygon,
+    Point as ShapelyPoint,
+    Polygon as ShapelyPolygon,
+)
 from sqlalchemy import func, or_, select
 
 from app.module.infrastructure.application.port import LocalInfrastructureRepository
@@ -144,6 +148,10 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
         if isinstance(shapely_geom, ShapelyPoint):
             geometry = GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
         else:
+            # Real OSM areas (e.g. water bodies with islands) are MultiPolygons.
+            # Fall back to the largest component so the domain Polygon stays valid.
+            if isinstance(shapely_geom, ShapelyMultiPolygon):
+                shapely_geom = max(shapely_geom.geoms, key=lambda geom: geom.area)
             points = [GeoPoint.create(float(coord[1]), float(coord[0])) for coord in shapely_geom.exterior.coords]
             geometry = Polygon(tuple(points))
 
