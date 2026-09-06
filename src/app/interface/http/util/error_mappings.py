@@ -11,6 +11,10 @@ from litestar.status_codes import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+from app.module.climate.application.error import (
+    ClimateDataNotFoundError,
+    ClimateMetricsNotFoundError,
+)
 from app.module.identity.application.error import (
     AuthenticationError,
     UserAlreadyExistsError,
@@ -87,6 +91,17 @@ def _get_topography_application_error_mappings() -> dict[type[ApplicationError],
     }
 
 
+# Climate module
+
+
+def _get_climate_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Climate module."""
+    return {
+        ClimateMetricsNotFoundError: HTTP_404_NOT_FOUND,
+        ClimateDataNotFoundError: HTTP_404_NOT_FOUND,
+    }
+
+
 #  Public API
 
 
@@ -116,6 +131,7 @@ def get_all_application_error_mappings() -> dict[type[ApplicationError], int]:
     mappings.update(_get_identity_application_error_mappings())
     mappings.update(_get_parcel_application_error_mappings())
     mappings.update(_get_topography_application_error_mappings())
+    mappings.update(_get_climate_application_error_mappings())
     return mappings
 
 

@@ -5,6 +5,7 @@ from .geo_point import GeoPoint
 from .latitude import Latitude
 from .longitude import Longitude
 from .polygon import Polygon
+from .raster_data_array import RasterDataArray
 
 
 __all__ = (
@@ -15,4 +16,5 @@ __all__ = (
     "Latitude",
     "Longitude",
     "Polygon",
+    "RasterDataArray",
 )

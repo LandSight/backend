@@ -18,10 +18,9 @@ import numpy as np
 import rasterio
 import rasterio.windows
 
-from app.module.shared.domain.value_object import BoundingBox
+from app.module.shared.domain.value_object import BoundingBox, RasterDataArray
 from app.module.topography.application.port.local_dem_repository import LocalDemRepository
 from app.module.topography.domain.value_object.raster import RasterData
-from app.module.topography.domain.value_object.raster.raster_data_array import RasterDataArray
 from app.module.topography.domain.value_object.raster.raster_resolution import RasterResolution
 from app.platform.logging import get_logger
 from app.platform.storage.repository import S3GeoRepository

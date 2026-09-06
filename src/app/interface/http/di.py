@@ -12,6 +12,7 @@ from litestar.di import Provide
 from litestar.params import HeaderParameter
 
 from app.interface.http.schema.current_user import CurrentUser
+from app.module.climate.di import climate_dependencies
 from app.module.identity.di import identity_dependencies
 from app.module.identity.interface.internal.dto import GetCurrentUserByTokenInput
 from app.module.identity.interface.internal.port import IdentityInternalAPI
@@ -70,6 +71,7 @@ def get_all_dependencies() -> dict[str, Provide]:
     dependencies.update(parcel_dependencies)
     dependencies.update(topography_dependencies)
     dependencies.update(infrastructure_dependencies)
+    dependencies.update(climate_dependencies)
     dependencies["current_user"] = Provide(provide_current_user)
     return dependencies
 
