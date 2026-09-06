@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from litestar import Router
 
+from app.interface.http.router.climate import climate_router
 from app.interface.http.router.identity import identity_router
 from app.interface.http.router.infrastructure import infrastructure_router
 from app.interface.http.router.parcel import parcel_router
@@ -20,6 +21,7 @@ api_v1_router = Router(
         parcel_router,
         topography_router,
         infrastructure_router,
+        climate_router,
     ],
 )
 
