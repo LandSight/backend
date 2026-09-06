@@ -206,6 +206,11 @@ class S3Config(BaseConfig):
         description="Bucket name for dem storage",
         min_length=1,
     )
+    climate_bucket: str = Field(
+        default="landsight-climate",
+        description="Bucket name for WorldClim 2.1 climate raster storage",
+        min_length=1,
+    )
     access_key: str = Field(
         default="admin",
         description="S3 access key",
