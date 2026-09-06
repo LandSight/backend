@@ -51,6 +51,7 @@ if service == "platform":
     include_schema: str | None = None
 
 elif service == "identity":
+    from app.module.identity.infrastructure.model.user_model import UserModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -60,6 +61,8 @@ elif service == "identity":
 
 elif service == "parcel":
     # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -70,6 +73,9 @@ elif service == "parcel":
 elif service == "topography":
     # Topography FK: metrics.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
+    from app.module.topography.infrastructure.model import TopographyMetricsModel  # noqa: F401
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -81,6 +87,8 @@ elif service == "infrastructure":
     # Infrastructure FK: *_metrics.parcel_id -> parcel.parcels.id
     # The external OSM layers (planet_osm_*) are created by osm2pgsql and are
     # intentionally NOT managed by Alembic autogenerate.
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -88,10 +96,23 @@ elif service == "infrastructure":
     schema_name = "infrastructure"
     include_schema = "infrastructure"
 
+elif service == "climate":
+    # Climate FK: metrics.parcel_id -> parcel.parcels.id
+    # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.climate.infrastructure.model import ClimateMetricsModel  # noqa: F401
+    from app.module.identity.infrastructure.model.user_model import UserModel  # noqa: F401
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel  # noqa: F401
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "climate"
+    schema_name = "climate"
+    include_schema = "climate"
+
 else:
     message = (
         f"Unknown Alembic service target: '{service}'. "
-        "Expected one of: platform, identity, parcel, topography, infrastructure."
+        "Expected one of: platform, identity, parcel, topography, infrastructure, climate."
     )
     raise ValueError(message)
 
