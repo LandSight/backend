@@ -5,29 +5,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import override
 
-import numpy as np
-
 from app.module.climate.domain.value_object.raster.climate_variable import ClimateVariable
 from app.module.shared.domain.error import ValidationError
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object import BaseValueObject, RasterDataArray
 
 
-class ClimateRasterData(BaseValueObject[Mapping[ClimateVariable, np.ndarray]]):
+class ClimateRasterData(BaseValueObject[Mapping[ClimateVariable, RasterDataArray]]):
     """Raster arrays for each of the 8 bioclimatic variables.
 
-    Maps a :class:`ClimateVariable` to its 2D NumPy array sampled over the
-    parcel's bounding box (NaN-filled for masked pixels).
+    Maps a :class:`ClimateVariable` to its :class:`RasterDataArray` sampled over
+    the parcel's bounding box (NaN-filled for masked pixels). Reuses the shared
+    raster array value object for 2D/shape validation.
     """
 
     _EXPECTED_VARIABLES = len(ClimateVariable)
-    _EXPECTED_DIMENSIONS = 2
-    _MIN_PIXELS = 4
 
     @override
     def _normalize(
         self,
-        value: Mapping[ClimateVariable, np.ndarray],
-    ) -> Mapping[ClimateVariable, np.ndarray]:
+        value: Mapping[ClimateVariable, RasterDataArray],
+    ) -> Mapping[ClimateVariable, RasterDataArray]:
         return dict(value)
 
     @override
@@ -38,31 +35,21 @@ class ClimateRasterData(BaseValueObject[Mapping[ClimateVariable, np.ndarray]]):
 
         expected_shape: tuple[int, int] | None = None
         for variable, array in self._value.items():
-            if array.ndim != self._EXPECTED_DIMENSIONS:
-                message = f"{variable.code}: raster must be 2D, got {array.ndim}D."
-                raise ValidationError(message)
             if expected_shape is None:
                 expected_shape = array.shape
             elif array.shape != expected_shape:
                 message = (
-                    f"{variable.code}: shape {array.shape} does not match the "
+                    f"{variable.value}: shape {array.shape} does not match the "
                     f"expected {expected_shape} shared across variables."
                 )
                 raise ValidationError(message)
 
-            if expected_shape[0] * expected_shape[1] < self._MIN_PIXELS:
-                message = (
-                    f"{variable.code}: raster must have at least {self._MIN_PIXELS} "
-                    f"pixels, got {expected_shape[0] * expected_shape[1]}."
-                )
-                raise ValidationError(message)
-
-    def get(self, variable: ClimateVariable) -> np.ndarray:
+    def get(self, variable: ClimateVariable) -> RasterDataArray:
         """Return the raster array for the given variable."""
         return self._value[variable]
 
     @property
-    def variables(self) -> Mapping[ClimateVariable, np.ndarray]:
+    def variables(self) -> Mapping[ClimateVariable, RasterDataArray]:
         """All variable arrays keyed by :class:`ClimateVariable`."""
         return self._value
 

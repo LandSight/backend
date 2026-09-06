@@ -9,6 +9,7 @@ import numpy as np
 from app.module.climate.application.port import ClimateMetricsService
 from app.module.climate.domain.value_object.metric import Percentage, Precipitation, Temperature
 from app.module.climate.domain.value_object.raster.climate_variable import ClimateVariable
+from app.module.climate.infrastructure.climate_variable_spec import CLIMATE_VARIABLE_SPECS
 
 
 if TYPE_CHECKING:
@@ -80,8 +81,9 @@ class NumpyClimateMetricsService(ClimateMetricsService):
             Mean value converted to the variable's physical unit.
         """
         array = data.get(variable)
-        raw_mean = float(np.nanmean(array))
-        return round(raw_mean / variable.scale, 2)
+        scale = CLIMATE_VARIABLE_SPECS[variable].scale
+        raw_mean = float(np.nanmean(array._value))
+        return round(raw_mean / scale, 2)
 
 
 __all__ = ("NumpyClimateMetricsService",)

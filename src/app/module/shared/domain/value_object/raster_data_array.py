@@ -1,4 +1,4 @@
-"""Raster data array value object."""
+"""Shared 2D raster data array value object."""
 
 from __future__ import annotations
 
@@ -7,11 +7,16 @@ from typing import override
 import numpy as np
 
 from app.module.shared.domain.error import ValidationError
-from app.module.shared.domain.value_object import BaseValueObject
+from app.module.shared.domain.value_object.base import BaseValueObject
 
 
 class RasterDataArray(BaseValueObject[np.ndarray]):
-    """2D raster data array."""
+    """2D raster data array.
+
+    A technical value object wrapping a 2D NumPy array and validating its shape,
+    reused across modules that compute metrics from raster data (e.g. topography
+    DEM, climate bioclimatic rasters).
+    """
 
     _EXPECTED_DIMENSIONS = 2
     _MIN_DIMENSION = 1

@@ -21,7 +21,8 @@ import rasterio.windows
 
 from app.module.climate.application.port import LocalClimateRepository
 from app.module.climate.domain.value_object.raster import ClimateRasterData, ClimateVariable
-from app.module.shared.domain.value_object import BoundingBox
+from app.module.climate.infrastructure.climate_variable_spec import CLIMATE_VARIABLE_SPECS
+from app.module.shared.domain.value_object import BoundingBox, RasterDataArray
 from app.platform.logging import get_logger
 from app.platform.storage.repository import S3GeoRepository
 
@@ -88,22 +89,22 @@ class S3LocalClimateRepository(S3GeoRepository, LocalClimateRepository):
             True if climate data is available for the requested bounds, False otherwise.
         """
         # 1) All 8 COG objects must exist in the bucket.
-        for variable in ClimateVariable:
+        for spec in CLIMATE_VARIABLE_SPECS.values():
             try:
                 self._s3_client.head_object(
                     Bucket=self._s3_config.climate_bucket,
-                    Key=variable.object_key,
+                    Key=spec.object_key,
                 )
             except self._s3_client.exceptions.ClientError:
                 self._logger.warning(
                     "Climate COG not found in S3: %s",
-                    self._get_s3_uri(variable.object_key),
+                    self._get_s3_uri(spec.object_key),
                 )
                 return False
 
         # 2) The requested bounds must be fully inside the (shared) coverage.
         reference_variable = ClimateVariable.MEAN_ANNUAL_TEMPERATURE
-        s3_uri = self._get_s3_uri(reference_variable.object_key)
+        s3_uri = self._get_s3_uri(CLIMATE_VARIABLE_SPECS[reference_variable].object_key)
         try:
             with rasterio.Env(**self._rasterio_env_options()), rasterio.open(s3_uri) as src:
                 coverage = self._coverage_bounds(src)
@@ -132,16 +133,16 @@ class S3LocalClimateRepository(S3GeoRepository, LocalClimateRepository):
             Raster arrays keyed by variable, or ``None`` if the requested
             bounds are not fully covered by the stored COGs.
         """
-        arrays: dict[ClimateVariable, np.ndarray] = {}
+        arrays: dict[ClimateVariable, RasterDataArray] = {}
 
-        for variable in ClimateVariable:
-            s3_uri = self._get_s3_uri(variable.object_key)
+        for spec in CLIMATE_VARIABLE_SPECS.values():
+            s3_uri = self._get_s3_uri(spec.object_key)
 
             try:
                 with rasterio.Env(**self._rasterio_env_options()), rasterio.open(s3_uri) as src:
                     if self._is_out_of_coverage(src, bounds):
                         return None
-                    arrays[variable] = self._read_window(src, bounds)
+                    arrays[spec.variable] = RasterDataArray(self._read_window(src, bounds))
             except rasterio.errors.RasterioIOError as exc:
                 self._logger.warning("Climate COG could not be opened from S3: %s (%s)", s3_uri, exc, exc_info=True)
                 return None
