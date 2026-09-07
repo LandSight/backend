@@ -172,6 +172,11 @@ class AuthConfig(BaseConfig):
         ge=1,
         le=30,
     )
+    cookie_secure: bool = Field(
+        default=False,
+        description="Whether the refresh token cookie should use the Secure flag "
+        "(enable over HTTPS; keep False for local HTTP development).",
+    )
 
 
 class S3Config(BaseConfig):

@@ -84,7 +84,7 @@ class AuthController(Controller):
                     value=result.refresh_token,
                     max_age=refresh_max_age,
                     httponly=True,
-                    secure=True,
+                    secure=auth_config.cookie_secure,
                     samesite="lax",
                     path="/api/v1/identity/auth/refresh",
                 )
@@ -120,7 +120,7 @@ class AuthController(Controller):
                     value=result.refresh_token,
                     max_age=refresh_max_age,
                     httponly=True,
-                    secure=True,
+                    secure=auth_config.cookie_secure,
                     samesite="lax",
                     path="/api/v1/identity/auth/refresh",
                 )
