@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 from app.module.topography.application.port import MetricsRepository
 from app.module.topography.domain.entity import TopographyMetrics
@@ -61,11 +61,8 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             compactness_index=metrics.compactness_index.unwrap(),
             elongation_index=metrics.elongation_index.unwrap(),
         )
-        # MVP keeps at most one row per parcel: recalculating overwrites the
-        # previous snapshot instead of accumulating history.
-        await self._session.execute(
-            delete(TopographyMetricsModel).where(TopographyMetricsModel.parcel_id == metrics.parcel_id.unwrap())
-        )
+        # Append-only: every calculation is stored as a new snapshot so that
+        # analyses can keep referencing the exact metrics they were computed from.
         self._session.add(model)
         await self._session.flush()
 
