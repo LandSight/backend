@@ -10,12 +10,15 @@ from typing import TYPE_CHECKING, override
 
 from app.module.infrastructure.application.dto.command import (
     CalculateInfrastructureMetricsCommand,
+    CategoryMetricRequest,
     CategoryRequest,
+    GetInfrastructureMetricsByIdsCommand,
     GetInfrastructureMetricsCommand,
 )
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
     CategoryInfoResult,
+    GetMetricsByIdsInput,
     GetMetricsInput,
     HospitalMetricsResult,
     InfrastructureMetricsResult,
@@ -39,6 +42,7 @@ if TYPE_CHECKING:
     from app.module.infrastructure.application.use_case import (
         CalculateInfrastructureMetricsUseCase,
         GetAvailableCategoriesUseCase,
+        GetInfrastructureMetricsByIdsUseCase,
         GetInfrastructureMetricsUseCase,
     )
 
@@ -54,10 +58,12 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         self,
         calculate_use_case: CalculateInfrastructureMetricsUseCase,
         get_use_case: GetInfrastructureMetricsUseCase,
+        get_by_ids_use_case: GetInfrastructureMetricsByIdsUseCase,
         get_categories_use_case: GetAvailableCategoriesUseCase,
     ) -> None:
         self._calculate = calculate_use_case
         self._get = get_use_case
+        self._get_by_ids = get_by_ids_use_case
         self._get_categories = get_categories_use_case
 
     @override
@@ -80,6 +86,20 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
                 categories=[CategoryRequest(c.category, c.buffer) for c in input_data.categories],
+            )
+        )
+        return self._to_result(result)
+
+    @override
+    async def get_metrics_by_ids(self, input_data: GetMetricsByIdsInput) -> InfrastructureMetricsResult:
+        """See :meth:`InfrastructureInternalAPI.get_metrics_by_ids`."""
+        result = await self._get_by_ids(
+            GetInfrastructureMetricsByIdsCommand(
+                parcel_id=input_data.parcel_id,
+                current_user_id=input_data.current_user_id,
+                metrics=[
+                    CategoryMetricRequest(category=m.category, metrics_id=m.metrics_id) for m in input_data.metrics
+                ],
             )
         )
         return self._to_result(result)
@@ -108,6 +128,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         if result is None:
             return None
         return SchoolMetricsResult(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -119,6 +140,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         if result is None:
             return None
         return HospitalMetricsResult(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -130,6 +152,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         if result is None:
             return None
         return ShopMetricsResult(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -141,6 +164,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         if result is None:
             return None
         return TransitStopMetricsResult(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -152,6 +176,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         if result is None:
             return None
         return WaterBodyMetricsResult(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,

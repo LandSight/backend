@@ -14,7 +14,7 @@ if TYPE_CHECKING:
         TransitStopMetrics,
         WaterBodyMetrics,
     )
-    from app.module.infrastructure.domain.value_object import Buffer, ParcelId
+    from app.module.infrastructure.domain.value_object import Buffer, InfrastructureMetricsId, ParcelId
 
 
 class MetricsRepository(ABC):
@@ -64,6 +64,22 @@ class MetricsRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_schools_by_id(self, metrics_id: InfrastructureMetricsId) -> SchoolMetrics | None:
+        """Retrieve a specific school metrics record by its ID.
+
+        Parameters
+        ----------
+        metrics_id : InfrastructureMetricsId
+            ID of the metrics record.
+
+        Returns
+        -------
+        SchoolMetrics | None
+            School metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
     # ----- Hospitals -----
 
     @abstractmethod
@@ -93,6 +109,22 @@ class MetricsRepository(ABC):
             Buffer radius in meters. If provided, returns metrics for this
             exact buffer. If ``None``, returns the most recent metrics
             (ordered by ``computed_at DESC``).
+
+        Returns
+        -------
+        HospitalMetrics | None
+            Hospital metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_hospitals_by_id(self, metrics_id: InfrastructureMetricsId) -> HospitalMetrics | None:
+        """Retrieve a specific hospital metrics record by its ID.
+
+        Parameters
+        ----------
+        metrics_id : InfrastructureMetricsId
+            ID of the metrics record.
 
         Returns
         -------
@@ -138,6 +170,22 @@ class MetricsRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_shops_by_id(self, metrics_id: InfrastructureMetricsId) -> ShopMetrics | None:
+        """Retrieve a specific shop metrics record by its ID.
+
+        Parameters
+        ----------
+        metrics_id : InfrastructureMetricsId
+            ID of the metrics record.
+
+        Returns
+        -------
+        ShopMetrics | None
+            Shop metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
     # ----- Transit stops -----
 
     @abstractmethod
@@ -175,6 +223,22 @@ class MetricsRepository(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_transit_stops_by_id(self, metrics_id: InfrastructureMetricsId) -> TransitStopMetrics | None:
+        """Retrieve a specific transit stop metrics record by its ID.
+
+        Parameters
+        ----------
+        metrics_id : InfrastructureMetricsId
+            ID of the metrics record.
+
+        Returns
+        -------
+        TransitStopMetrics | None
+            Transit stop metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
     # ----- Water bodies -----
 
     @abstractmethod
@@ -204,6 +268,22 @@ class MetricsRepository(ABC):
             Buffer radius in meters. If provided, returns metrics for this
             exact buffer. If ``None``, returns the most recent metrics
             (ordered by ``computed_at DESC``).
+
+        Returns
+        -------
+        WaterBodyMetrics | None
+            Water body metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_water_bodies_by_id(self, metrics_id: InfrastructureMetricsId) -> WaterBodyMetrics | None:
+        """Retrieve a specific water body metrics record by its ID.
+
+        Parameters
+        ----------
+        metrics_id : InfrastructureMetricsId
+            ID of the metrics record.
 
         Returns
         -------

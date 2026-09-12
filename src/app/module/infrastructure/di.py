@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.infrastructure.application.use_case import (
     CalculateInfrastructureMetricsUseCase,
     GetAvailableCategoriesUseCase,
+    GetInfrastructureMetricsByIdsUseCase,
     GetInfrastructureMetricsUseCase,
 )
 from app.module.infrastructure.infrastructure.geo import (
@@ -81,6 +82,13 @@ def provide_get_infrastructure_metrics_use_case(
     return GetInfrastructureMetricsUseCase(metrics_repository, infrastructure_metrics_permission_service)
 
 
+def provide_get_infrastructure_metrics_by_ids_use_case(
+    metrics_repository: NamedDependency[PostgresMetricsRepository],
+    infrastructure_metrics_permission_service: NamedDependency[MetricsPermissionServiceImpl],
+) -> GetInfrastructureMetricsByIdsUseCase:
+    return GetInfrastructureMetricsByIdsUseCase(metrics_repository, infrastructure_metrics_permission_service)
+
+
 def provide_get_available_categories_use_case() -> GetAvailableCategoriesUseCase:
     return GetAvailableCategoriesUseCase()
 
@@ -89,11 +97,13 @@ def provide_get_available_categories_use_case() -> GetAvailableCategoriesUseCase
 def provide_infrastructure_internal(
     calculate_infrastructure_metrics_use_case: NamedDependency[CalculateInfrastructureMetricsUseCase],
     get_infrastructure_metrics_use_case: NamedDependency[GetInfrastructureMetricsUseCase],
+    get_infrastructure_metrics_by_ids_use_case: NamedDependency[GetInfrastructureMetricsByIdsUseCase],
     get_available_categories_use_case: NamedDependency[GetAvailableCategoriesUseCase],
 ) -> InfrastructureInternal:
     return InfrastructureInternal(
         calculate_use_case=calculate_infrastructure_metrics_use_case,
         get_use_case=get_infrastructure_metrics_use_case,
+        get_by_ids_use_case=get_infrastructure_metrics_by_ids_use_case,
         get_categories_use_case=get_available_categories_use_case,
     )
 
@@ -123,6 +133,10 @@ infrastructure_dependencies = {
     ),
     "get_infrastructure_metrics_use_case": Provide(
         provide_get_infrastructure_metrics_use_case,
+        sync_to_thread=False,
+    ),
+    "get_infrastructure_metrics_by_ids_use_case": Provide(
+        provide_get_infrastructure_metrics_by_ids_use_case,
         sync_to_thread=False,
     ),
     "get_available_categories_use_case": Provide(

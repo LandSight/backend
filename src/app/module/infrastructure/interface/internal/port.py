@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.module.infrastructure.interface.internal.dto import (
         CalculateMetricsInput,
         CategoryInfoResult,
+        GetMetricsByIdsInput,
         GetMetricsInput,
         InfrastructureMetricsResult,
     )
@@ -33,6 +34,11 @@ class InfrastructureInternalAPI(ABC):
     @abstractmethod
     async def get_metrics(self, input_data: GetMetricsInput) -> InfrastructureMetricsResult:
         """Retrieve infrastructure metrics for a parcel."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_metrics_by_ids(self, input_data: GetMetricsByIdsInput) -> InfrastructureMetricsResult:
+        """Retrieve specific infrastructure metrics records by their IDs."""
         raise NotImplementedError
 
     @abstractmethod

@@ -153,6 +153,7 @@ class CalculateInfrastructureMetricsUseCase(
         )
         await self._metrics_repository.save_schools(metrics)
         response = SchoolMetricsResponse(
+            id=id.unwrap(),
             buffer=buffer.unwrap(),
             count=count.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
@@ -178,6 +179,7 @@ class CalculateInfrastructureMetricsUseCase(
         )
         await self._metrics_repository.save_hospitals(metrics)
         response = HospitalMetricsResponse(
+            id=id.unwrap(),
             buffer=buffer.unwrap(),
             count=count.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
@@ -203,6 +205,7 @@ class CalculateInfrastructureMetricsUseCase(
         )
         await self._metrics_repository.save_shops(metrics)
         response = ShopMetricsResponse(
+            id=id.unwrap(),
             buffer=buffer.unwrap(),
             count=count.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
@@ -228,6 +231,7 @@ class CalculateInfrastructureMetricsUseCase(
         )
         await self._metrics_repository.save_transit_stops(metrics)
         response = TransitStopMetricsResponse(
+            id=id.unwrap(),
             buffer=buffer.unwrap(),
             count=count.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
@@ -255,6 +259,7 @@ class CalculateInfrastructureMetricsUseCase(
         )
         await self._metrics_repository.save_water_bodies(metrics)
         response = WaterBodyMetricsResponse(
+            id=id.unwrap(),
             buffer=buffer.unwrap(),
             count=count.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,

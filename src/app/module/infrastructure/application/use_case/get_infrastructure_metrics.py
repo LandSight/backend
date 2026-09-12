@@ -101,6 +101,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return SchoolMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -113,6 +114,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return HospitalMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -125,6 +127,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return ShopMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -137,6 +140,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return TransitStopMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -149,6 +153,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return WaterBodyMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 
 from app.module.infrastructure.application.port import MetricsRepository
 from app.module.infrastructure.domain.entity import (
@@ -33,8 +33,6 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -68,7 +66,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
+        await self._insert(model)
 
     @override
     async def get_schools(
@@ -78,6 +76,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     ) -> SchoolMetrics | None:
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_schools`."""
         model = await self._get_latest(SchoolMetricsModel, parcel_id, buffer)
+        return self._school_to_domain(model) if model is not None else None
+
+    @override
+    async def get_schools_by_id(self, metrics_id: InfrastructureMetricsId) -> SchoolMetrics | None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_schools_by_id`."""
+        model = await self._get_by_id(SchoolMetricsModel, metrics_id)
         return self._school_to_domain(model) if model is not None else None
 
     # ----- Hospitals -----
@@ -92,7 +96,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
+        await self._insert(model)
 
     @override
     async def get_hospitals(
@@ -102,6 +106,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     ) -> HospitalMetrics | None:
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_hospitals`."""
         model = await self._get_latest(HospitalMetricsModel, parcel_id, buffer)
+        return self._hospital_to_domain(model) if model is not None else None
+
+    @override
+    async def get_hospitals_by_id(self, metrics_id: InfrastructureMetricsId) -> HospitalMetrics | None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_hospitals_by_id`."""
+        model = await self._get_by_id(HospitalMetricsModel, metrics_id)
         return self._hospital_to_domain(model) if model is not None else None
 
     # ----- Shops -----
@@ -116,7 +126,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
+        await self._insert(model)
 
     @override
     async def get_shops(
@@ -126,6 +136,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     ) -> ShopMetrics | None:
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_shops`."""
         model = await self._get_latest(ShopMetricsModel, parcel_id, buffer)
+        return self._shop_to_domain(model) if model is not None else None
+
+    @override
+    async def get_shops_by_id(self, metrics_id: InfrastructureMetricsId) -> ShopMetrics | None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_shops_by_id`."""
+        model = await self._get_by_id(ShopMetricsModel, metrics_id)
         return self._shop_to_domain(model) if model is not None else None
 
     # ----- Transit stops -----
@@ -140,7 +156,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             count=metrics.count.unwrap(),
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
         )
-        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
+        await self._insert(model)
 
     @override
     async def get_transit_stops(
@@ -150,6 +166,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     ) -> TransitStopMetrics | None:
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_transit_stops`."""
         model = await self._get_latest(TransitStopMetricsModel, parcel_id, buffer)
+        return self._transit_stop_to_domain(model) if model is not None else None
+
+    @override
+    async def get_transit_stops_by_id(self, metrics_id: InfrastructureMetricsId) -> TransitStopMetrics | None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_transit_stops_by_id`."""
+        model = await self._get_by_id(TransitStopMetricsModel, metrics_id)
         return self._transit_stop_to_domain(model) if model is not None else None
 
     # ----- Water bodies -----
@@ -165,7 +187,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
             coverage_ratio=metrics.coverage_ratio.unwrap(),
         )
-        await self._replace(model, metrics.parcel_id.unwrap(), metrics.buffer.unwrap())
+        await self._insert(model)
 
     @override
     async def get_water_bodies(
@@ -177,21 +199,33 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         model = await self._get_latest(WaterBodyMetricsModel, parcel_id, buffer)
         return self._water_body_to_domain(model) if model is not None else None
 
+    @override
+    async def get_water_bodies_by_id(self, metrics_id: InfrastructureMetricsId) -> WaterBodyMetrics | None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_water_bodies_by_id`."""
+        model = await self._get_by_id(WaterBodyMetricsModel, metrics_id)
+        return self._water_body_to_domain(model) if model is not None else None
+
     # ----- Helpers -----
 
-    async def _replace(self, model: MetricsModel, parcel_id: UUID, buffer: int) -> None:
-        """Replace any existing metrics row for the (parcel, buffer) pair.
+    async def _insert(self, model: MetricsModel) -> None:
+        """Append a new metrics row.
 
-        MVP keeps at most one row per (parcel, category, buffer): recalculating
-        overwrites the previous result instead of accumulating history.
+        Append-only: every calculation is stored as a new snapshot so that
+        analyses can keep referencing the exact metrics they were computed from.
         """
-        model_cls = type(model)
-        stmt = delete(model_cls).where(
-            model_cls.parcel_id == parcel_id,
-            model_cls.buffer == buffer,
-        )
-        await self._session.execute(stmt)
         self._session.add(model)
+        await self._session.flush()
+
+    async def _get_by_id(
+        self,
+        model_cls: type[ModelT],
+        metrics_id: InfrastructureMetricsId,
+    ) -> ModelT | None:
+        """Retrieve a metrics row by its primary key."""
+        result = await self._session.execute(
+            select(model_cls).where(cast("Any", model_cls).id == metrics_id.unwrap()),
+        )
+        return result.scalar_one_or_none()
 
     async def _get_latest(
         self,

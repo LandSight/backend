@@ -37,9 +37,27 @@ class GetMetricsInput:
 
 
 @dataclass(frozen=True, slots=True)
+class CategoryMetricRefInput:
+    """Reference to a specific infrastructure metrics record within a category."""
+
+    category: str
+    metrics_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class GetMetricsByIdsInput:
+    """Input for retrieving specific infrastructure metrics records by their IDs."""
+
+    parcel_id: UUID
+    current_user_id: UUID
+    metrics: list[CategoryMetricRefInput] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class SchoolMetricsResult:
     """Metrics for the ``school`` category."""
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -49,6 +67,7 @@ class SchoolMetricsResult:
 class HospitalMetricsResult:
     """Metrics for the ``hospital`` category."""
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -58,6 +77,7 @@ class HospitalMetricsResult:
 class ShopMetricsResult:
     """Metrics for the ``shop`` category."""
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -67,6 +87,7 @@ class ShopMetricsResult:
 class TransitStopMetricsResult:
     """Metrics for the ``transit_stop`` category."""
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -76,6 +97,7 @@ class TransitStopMetricsResult:
 class WaterBodyMetricsResult:
     """Metrics for the ``water_body`` category."""
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -104,7 +126,9 @@ class CategoryInfoResult:
 __all__ = (
     "CalculateMetricsInput",
     "CategoryInfoResult",
+    "CategoryMetricRefInput",
     "CategoryRequestInput",
+    "GetMetricsByIdsInput",
     "GetMetricsInput",
     "HospitalMetricsResult",
     "InfrastructureMetricsResult",

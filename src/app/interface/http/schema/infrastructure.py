@@ -44,9 +44,29 @@ class GetInfrastructureMetricsRequest(BaseModel):
     )
 
 
+class CategoryMetricRefSchema(BaseModel):
+    """Reference to a specific infrastructure metrics record within a category."""
+
+    category: str = Field(
+        description="Infrastructure category (school, hospital, shop, transit_stop, water_body).",
+    )
+    metrics_id: UUID = Field(description="ID of the persisted metrics record.")
+
+
+class GetInfrastructureMetricsByIdsRequest(BaseModel):
+    """Request body for retrieving specific infrastructure metrics records by their IDs."""
+
+    parcel_id: UUID = Field(description="ID of the parcel the metrics belong to.")
+    metrics: list[CategoryMetricRefSchema] = Field(
+        default_factory=list,
+        description="Requested (category, metrics_id) references.",
+    )
+
+
 class SchoolMetricsSchema(BaseModel):
     """Metrics for the ``school`` category."""
 
+    id: UUID = Field(description="ID of the persisted metrics record.")
     buffer: int = Field(description="Buffer radius in meters.")
     count: int = Field(description="Number of objects within the buffer zone.")
     min_distance_to: float | None = Field(
@@ -58,6 +78,7 @@ class SchoolMetricsSchema(BaseModel):
 class HospitalMetricsSchema(BaseModel):
     """Metrics for the ``hospital`` category."""
 
+    id: UUID = Field(description="ID of the persisted metrics record.")
     buffer: int = Field(description="Buffer radius in meters.")
     count: int = Field(description="Number of objects within the buffer zone.")
     min_distance_to: float | None = Field(
@@ -69,6 +90,7 @@ class HospitalMetricsSchema(BaseModel):
 class ShopMetricsSchema(BaseModel):
     """Metrics for the ``shop`` category."""
 
+    id: UUID = Field(description="ID of the persisted metrics record.")
     buffer: int = Field(description="Buffer radius in meters.")
     count: int = Field(description="Number of objects within the buffer zone.")
     min_distance_to: float | None = Field(
@@ -80,6 +102,7 @@ class ShopMetricsSchema(BaseModel):
 class TransitStopMetricsSchema(BaseModel):
     """Metrics for the ``transit_stop`` category."""
 
+    id: UUID = Field(description="ID of the persisted metrics record.")
     buffer: int = Field(description="Buffer radius in meters.")
     count: int = Field(description="Number of objects within the buffer zone.")
     min_distance_to: float | None = Field(
@@ -91,6 +114,7 @@ class TransitStopMetricsSchema(BaseModel):
 class WaterBodyMetricsSchema(BaseModel):
     """Metrics for the ``water_body`` category."""
 
+    id: UUID = Field(description="ID of the persisted metrics record.")
     buffer: int = Field(description="Buffer radius in meters.")
     count: int = Field(description="Number of objects within the buffer zone.")
     min_distance_to: float | None = Field(
@@ -137,7 +161,9 @@ class CategoryInfoSchema(BaseModel):
 __all__ = (
     "CalculateInfrastructureMetricsRequest",
     "CategoryInfoSchema",
+    "CategoryMetricRefSchema",
     "CategoryRequestSchema",
+    "GetInfrastructureMetricsByIdsRequest",
     "GetInfrastructureMetricsRequest",
     "HospitalMetricsSchema",
     "InfrastructureMetricsResponse",

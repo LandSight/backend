@@ -20,6 +20,10 @@ from app.module.identity.application.error import (
     UserAlreadyExistsError,
     UserNotFoundError,
 )
+from app.module.infrastructure.application.error import (
+    InfrastructureMetricsByIdNotFoundError,
+    InfrastructureMetricsNotFoundError,
+)
 from app.module.parcel.application.error import (
     InvalidGeoJsonError,
     InvalidPolygonError,
@@ -102,6 +106,17 @@ def _get_climate_application_error_mappings() -> dict[type[ApplicationError], in
     }
 
 
+# Infrastructure module
+
+
+def _get_infrastructure_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Infrastructure module."""
+    return {
+        InfrastructureMetricsNotFoundError: HTTP_404_NOT_FOUND,
+        InfrastructureMetricsByIdNotFoundError: HTTP_404_NOT_FOUND,
+    }
+
+
 #  Public API
 
 
@@ -132,6 +147,7 @@ def get_all_application_error_mappings() -> dict[type[ApplicationError], int]:
     mappings.update(_get_parcel_application_error_mappings())
     mappings.update(_get_topography_application_error_mappings())
     mappings.update(_get_climate_application_error_mappings())
+    mappings.update(_get_infrastructure_application_error_mappings())
     return mappings
 
 

@@ -10,6 +10,7 @@ from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.infrastructure import (
     CalculateInfrastructureMetricsRequest,
     CategoryInfoSchema,
+    GetInfrastructureMetricsByIdsRequest,
     GetInfrastructureMetricsRequest,
     HospitalMetricsSchema,
     InfrastructureMetricsResponse,
@@ -21,7 +22,9 @@ from app.interface.http.schema.infrastructure import (
 from app.interface.http.util.guards import require_authorization
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
+    CategoryMetricRefInput,
     CategoryRequestInput,
+    GetMetricsByIdsInput,
     GetMetricsInput,
     HospitalMetricsResult,
     InfrastructureMetricsResult,
@@ -82,6 +85,27 @@ class InfrastructureMetricsController(Controller):
         )
         return InfrastructureMetricsController._to_response(result)
 
+    @post(
+        "/by-ids",
+        status_code=HTTP_200_OK,
+        description="Get specific infrastructure metrics records by their IDs.",
+    )
+    async def get_infrastructure_metrics_by_ids(
+        self,
+        data: GetInfrastructureMetricsByIdsRequest,
+        infrastructure_api: InfrastructureInternalAPI,
+        current_user: CurrentUser,
+    ) -> InfrastructureMetricsResponse:
+        """Get specific infrastructure metrics records by their IDs."""
+        result = await infrastructure_api.get_metrics_by_ids(
+            GetMetricsByIdsInput(
+                parcel_id=data.parcel_id,
+                current_user_id=current_user.id,
+                metrics=[CategoryMetricRefInput(m.category, m.metrics_id) for m in data.metrics],
+            )
+        )
+        return InfrastructureMetricsController._to_response(result)
+
     @get(
         "/categories",
         status_code=HTTP_200_OK,
@@ -114,6 +138,7 @@ class InfrastructureMetricsController(Controller):
         if result is None:
             return None
         return SchoolMetricsSchema(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -125,6 +150,7 @@ class InfrastructureMetricsController(Controller):
         if result is None:
             return None
         return HospitalMetricsSchema(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -136,6 +162,7 @@ class InfrastructureMetricsController(Controller):
         if result is None:
             return None
         return ShopMetricsSchema(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -147,6 +174,7 @@ class InfrastructureMetricsController(Controller):
         if result is None:
             return None
         return TransitStopMetricsSchema(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
@@ -158,6 +186,7 @@ class InfrastructureMetricsController(Controller):
         if result is None:
             return None
         return WaterBodyMetricsSchema(
+            id=result.id,
             buffer=result.buffer,
             count=result.count,
             min_distance_to=result.min_distance_to,
