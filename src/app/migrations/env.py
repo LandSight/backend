@@ -100,8 +100,8 @@ elif service == "climate":
     # Climate FK: metrics.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
     from app.module.climate.infrastructure.model import ClimateMetricsModel  # noqa: F401
-    from app.module.identity.infrastructure.model.user_model import UserModel  # noqa: F401
-    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel  # noqa: F401
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -109,10 +109,24 @@ elif service == "climate":
     schema_name = "climate"
     include_schema = "climate"
 
+elif service == "analysis":
+    # Analysis FK: analyses.parcel_id -> parcel.parcels.id
+    # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.analysis.infrastructure.model.analysis_metric_model import AnalysisMetricModel  # noqa: F401
+    from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel  # noqa: F401
+    from app.module.identity.infrastructure.model.user_model import UserModel  # noqa: F401
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel  # noqa: F401
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "analysis"
+    schema_name = "analysis"
+    include_schema = "analysis"
+
 else:
     message = (
         f"Unknown Alembic service target: '{service}'. "
-        "Expected one of: platform, identity, parcel, topography, infrastructure, climate."
+        "Expected one of: platform, identity, parcel, topography, infrastructure, climate, analysis."
     )
     raise ValueError(message)
 
