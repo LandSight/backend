@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .metric_value import (
     IntegerMetricValue,
+    MetricsResponse,
     MetricValue,
     MetricValueBase,
     MetricValueType,
@@ -19,6 +20,7 @@ __all__ = (
     "MetricValue",
     "MetricValueBase",
     "MetricValueType",
+    "MetricsResponse",
     "NumberMetricValue",
     "SeriesMetricValue",
     "TextMetricValue",

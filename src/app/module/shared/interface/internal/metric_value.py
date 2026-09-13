@@ -1,14 +1,9 @@
-"""Neutral metric value contract shared between modules.
+"""Neutral metric contracts shared between modules.
 
-A ``MetricValue`` is a single, self-describing metric reading. It is a tagged
-union: every variant carries a ``value_type`` discriminator so heterogeneous
-metric sets can be transferred and parsed safely.
-
-Variants:
-- :class:`NumberMetricValue` — ``float``
-- :class:`IntegerMetricValue` — ``int``
-- :class:`TextMetricValue` — ``str``
-- :class:`SeriesMetricValue` — ``list[float]``
+``MetricValue`` is a single self-describing reading (a tagged union, so
+heterogeneous sets can be transferred and parsed safely). ``MetricsResponse``
+groups the values of one persisted snapshot and carries the module/category/id
+metadata once, so it is not repeated on every value.
 """
 
 from __future__ import annotations
@@ -28,9 +23,6 @@ MetricValueType = Literal["number", "integer", "text", "series"]
 class MetricValueBase:
     """Fields shared by every metric value variant."""
 
-    module: str
-    category: str | None
-    metrics_id: UUID
     key: str
     label: str
     unit: str
@@ -71,11 +63,30 @@ class SeriesMetricValue(MetricValueBase):
 MetricValue = NumberMetricValue | IntegerMetricValue | TextMetricValue | SeriesMetricValue
 
 
-def build_metric_value(  # noqa: PLR0913
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MetricsResponse:
+    """Metrics calculated by one metric module for one snapshot.
+
+    Attributes
+    ----------
+    module : str
+        Metric module (``topography``, ``climate``, ``infrastructure``).
+    category : str | None
+        Infrastructure category; ``None`` for single-metric modules.
+    id : UUID
+        ID of the persisted metrics snapshot.
+    metrics : list[MetricValue]
+        Metric values belonging to this snapshot.
+    """
+
+    module: str
+    category: str | None
+    id: UUID
+    metrics: list[MetricValue] = field(default_factory=list)
+
+
+def build_metric_value(
     *,
-    module: str,
-    category: str | None,
-    metrics_id: UUID,
     key: str,
     label: str,
     unit: str,
@@ -86,12 +97,6 @@ def build_metric_value(  # noqa: PLR0913
 
     Parameters
     ----------
-    module : str
-        Metric module name.
-    category : str | None
-        Infrastructure category; ``None`` for single-metric modules.
-    metrics_id : UUID
-        ID of the persisted metrics snapshot.
     key : str
         Machine metric key.
     label : str
@@ -110,40 +115,13 @@ def build_metric_value(  # noqa: PLR0913
     """
     match value_type:
         case "number":
-            return NumberMetricValue(
-                module=module,
-                category=category,
-                metrics_id=metrics_id,
-                key=key,
-                label=label,
-                unit=unit,
-                value=float(cast("float", raw)),
-            )
+            return NumberMetricValue(key=key, label=label, unit=unit, value=float(cast("float", raw)))
         case "integer":
-            return IntegerMetricValue(
-                module=module,
-                category=category,
-                metrics_id=metrics_id,
-                key=key,
-                label=label,
-                unit=unit,
-                value=int(cast("int", raw)),
-            )
+            return IntegerMetricValue(key=key, label=label, unit=unit, value=int(cast("int", raw)))
         case "text":
-            return TextMetricValue(
-                module=module,
-                category=category,
-                metrics_id=metrics_id,
-                key=key,
-                label=label,
-                unit=unit,
-                value=str(raw),
-            )
+            return TextMetricValue(key=key, label=label, unit=unit, value=str(raw))
         case "series":
             return SeriesMetricValue(
-                module=module,
-                category=category,
-                metrics_id=metrics_id,
                 key=key,
                 label=label,
                 unit=unit,
@@ -156,6 +134,7 @@ __all__ = (
     "MetricValue",
     "MetricValueBase",
     "MetricValueType",
+    "MetricsResponse",
     "NumberMetricValue",
     "SeriesMetricValue",
     "TextMetricValue",
