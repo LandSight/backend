@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
-from sqlalchemy import select
+from sqlalchemy import delete as sa_delete, select
 
 from app.module.infrastructure.application.port import MetricsRepository
 from app.module.infrastructure.domain.entity import (
@@ -16,6 +16,7 @@ from app.module.infrastructure.domain.entity import (
 )
 from app.module.infrastructure.domain.value_object import (
     Buffer,
+    Category,
     Count,
     CoverageRatio,
     Distance,
@@ -33,7 +34,11 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.platform.database.base import BaseModel
 
 
 ModelT = TypeVar("ModelT")
@@ -51,8 +56,28 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     (e.g. ``infrastructure.parcel_school_metrics``).
     """
 
+    _MODEL_BY_CATEGORY: dict[Category, type[BaseModel]] = {  # noqa: RUF012
+        Category.SCHOOL: SchoolMetricsModel,
+        Category.HOSPITAL: HospitalMetricsModel,
+        Category.SHOP: ShopMetricsModel,
+        Category.TRANSIT_STOP: TransitStopMetricsModel,
+        Category.WATER_BODY: WaterBodyMetricsModel,
+    }
+
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
+
+    @override
+    async def delete(self, refs: list[tuple[Category, InfrastructureMetricsId]]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete`."""
+        grouped: dict[Category, list[UUID]] = {}
+        for category, metrics_id in refs:
+            grouped.setdefault(category, []).append(metrics_id.unwrap())
+
+        for category, metrics_ids in grouped.items():
+            model = self._MODEL_BY_CATEGORY[category]
+            await self._session.execute(sa_delete(model).where(model.id.in_(metrics_ids)))
+        await self._session.flush()
 
     # ----- Schools -----
 

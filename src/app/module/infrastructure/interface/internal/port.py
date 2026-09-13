@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.module.infrastructure.interface.internal.dto import (
         CalculateMetricsInput,
         CategoryInfoResult,
+        DeleteMetricsInput,
         GetMetricsByIdsInput,
         GetMetricsInput,
     )
@@ -44,6 +45,11 @@ class InfrastructureInternalAPI(ABC):
     @abstractmethod
     async def get_available_categories(self) -> list[CategoryInfoResult]:
         """List all available infrastructure categories."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """Delete infrastructure metrics snapshots by their references."""
         raise NotImplementedError
 
 

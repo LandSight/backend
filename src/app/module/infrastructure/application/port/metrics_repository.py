@@ -14,7 +14,12 @@ if TYPE_CHECKING:
         TransitStopMetrics,
         WaterBodyMetrics,
     )
-    from app.module.infrastructure.domain.value_object import Buffer, InfrastructureMetricsId, ParcelId
+    from app.module.infrastructure.domain.value_object import (
+        Buffer,
+        Category,
+        InfrastructureMetricsId,
+        ParcelId,
+    )
 
 
 class MetricsRepository(ABC):
@@ -26,6 +31,17 @@ class MetricsRepository(ABC):
     Implementations:
     - :class:`app.module.infrastructure.infrastructure.repository.postgres_metrics_repository.PostgresMetricsRepository`
     """
+
+    @abstractmethod
+    async def delete(self, refs: list[tuple[Category, InfrastructureMetricsId]]) -> None:
+        """Delete metrics snapshots for the given ``(category, id)`` references.
+
+        Parameters
+        ----------
+        refs : list[tuple[Category, InfrastructureMetricsId]]
+            References to delete.
+        """
+        raise NotImplementedError
 
     # ----- Schools -----
 

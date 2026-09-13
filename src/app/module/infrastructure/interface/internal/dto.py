@@ -60,11 +60,19 @@ class CategoryInfoResult:
     category: str
 
 
+@dataclass(frozen=True, slots=True)
+class DeleteMetricsInput:
+    """Input for deleting infrastructure metrics snapshots by their references."""
+
+    metrics: list[CategoryMetricRefInput] = field(default_factory=list)
+
+
 __all__ = (
     "CalculateMetricsInput",
     "CategoryInfoResult",
     "CategoryMetricRefInput",
     "CategoryRequestInput",
+    "DeleteMetricsInput",
     "GetMetricsByIdsInput",
     "GetMetricsInput",
 )

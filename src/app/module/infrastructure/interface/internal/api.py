@@ -13,6 +13,7 @@ from app.module.infrastructure.application.dto.command import (
     CalculateInfrastructureMetricsCommand,
     CategoryMetricRequest,
     CategoryRequest,
+    DeleteInfrastructureMetricsCommand,
     GetInfrastructureMetricsByIdsCommand,
     GetInfrastructureMetricsCommand,
 )
@@ -20,6 +21,7 @@ from app.module.infrastructure.domain.metric_catalog import CATEGORY_CATALOG, CO
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
     CategoryInfoResult,
+    DeleteMetricsInput,
     GetMetricsByIdsInput,
     GetMetricsInput,
 )
@@ -38,6 +40,7 @@ if TYPE_CHECKING:
     )
     from app.module.infrastructure.application.use_case import (
         CalculateInfrastructureMetricsUseCase,
+        DeleteInfrastructureMetricsUseCase,
         GetAvailableCategoriesUseCase,
         GetInfrastructureMetricsByIdsUseCase,
         GetInfrastructureMetricsUseCase,
@@ -62,11 +65,13 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         get_use_case: GetInfrastructureMetricsUseCase,
         get_by_ids_use_case: GetInfrastructureMetricsByIdsUseCase,
         get_categories_use_case: GetAvailableCategoriesUseCase,
+        delete_metrics_use_case: DeleteInfrastructureMetricsUseCase,
     ) -> None:
         self._calculate = calculate_use_case
         self._get = get_use_case
         self._get_by_ids = get_by_ids_use_case
         self._get_categories = get_categories_use_case
+        self._delete_metrics = delete_metrics_use_case
 
     @override
     async def calculate_metrics(self, input_data: CalculateMetricsInput) -> list[MetricsResponse]:
@@ -111,6 +116,17 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         """See :meth:`InfrastructureInternalAPI.get_available_categories`."""
         results = await self._get_categories()
         return [CategoryInfoResult(category=r.category) for r in results]
+
+    @override
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """See :meth:`InfrastructureInternalAPI.delete_metrics`."""
+        await self._delete_metrics(
+            DeleteInfrastructureMetricsCommand(
+                metrics=[
+                    CategoryMetricRequest(category=m.category, metrics_id=m.metrics_id) for m in input_data.metrics
+                ],
+            )
+        )
 
     @staticmethod
     def to_metrics_responses(result: InfrastructureMetricsResponse) -> list[MetricsResponse]:
