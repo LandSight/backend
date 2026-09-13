@@ -72,7 +72,11 @@ class AnalysisRepository(ABC):
 
     @abstractmethod
     async def save_metrics(self, analysis_id: AnalysisId, metrics: list[AnalysisMetricRef]) -> None:
-        """Replace the metric references recorded for an analysis.
+        """Replace the metric references for the metric types present in ``metrics``.
+
+        Only rows whose ``metric_type`` appears in ``metrics`` are replaced, so
+        independent metric modules can persist their references concurrently
+        without clobbering each other.
 
         Parameters
         ----------
