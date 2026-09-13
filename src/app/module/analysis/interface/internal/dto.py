@@ -43,6 +43,7 @@ class AnalysisResult:
     parcel_id: UUID
     name: str
     status: str
+    stage: str
     score: float | None
     status_reason: str | None
     created_at: datetime.datetime | None
