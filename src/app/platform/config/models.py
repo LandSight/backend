@@ -1,7 +1,8 @@
+import json
 import typing
 
-from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from app.platform.constants import ENV_FILE
 
@@ -202,15 +203,39 @@ class AnalysisConfig(BaseConfig):
     infra_buffers : dict[str, int]
         Buffer radius in meters per infrastructure category. Categories missing
         from the mapping are skipped when an analysis calculates its metrics.
+        Configured via ``ANALYSIS_INFRA_BUFFERS`` as comma-separated
+        ``category=meters`` pairs (or a JSON object).
     """
 
     model_config = SettingsConfigDict(
         env_prefix="ANALYSIS_",
     )
-    infra_buffers: dict[str, int] = Field(
+    infra_buffers: typing.Annotated[dict[str, int], NoDecode] = Field(
         default_factory=_default_infra_buffers,
-        description="Per-category infrastructure buffer radius in meters (JSON object in ANALYSIS_INFRA_BUFFERS)",
+        description="Per-category infrastructure buffer radius in meters",
     )
+
+    @field_validator("infra_buffers", mode="before")
+    @classmethod
+    def _parse_infra_buffers(cls, value: object) -> object:
+        """Parse ``category=meters`` pairs (or a JSON object) into a mapping."""
+        if not isinstance(value, str):
+            return value
+
+        raw = value.strip()
+        if not raw:
+            return _default_infra_buffers()
+        if raw.startswith("{"):
+            return json.loads(raw)
+
+        buffers: dict[str, int] = {}
+        for pair in raw.split(","):
+            category, separator, meters = pair.partition("=")
+            if not separator or not category.strip() or not meters.strip():
+                message = f"Invalid infrastructure buffer entry: {pair!r} (expected 'category=meters')."
+                raise ValueError(message)
+            buffers[category.strip()] = int(meters.strip())
+        return buffers
 
 
 class AuthConfig(BaseConfig):
