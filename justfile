@@ -134,3 +134,7 @@ app-serve:
         --reload \
         --reload-paths="{{ SRC_DIR }}" \
         app.interface.http.asgi:create_asgi_application
+
+# Run the Celery worker that processes analyses
+worker:
+    @uv run celery -A app.worker.celery_app:celery_app worker --loglevel="INFO"
