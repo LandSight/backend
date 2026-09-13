@@ -38,19 +38,20 @@ class ListUserAnalysesUseCase(BaseUseCase[ListUserAnalysesCommand, list[Analysis
     async def __call__(self, command: ListUserAnalysesCommand) -> list[AnalysisResponse]:
         self._logger.info("Listing analyses: user_id=%s", command.current_user_id)
 
-        parcel_ids = await self._owned_parcels_provider.list_owned_parcel_ids(command.current_user_id)
-        analyses = await self._analysis_repository.list_by_parcel_ids(parcel_ids)
+        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        analyses = await self._analysis_repository.list_by_parcel_ids(list(parcels))
 
         self._logger.info("Analyses listed: user_id=%s count=%s", command.current_user_id, len(analyses))
 
-        return [self._to_response(analysis) for analysis in analyses]
+        return [self._to_response(analysis, parcels.get(analysis.parcel_id.unwrap())) for analysis in analyses]
 
     @staticmethod
-    def _to_response(analysis: Analysis) -> AnalysisResponse:
+    def _to_response(analysis: Analysis, parcel_name: str | None) -> AnalysisResponse:
         """Map a domain entity to a response DTO."""
         return AnalysisResponse(
             id=analysis.id.unwrap(),
             parcel_id=analysis.parcel_id.unwrap(),
+            parcel_name=parcel_name,
             name=analysis.name.unwrap(),
             status=analysis.status.value,
             stage=analysis.stage.value,

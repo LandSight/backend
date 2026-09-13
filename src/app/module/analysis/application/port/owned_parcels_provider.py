@@ -18,8 +18,8 @@ class OwnedParcelsProvider(ABC):
     """
 
     @abstractmethod
-    async def list_owned_parcel_ids(self, user_id: UUID) -> list[UUID]:
-        """Return IDs of all parcels owned by the user.
+    async def list_owned_parcels(self, user_id: UUID) -> dict[UUID, str]:
+        """Return the parcels owned by the user as an ``id -> name`` mapping.
 
         Parameters
         ----------
@@ -28,8 +28,8 @@ class OwnedParcelsProvider(ABC):
 
         Returns
         -------
-        list[UUID]
-            Owned parcel IDs; empty if the user owns no parcels.
+        dict[UUID, str]
+            Owned parcel IDs mapped to their names; empty if the user owns none.
         """
         raise NotImplementedError
 

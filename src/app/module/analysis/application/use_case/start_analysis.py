@@ -19,6 +19,7 @@ if TYPE_CHECKING:
         AnalysisPermissionService,
         AnalysisRepository,
         AnalysisTaskQueue,
+        OwnedParcelsProvider,
     )
 
 
@@ -34,10 +35,12 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
+        owned_parcels_provider: OwnedParcelsProvider,
         task_queue: AnalysisTaskQueue,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
+        self._owned_parcels_provider = owned_parcels_provider
         self._task_queue = task_queue
         self._logger = get_logger("app.analysis.use_case.start_analysis")
 
@@ -49,6 +52,8 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             reason = f"User is not allowed to analyze parcel '{command.parcel_id}'"
             raise ForbiddenError(reason)
 
+        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+
         analysis = Analysis(
             id=AnalysisId(uuid6()),
             parcel_id=ParcelId(command.parcel_id),
@@ -59,14 +64,15 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
 
         self._logger.info("Analysis started: analysis_id=%s parcel_id=%s", saved.id, saved.parcel_id)
 
-        return self._to_response(saved)
+        return self._to_response(saved, parcels.get(command.parcel_id))
 
     @staticmethod
-    def _to_response(analysis: Analysis) -> AnalysisResponse:
+    def _to_response(analysis: Analysis, parcel_name: str | None) -> AnalysisResponse:
         """Map a domain entity to a response DTO."""
         return AnalysisResponse(
             id=analysis.id.unwrap(),
             parcel_id=analysis.parcel_id.unwrap(),
+            parcel_name=parcel_name,
             name=analysis.name.unwrap(),
             status=analysis.status.value,
             stage=analysis.stage.value,

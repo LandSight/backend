@@ -41,6 +41,7 @@ class AnalysisResult:
 
     id: UUID
     parcel_id: UUID
+    parcel_name: str | None
     name: str
     status: str
     stage: str

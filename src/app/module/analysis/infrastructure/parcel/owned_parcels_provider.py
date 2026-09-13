@@ -15,16 +15,16 @@ if TYPE_CHECKING:
 
 
 class OwnedParcelsProviderImpl(OwnedParcelsProvider):
-    """Resolves owned parcel IDs via the Parcel module's Internal API."""
+    """Resolves owned parcels via the Parcel module's Internal API."""
 
     def __init__(self, parcel_api: ParcelInternalAPI) -> None:
         self._parcel_api = parcel_api
 
     @override
-    async def list_owned_parcel_ids(self, user_id: UUID) -> list[UUID]:
-        """See :class:`app.module.analysis.application.port.OwnedParcelsProvider.list_owned_parcel_ids`."""
+    async def list_owned_parcels(self, user_id: UUID) -> dict[UUID, str]:
+        """See :class:`app.module.analysis.application.port.OwnedParcelsProvider.list_owned_parcels`."""
         result = await self._parcel_api.list_user_parcels(ListUserParcelsInput(owner_id=user_id))
-        return [feature.properties.id for feature in result.features]
+        return {feature.properties.id: feature.properties.name for feature in result.features}
 
 
 __all__ = ("OwnedParcelsProviderImpl",)

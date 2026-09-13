@@ -87,6 +87,7 @@ class AnalysisController(Controller):
         return AnalysisResponse(
             id=result.id,
             parcel_id=result.parcel_id,
+            parcel_name=result.parcel_name,
             name=result.name,
             status=result.status,
             stage=result.stage,

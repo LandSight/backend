@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
+        OwnedParcelsProvider,
     )
     from app.module.analysis.domain.entity import Analysis
 
@@ -33,9 +34,11 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
+        owned_parcels_provider: OwnedParcelsProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
+        self._owned_parcels_provider = owned_parcels_provider
         self._logger = get_logger("app.analysis.use_case.get_analysis")
 
     @override
@@ -57,7 +60,8 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
             )
             self._raise_not_found(command.analysis_id)
 
-        return self._to_response(analysis)
+        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        return self._to_response(analysis, parcels.get(analysis.parcel_id.unwrap()))
 
     @staticmethod
     def _raise_not_found(analysis_id: UUID) -> NoReturn:
@@ -65,11 +69,12 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
         raise AnalysisNotFoundError(str(analysis_id))
 
     @staticmethod
-    def _to_response(analysis: Analysis) -> AnalysisResponse:
+    def _to_response(analysis: Analysis, parcel_name: str | None) -> AnalysisResponse:
         """Map a domain entity to a response DTO."""
         return AnalysisResponse(
             id=analysis.id.unwrap(),
             parcel_id=analysis.parcel_id.unwrap(),
+            parcel_name=parcel_name,
             name=analysis.name.unwrap(),
             status=analysis.status.value,
             stage=analysis.stage.value,

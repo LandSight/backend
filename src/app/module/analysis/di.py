@@ -79,16 +79,23 @@ def provide_analysis_task_queue(celery_app: NamedDependency[Celery]) -> CeleryAn
 def provide_start_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+    owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
     analysis_task_queue: NamedDependency[AnalysisTaskQueue],
 ) -> StartAnalysisUseCase:
-    return StartAnalysisUseCase(analysis_repository, analysis_permission_service, analysis_task_queue)
+    return StartAnalysisUseCase(
+        analysis_repository,
+        analysis_permission_service,
+        owned_parcels_provider,
+        analysis_task_queue,
+    )
 
 
 def provide_get_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+    owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
 ) -> GetAnalysisUseCase:
-    return GetAnalysisUseCase(analysis_repository, analysis_permission_service)
+    return GetAnalysisUseCase(analysis_repository, analysis_permission_service, owned_parcels_provider)
 
 
 def provide_list_user_analyses_use_case(

@@ -24,6 +24,10 @@ class AnalysisResponse(BaseModel):
 
     id: UUID = Field(description="Analysis identifier.")
     parcel_id: UUID = Field(description="ID of the parcel being analysed.")
+    parcel_name: str | None = Field(
+        default=None,
+        description="Human-readable name of the parcel; null if it could not be resolved.",
+    )
     name: str = Field(description="Human-readable name of the analysis.")
     status: str = Field(description="Lifecycle status (pending/running/completed/failed).")
     stage: str = Field(description="Pipeline stage (metrics/scoring).")

@@ -21,6 +21,8 @@ class AnalysisResponse:
         Analysis identifier.
     parcel_id : UUID
         ID of the parcel being analysed.
+    parcel_name : str | None
+        Human-readable name of the parcel; ``None`` if it could not be resolved.
     name : str
         Human-readable name of the analysis.
     status : str
@@ -37,6 +39,7 @@ class AnalysisResponse:
 
     id: UUID
     parcel_id: UUID
+    parcel_name: str | None
     name: str
     status: str
     stage: str
