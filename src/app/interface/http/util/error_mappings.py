@@ -24,6 +24,7 @@ from app.module.identity.application.error import (
 from app.module.infrastructure.application.error import (
     InfrastructureMetricsByIdNotFoundError,
     InfrastructureMetricsNotFoundError,
+    UnknownCategoryError,
 )
 from app.module.parcel.application.error import (
     InvalidGeoJsonError,
@@ -115,6 +116,7 @@ def _get_infrastructure_application_error_mappings() -> dict[type[ApplicationErr
     return {
         InfrastructureMetricsNotFoundError: HTTP_404_NOT_FOUND,
         InfrastructureMetricsByIdNotFoundError: HTTP_404_NOT_FOUND,
+        UnknownCategoryError: HTTP_400_BAD_REQUEST,
     }
 
 

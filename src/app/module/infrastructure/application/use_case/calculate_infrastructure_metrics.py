@@ -16,6 +16,7 @@ from app.module.infrastructure.application.dto.response import (
     TransitStopMetricsResponse,
     WaterBodyMetricsResponse,
 )
+from app.module.infrastructure.application.error import UnknownCategoryError
 from app.module.infrastructure.domain.entity import (
     HospitalMetrics,
     SchoolMetrics,
@@ -108,7 +109,7 @@ class CalculateInfrastructureMetricsUseCase(
         results: dict[Category, Any] = {}
 
         for category_request in command.categories:
-            category = Category(category_request.category)
+            category = self._parse_category(category_request.category)
             buffer = Buffer(category_request.buffer)
             zone = self._buffer_service.create_zone(polygon, buffer)
             result = await self._handlers[category](
@@ -133,6 +134,14 @@ class CalculateInfrastructureMetricsUseCase(
             transit_stop=results.get(Category.TRANSIT_STOP),
             water_body=results.get(Category.WATER_BODY),
         )
+
+    @staticmethod
+    def _parse_category(category: str) -> Category:
+        """Parse a category string, raising a 400-mapped error if unknown."""
+        try:
+            return Category(category)
+        except ValueError as exc:
+            raise UnknownCategoryError(category) from exc
 
     async def _handle_schools(
         self,

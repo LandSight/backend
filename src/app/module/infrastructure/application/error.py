@@ -21,7 +21,15 @@ class InfrastructureMetricsByIdNotFoundError(ApplicationError):
         super().__init__(f"Infrastructure metrics '{metrics_id}' not found.")
 
 
+class UnknownCategoryError(ApplicationError):
+    """Raised when an unsupported infrastructure category is requested."""
+
+    def __init__(self, category: str) -> None:
+        super().__init__(f"Unknown infrastructure category: '{category}'.")
+
+
 __all__ = (
     "InfrastructureMetricsByIdNotFoundError",
     "InfrastructureMetricsNotFoundError",
+    "UnknownCategoryError",
 )
