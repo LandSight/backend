@@ -110,6 +110,10 @@ migration-create module description:
 migration-upgrade module:
     @uv run alembic -n {{ module }} upgrade head
 
+# Apply migrations for every module (in dependency order)
+migration-upgrade-all:
+    for module in platform identity parcel topography infrastructure climate analysis; do echo "Upgrading $module..."; uv run alembic -n $module upgrade head || exit 1; done
+
 migration-downgrade module steps:
     @uv run alembic -n {{ module }} downgrade -{{ steps }}
 
