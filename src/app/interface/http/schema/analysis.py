@@ -2,28 +2,45 @@
 
 from __future__ import annotations
 
+import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.interface.http.schema.climate import ClimateMetricsResponse
-from app.interface.http.schema.infrastructure import InfrastructureMetricsResponse
-from app.interface.http.schema.topography import TopographyMetricsResponse
 
+class StartAnalysisRequest(BaseModel):
+    """Request body for starting an analysis."""
 
-class ParcelAnalysisResponse(BaseModel):
-    """Response body for the aggregated analysis of a parcel."""
-
-    parcel_id: UUID = Field(description="ID of the parcel.")
-    topography: TopographyMetricsResponse = Field(
-        description="Topography metrics.",
-    )
-    infrastructure: InfrastructureMetricsResponse = Field(
-        description="Infrastructure metrics (per category).",
-    )
-    climate: ClimateMetricsResponse = Field(
-        description="Climate metrics.",
+    parcel_id: UUID = Field(description="ID of the parcel to analyse.")
+    name: str = Field(
+        min_length=3,
+        max_length=64,
+        description="Human-readable name of the analysis.",
     )
 
 
-__all__ = ("ParcelAnalysisResponse",)
+class AnalysisResponse(BaseModel):
+    """Response body for an analysis."""
+
+    id: UUID = Field(description="Analysis identifier.")
+    parcel_id: UUID = Field(description="ID of the parcel being analysed.")
+    name: str = Field(description="Human-readable name of the analysis.")
+    status: str = Field(description="Lifecycle status (pending/running/completed/failed).")
+    score: float | None = Field(
+        default=None,
+        description="Final score in [0, 10]; null until the analysis is completed.",
+    )
+    status_reason: str | None = Field(
+        default=None,
+        description="Human-readable status explanation.",
+    )
+    created_at: datetime.datetime | None = Field(
+        default=None,
+        description="When the analysis was created (UTC).",
+    )
+
+
+__all__ = (
+    "AnalysisResponse",
+    "StartAnalysisRequest",
+)
