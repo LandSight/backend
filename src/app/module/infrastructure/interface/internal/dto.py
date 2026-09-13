@@ -54,69 +54,6 @@ class GetMetricsByIdsInput:
 
 
 @dataclass(frozen=True, slots=True)
-class SchoolMetricsResult:
-    """Metrics for the ``school`` category."""
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class HospitalMetricsResult:
-    """Metrics for the ``hospital`` category."""
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class ShopMetricsResult:
-    """Metrics for the ``shop`` category."""
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class TransitStopMetricsResult:
-    """Metrics for the ``transit_stop`` category."""
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class WaterBodyMetricsResult:
-    """Metrics for the ``water_body`` category."""
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-    coverage_ratio: float
-
-
-@dataclass(frozen=True, slots=True)
-class InfrastructureMetricsResult:
-    """Result of infrastructure metrics operations."""
-
-    parcel_id: UUID
-    school: SchoolMetricsResult | None = None
-    hospital: HospitalMetricsResult | None = None
-    shop: ShopMetricsResult | None = None
-    transit_stop: TransitStopMetricsResult | None = None
-    water_body: WaterBodyMetricsResult | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class CategoryInfoResult:
     """Information about an available infrastructure category."""
 
@@ -130,10 +67,4 @@ __all__ = (
     "CategoryRequestInput",
     "GetMetricsByIdsInput",
     "GetMetricsInput",
-    "HospitalMetricsResult",
-    "InfrastructureMetricsResult",
-    "SchoolMetricsResult",
-    "ShopMetricsResult",
-    "TransitStopMetricsResult",
-    "WaterBodyMetricsResult",
 )

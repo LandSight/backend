@@ -12,33 +12,33 @@ if TYPE_CHECKING:
         CategoryInfoResult,
         GetMetricsByIdsInput,
         GetMetricsInput,
-        InfrastructureMetricsResult,
     )
+    from app.module.shared.interface.internal import MetricsResponse
 
 
 class InfrastructureInternalAPI(ABC):
     """Abstract interface for the Infrastructure module's internal API.
 
-    This is the framework-agnostic contract that the HTTP layer
-    (``app/interface/http/controller/infrastructure/``) depends on.
+    Metrics are returned as a neutral ``list[MetricValue]`` so that internal and
+    HTTP consumers receive the same generic shape.
 
     Implementations:
     - :class:`app.module.infrastructure.interface.internal.api.InfrastructureInternal`
     """
 
     @abstractmethod
-    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> InfrastructureMetricsResult:
-        """Calculate infrastructure metrics for a parcel."""
+    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> list[MetricsResponse]:
+        """Calculate infrastructure metrics for a parcel and return neutral values."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_metrics(self, input_data: GetMetricsInput) -> InfrastructureMetricsResult:
-        """Retrieve infrastructure metrics for a parcel."""
+    async def get_metrics(self, input_data: GetMetricsInput) -> list[MetricsResponse]:
+        """Retrieve infrastructure metrics for a parcel as neutral values."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_metrics_by_ids(self, input_data: GetMetricsByIdsInput) -> InfrastructureMetricsResult:
-        """Retrieve specific infrastructure metrics records by their IDs."""
+    async def get_metrics_by_ids(self, input_data: GetMetricsByIdsInput) -> list[MetricsResponse]:
+        """Retrieve specific infrastructure metrics records as neutral values."""
         raise NotImplementedError
 
     @abstractmethod
