@@ -8,6 +8,7 @@ from app.module.analysis.domain.value_object import (
     AnalysisId,
     AnalysisName,
     AnalysisScore,
+    AnalysisStage,
     AnalysisStatus,
     ParcelId,
 )
@@ -32,6 +33,8 @@ class Analysis(BaseEntity[AnalysisId]):
         Human-readable name of the analysis.
     status : AnalysisStatus
         Current lifecycle status.
+    stage : AnalysisStage
+        Pipeline stage (metrics calculation or scoring).
     score : AnalysisScore | None
         Final score, set only when the analysis is completed.
     status_reason : str | None
@@ -47,6 +50,7 @@ class Analysis(BaseEntity[AnalysisId]):
         *,
         name: AnalysisName,
         status: AnalysisStatus = AnalysisStatus.PENDING,
+        stage: AnalysisStage = AnalysisStage.METRICS,
         score: AnalysisScore | None = None,
         status_reason: str | None = None,
         created_at: datetime.datetime | None = None,
@@ -54,6 +58,7 @@ class Analysis(BaseEntity[AnalysisId]):
         self._parcel_id: ParcelId = parcel_id
         self._name: AnalysisName = name
         self._status: AnalysisStatus = status
+        self._stage: AnalysisStage = stage
         self._score: AnalysisScore | None = score
         self._status_reason: str | None = status_reason
         self._created_at: datetime.datetime | None = created_at
@@ -68,6 +73,9 @@ class Analysis(BaseEntity[AnalysisId]):
         if self._status is not AnalysisStatus.COMPLETED and self._score is not None:
             message = "Only a completed analysis may carry a score."
             raise InvariantViolationError(message)
+        if self._status is AnalysisStatus.COMPLETED and self._stage is not AnalysisStage.SCORING:
+            message = "A completed analysis must have finished the scoring stage."
+            raise InvariantViolationError(message)
         if self._status is AnalysisStatus.FAILED and not self._status_reason:
             message = "A failed analysis must carry a status reason."
             raise InvariantViolationError(message)
@@ -79,10 +87,22 @@ class Analysis(BaseEntity[AnalysisId]):
         self._status = AnalysisStatus.RUNNING
         self._status_reason = None
 
+    def mark_metrics_calculated(self) -> None:
+        """Transition the pipeline stage to ``SCORING`` once metrics are ready."""
+        if self._status is not AnalysisStatus.RUNNING:
+            self._raise_invalid_transition(AnalysisStatus.RUNNING)
+        if self._stage is not AnalysisStage.METRICS:
+            message = "Metrics have already been calculated."
+            raise InvariantViolationError(message)
+        self._stage = AnalysisStage.SCORING
+
     def complete(self, score: AnalysisScore, reason: str | None = None) -> None:
         """Transition the analysis to ``COMPLETED`` with its final score."""
         if self._status is not AnalysisStatus.RUNNING:
             self._raise_invalid_transition(AnalysisStatus.RUNNING)
+        if self._stage is not AnalysisStage.SCORING:
+            message = "Cannot complete an analysis before its metrics are calculated."
+            raise InvariantViolationError(message)
         self._score = score
         self._status_reason = reason
         self._status = AnalysisStatus.COMPLETED
@@ -112,6 +132,11 @@ class Analysis(BaseEntity[AnalysisId]):
     def status(self) -> AnalysisStatus:
         """Current lifecycle status."""
         return self._status
+
+    @property
+    def stage(self) -> AnalysisStage:
+        """Current pipeline stage."""
+        return self._stage
 
     @property
     def score(self) -> AnalysisScore | None:

@@ -6,6 +6,7 @@ from .analysis_id import AnalysisId
 from .analysis_metric_ref import AnalysisMetricRef
 from .analysis_name import AnalysisName
 from .analysis_score import AnalysisScore
+from .analysis_stage import AnalysisStage
 from .analysis_status import AnalysisStatus
 from .metric_type import MetricType
 from .parcel_id import ParcelId
@@ -16,6 +17,7 @@ __all__ = (
     "AnalysisMetricRef",
     "AnalysisName",
     "AnalysisScore",
+    "AnalysisStage",
     "AnalysisStatus",
     "MetricType",
     "ParcelId",
