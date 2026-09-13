@@ -28,7 +28,7 @@ class NumberMetricValueSchema(MetricValueSchemaBase):
     """A floating-point metric value."""
 
     value_type: Literal["number"] = "number"
-    value: float = Field(description="Floating-point metric value.")
+    value: float | None = Field(default=None, description="Floating-point metric value; null when unmeasured.")
 
 
 class IntegerMetricValueSchema(MetricValueSchemaBase):
