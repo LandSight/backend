@@ -89,6 +89,7 @@ class AnalysisController(Controller):
             parcel_id=result.parcel_id,
             name=result.name,
             status=result.status,
+            stage=result.stage,
             score=result.score,
             status_reason=result.status_reason,
             created_at=result.created_at,
