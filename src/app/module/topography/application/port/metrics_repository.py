@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from app.module.topography.domain.entity.topography_metrics import TopographyMetrics
     from app.module.topography.domain.value_object.metric import ParcelId, TopographyMetricsId
 
@@ -47,6 +49,17 @@ class MetricsRepository(ABC):
         -------
         TopographyMetrics | None
             The metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete(self, metrics_ids: list[UUID]) -> None:
+        """Delete topography metrics snapshots by their IDs.
+
+        Parameters
+        ----------
+        metrics_ids : list[UUID]
+            IDs of the metrics snapshots to delete.
         """
         raise NotImplementedError
 

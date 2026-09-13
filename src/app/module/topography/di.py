@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.topography.application.use_case import (
     CalculateTopographyMetricsUseCase,
+    DeleteTopographyMetricsUseCase,
     GetParcelTopographyMetricsUseCase,
     GetTopographyMetricsUseCase,
 )
@@ -93,16 +94,24 @@ def provide_get_parcel_topography_metrics_use_case(
     return GetParcelTopographyMetricsUseCase(topography_metrics_repository, topography_metrics_permission_service)
 
 
+def provide_delete_topography_metrics_use_case(
+    topography_metrics_repository: NamedDependency[PostgresMetricsRepository],
+) -> DeleteTopographyMetricsUseCase:
+    return DeleteTopographyMetricsUseCase(topography_metrics_repository)
+
+
 # ----- Internal API -----
 def provide_topography_internal(
     calculate_topography_metrics_use_case: NamedDependency[CalculateTopographyMetricsUseCase],
     get_topography_metrics_use_case: NamedDependency[GetTopographyMetricsUseCase],
     get_parcel_topography_metrics_use_case: NamedDependency[GetParcelTopographyMetricsUseCase],
+    delete_topography_metrics_use_case: NamedDependency[DeleteTopographyMetricsUseCase],
 ) -> TopographyInternal:
     return TopographyInternal(
         calculate_metrics_use_case=calculate_topography_metrics_use_case,
         get_metrics_use_case=get_topography_metrics_use_case,
         get_parcel_metrics_use_case=get_parcel_topography_metrics_use_case,
+        delete_metrics_use_case=delete_topography_metrics_use_case,
     )
 
 
@@ -121,6 +130,10 @@ topography_dependencies = {
     "get_topography_metrics_use_case": Provide(provide_get_topography_metrics_use_case, sync_to_thread=False),
     "get_parcel_topography_metrics_use_case": Provide(
         provide_get_parcel_topography_metrics_use_case,
+        sync_to_thread=False,
+    ),
+    "delete_topography_metrics_use_case": Provide(
+        provide_delete_topography_metrics_use_case,
         sync_to_thread=False,
     ),
     "topography_api": Provide(provide_topography_internal, sync_to_thread=False),

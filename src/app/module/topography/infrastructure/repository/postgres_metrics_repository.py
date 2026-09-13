@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.module.topography.application.port import MetricsRepository
 from app.module.topography.domain.entity import TopographyMetrics
@@ -26,6 +26,8 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -65,6 +67,14 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         await self._session.flush()
 
         return self._to_domain(model)
+
+    @override
+    async def delete(self, metrics_ids: list[UUID]) -> None:
+        """See :class:`app.module.topography.application.port.MetricsRepository.delete`."""
+        if not metrics_ids:
+            return
+        await self._session.execute(delete(TopographyMetricsModel).where(TopographyMetricsModel.id.in_(metrics_ids)))
+        await self._session.flush()
 
     @override
     async def get(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:

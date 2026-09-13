@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.module.shared.interface.internal import MetricsResponse
     from app.module.topography.interface.internal.dto import (
         CalculateMetricsInput,
+        DeleteMetricsInput,
         GetMetricsInput,
         GetParcelMetricsInput,
     )
@@ -38,6 +39,11 @@ class TopographyInternalAPI(ABC):
     @abstractmethod
     async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> MetricsResponse:
         """Retrieve the current topography metrics for a parcel as a neutral response."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """Delete topography metrics snapshots by their IDs."""
         raise NotImplementedError
 
 

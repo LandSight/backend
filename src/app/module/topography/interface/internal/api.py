@@ -16,6 +16,7 @@ from app.module.shared.interface.internal import (
 )
 from app.module.topography.application.dto.command import (
     CalculateTopographyMetricsCommand,
+    DeleteTopographyMetricsCommand,
     GetLatestParcelTopographyMetricsCommand,
     GetTopographyMetricsCommand,
 )
@@ -28,11 +29,13 @@ if TYPE_CHECKING:
     from app.module.topography.application.dto.response import TopographyMetricsResponse
     from app.module.topography.application.use_case import (
         CalculateTopographyMetricsUseCase,
+        DeleteTopographyMetricsUseCase,
         GetParcelTopographyMetricsUseCase,
         GetTopographyMetricsUseCase,
     )
     from app.module.topography.interface.internal.dto import (
         CalculateMetricsInput,
+        DeleteMetricsInput,
         GetMetricsInput,
         GetParcelMetricsInput,
     )
@@ -46,10 +49,12 @@ class TopographyInternal(TopographyInternalAPI):
         calculate_metrics_use_case: CalculateTopographyMetricsUseCase,
         get_metrics_use_case: GetTopographyMetricsUseCase,
         get_parcel_metrics_use_case: GetParcelTopographyMetricsUseCase,
+        delete_metrics_use_case: DeleteTopographyMetricsUseCase,
     ) -> None:
         self._calculate_metrics = calculate_metrics_use_case
         self._get_metrics = get_metrics_use_case
         self._get_parcel_metrics = get_parcel_metrics_use_case
+        self._delete_metrics = delete_metrics_use_case
 
     @override
     async def calculate_metrics(self, input_data: CalculateMetricsInput) -> MetricsResponse:
@@ -83,6 +88,11 @@ class TopographyInternal(TopographyInternalAPI):
             )
         )
         return self.to_metrics_response(result)
+
+    @override
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """See :meth:`TopographyInternalAPI.delete_metrics`."""
+        await self._delete_metrics(DeleteTopographyMetricsCommand(metrics_ids=input_data.metrics_ids))
 
     @staticmethod
     def to_metrics_response(result: TopographyMetricsResponse) -> MetricsResponse:
