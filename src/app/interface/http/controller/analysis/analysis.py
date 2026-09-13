@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from litestar import get, post
+from litestar import delete, get, post
 from litestar.controller import Controller
-from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED
+from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_204_NO_CONTENT
 
 from app.interface.http.schema.analysis import AnalysisResponse, StartAnalysisRequest
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.util.guards import require_authorization
 from app.module.analysis.interface.internal.dto import (
     AnalysisResult,
+    DeleteAnalysisInput,
     GetAnalysisInput,
     ListUserAnalysesInput,
     StartAnalysisInput,
@@ -80,6 +81,22 @@ class AnalysisController(Controller):
             GetAnalysisInput(analysis_id=analysis_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)
+
+    @delete(
+        "/{analysis_id:uuid}",
+        status_code=HTTP_204_NO_CONTENT,
+        description="Delete an analysis and its metric references.",
+    )
+    async def delete_analysis(
+        self,
+        analysis_id: UUID,
+        analysis_api: AnalysisInternalAPI,
+        current_user: CurrentUser,
+    ) -> None:
+        """Delete an analysis and its metric references."""
+        await analysis_api.delete_analysis(
+            DeleteAnalysisInput(analysis_id=analysis_id, current_user_id=current_user.id),
+        )
 
     @staticmethod
     def _to_schema(result: AnalysisResult) -> AnalysisResponse:

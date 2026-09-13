@@ -67,6 +67,12 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         return self._to_domain(model) if model is not None else None
 
     @override
+    async def delete(self, analysis_id: AnalysisId) -> None:
+        """See :class:`app.module.analysis.application.port.AnalysisRepository.delete`."""
+        await self._session.execute(delete(AnalysisModel).where(AnalysisModel.id == analysis_id.unwrap()))
+        await self._session.flush()
+
+    @override
     async def list_by_parcel_ids(self, parcel_ids: list[UUID]) -> list[Analysis]:
         """See :class:`app.module.analysis.application.port.AnalysisRepository.list_by_parcel_ids`."""
         if not parcel_ids:

@@ -19,6 +19,7 @@ from app.module.analysis.application.port import (
 )
 from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
+    DeleteAnalysisUseCase,
     FailAnalysisUseCase,
     GetAnalysisUseCase,
     ListUserAnalysesUseCase,
@@ -105,13 +106,26 @@ def provide_list_user_analyses_use_case(
     return ListUserAnalysesUseCase(analysis_repository, owned_parcels_provider)
 
 
+def provide_delete_analysis_use_case(
+    analysis_repository: NamedDependency[PostgresAnalysisRepository],
+    analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+) -> DeleteAnalysisUseCase:
+    return DeleteAnalysisUseCase(analysis_repository, analysis_permission_service)
+
+
 # ----- Internal API -----
 def provide_analysis_internal(
     start_analysis_use_case: NamedDependency[StartAnalysisUseCase],
     get_analysis_use_case: NamedDependency[GetAnalysisUseCase],
     list_user_analyses_use_case: NamedDependency[ListUserAnalysesUseCase],
+    delete_analysis_use_case: NamedDependency[DeleteAnalysisUseCase],
 ) -> AnalysisInternal:
-    return AnalysisInternal(start_analysis_use_case, get_analysis_use_case, list_user_analyses_use_case)
+    return AnalysisInternal(
+        start_analysis_use_case,
+        get_analysis_use_case,
+        list_user_analyses_use_case,
+        delete_analysis_use_case,
+    )
 
 
 # ----- Worker (background pipeline) -----
@@ -188,6 +202,7 @@ analysis_dependencies = {
     "start_analysis_use_case": Provide(provide_start_analysis_use_case, sync_to_thread=False),
     "get_analysis_use_case": Provide(provide_get_analysis_use_case, sync_to_thread=False),
     "list_user_analyses_use_case": Provide(provide_list_user_analyses_use_case, sync_to_thread=False),
+    "delete_analysis_use_case": Provide(provide_delete_analysis_use_case, sync_to_thread=False),
     "analysis_api": Provide(provide_analysis_internal, sync_to_thread=False),
 }
 

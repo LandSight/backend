@@ -36,6 +36,14 @@ class ListUserAnalysesInput:
 
 
 @dataclass(frozen=True, slots=True)
+class DeleteAnalysisInput:
+    """Input for deleting an analysis by its ID."""
+
+    analysis_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
 class AnalysisResult:
     """Result of an analysis operation."""
 
@@ -52,6 +60,7 @@ class AnalysisResult:
 
 __all__ = (
     "AnalysisResult",
+    "DeleteAnalysisInput",
     "GetAnalysisInput",
     "ListUserAnalysesInput",
     "StartAnalysisInput",

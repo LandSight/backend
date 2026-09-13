@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.module.analysis.interface.internal.dto import (
         AnalysisResult,
+        DeleteAnalysisInput,
         GetAnalysisInput,
         ListUserAnalysesInput,
         StartAnalysisInput,
@@ -35,6 +36,11 @@ class AnalysisInternalAPI(ABC):
     @abstractmethod
     async def list_user_analyses(self, input_data: ListUserAnalysesInput) -> list[AnalysisResult]:
         """List all analyses of a user across all statuses."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_analysis(self, input_data: DeleteAnalysisInput) -> None:
+        """Delete an analysis and its metric references."""
         raise NotImplementedError
 
 

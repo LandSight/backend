@@ -53,6 +53,19 @@ class AnalysisRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def delete(self, analysis_id: AnalysisId) -> None:
+        """Delete an analysis and its metric references.
+
+        Metric snapshots owned by other modules are left untouched.
+
+        Parameters
+        ----------
+        analysis_id : AnalysisId
+            Analysis identifier.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def list_by_parcel_ids(self, parcel_ids: list[UUID]) -> list[Analysis]:
         """List analyses belonging to the given parcels.
 
