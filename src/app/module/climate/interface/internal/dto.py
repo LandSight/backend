@@ -34,8 +34,16 @@ class GetParcelMetricsInput:
     current_user_id: UUID
 
 
+@dataclass(frozen=True, slots=True)
+class DeleteMetricsInput:
+    """Input for deleting climate metrics snapshots by their IDs."""
+
+    metrics_ids: list[UUID]
+
+
 __all__ = (
     "CalculateMetricsInput",
+    "DeleteMetricsInput",
     "GetMetricsInput",
     "GetParcelMetricsInput",
 )

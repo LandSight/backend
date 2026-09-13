@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.module.climate.interface.internal.dto import (
         CalculateMetricsInput,
+        DeleteMetricsInput,
         GetMetricsInput,
         GetParcelMetricsInput,
     )
@@ -38,6 +39,11 @@ class ClimateInternalAPI(ABC):
     @abstractmethod
     async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> MetricsResponse:
         """Retrieve the current climate metrics for a parcel as a neutral response."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """Delete climate metrics snapshots by their IDs."""
         raise NotImplementedError
 
 

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, override
 
 from app.module.climate.application.dto.command import (
     CalculateClimateMetricsCommand,
+    DeleteClimateMetricsCommand,
     GetClimateMetricsCommand,
     GetParcelClimateMetricsCommand,
 )
@@ -23,11 +24,13 @@ if TYPE_CHECKING:
     from app.module.climate.application.dto.response import ClimateMetricsResponse
     from app.module.climate.application.use_case import (
         CalculateClimateMetricsUseCase,
+        DeleteClimateMetricsUseCase,
         GetClimateMetricsUseCase,
         GetParcelClimateMetricsUseCase,
     )
     from app.module.climate.interface.internal.dto import (
         CalculateMetricsInput,
+        DeleteMetricsInput,
         GetMetricsInput,
         GetParcelMetricsInput,
     )
@@ -41,10 +44,12 @@ class ClimateInternal(ClimateInternalAPI):
         calculate_metrics_use_case: CalculateClimateMetricsUseCase,
         get_metrics_use_case: GetClimateMetricsUseCase,
         get_parcel_metrics_use_case: GetParcelClimateMetricsUseCase,
+        delete_metrics_use_case: DeleteClimateMetricsUseCase,
     ) -> None:
         self._calculate_metrics = calculate_metrics_use_case
         self._get_metrics = get_metrics_use_case
         self._get_parcel_metrics = get_parcel_metrics_use_case
+        self._delete_metrics = delete_metrics_use_case
 
     @override
     async def calculate_metrics(self, input_data: CalculateMetricsInput) -> MetricsResponse:
@@ -78,6 +83,11 @@ class ClimateInternal(ClimateInternalAPI):
             )
         )
         return self.to_metrics_response(result)
+
+    @override
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """See :meth:`ClimateInternalAPI.delete_metrics`."""
+        await self._delete_metrics(DeleteClimateMetricsCommand(metrics_ids=input_data.metrics_ids))
 
     @staticmethod
     def to_metrics_response(result: ClimateMetricsResponse) -> MetricsResponse:

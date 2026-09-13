@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from app.module.climate.domain.entity.climate_metrics import ClimateMetrics
     from app.module.climate.domain.value_object.metric import ClimateMetricsId, ParcelId
 
@@ -47,6 +49,17 @@ class MetricsRepository(ABC):
         -------
         ClimateMetrics | None
             The metrics if found, ``None`` otherwise.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete(self, metrics_ids: list[UUID]) -> None:
+        """Delete climate metrics snapshots by their IDs.
+
+        Parameters
+        ----------
+        metrics_ids : list[UUID]
+            IDs of the metrics snapshots to delete.
         """
         raise NotImplementedError
 
