@@ -132,6 +132,77 @@ class DatabaseConfig(BaseConfig):
         return f"{self.engine}+{self.driver}://{self.username}:{self.password.get_secret_value()}@{self.host}:{self.port}/{self.name}"
 
 
+class RedisConfig(BaseConfig):
+    """Redis configuration used as the Celery broker and result backend.
+
+    Attributes
+    ----------
+    host : str
+        Redis host.
+    port : int
+        Redis port.
+    db : int
+        Redis database index.
+    password : SecretStr | None
+        Optional Redis password.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="REDIS_",
+    )
+    host: str = Field(
+        default="localhost",
+        description="Redis host",
+        min_length=1,
+    )
+    port: int = Field(
+        default=6379,
+        description="Redis port",
+        ge=1,
+        le=65535,
+    )
+    db: int = Field(
+        default=0,
+        description="Redis database index",
+        ge=0,
+    )
+    password: SecretStr | None = Field(
+        default=None,
+        description="Redis password",
+    )
+
+    def get_url(self) -> str:
+        """Build a full Redis URL from connection parameters.
+
+        Returns
+        -------
+        str
+            Redis URL in the form ``redis://[:pass@]host:port/db``.
+        """
+        credentials = f":{self.password.get_secret_value()}@" if self.password is not None else ""
+        return f"redis://{credentials}{self.host}:{self.port}/{self.db}"
+
+
+class AnalysisConfig(BaseConfig):
+    """Analysis module configuration.
+
+    Attributes
+    ----------
+    infra_buffer_m : int
+        Buffer radius (meters) applied to every infrastructure category when
+        an analysis calculates its infrastructure metrics.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="ANALYSIS_",
+    )
+    infra_buffer_m: int = Field(
+        default=1000,
+        description="Buffer radius (meters) applied to each infrastructure category during analysis",
+        ge=1,
+    )
+
+
 class AuthConfig(BaseConfig):
     """Authentication configuration.
 
@@ -245,5 +316,7 @@ class AppConfig(BaseConfig):
 
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    redis: RedisConfig = Field(default_factory=RedisConfig)
+    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     s3: S3Config = Field(default_factory=S3Config)
