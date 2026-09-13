@@ -94,13 +94,7 @@ infra-up:
 down:
     @{{ COMPOSE_CMD }} down
 
-# Start only PostgreSQL
-db-up:
-    @{{ COMPOSE_CMD }} up --detach --wait postgres
 
-# Stop only PostgreSQL
-db-down:
-    @{{ COMPOSE_CMD }} stop postgres
 
 # View service logs
 logs:
