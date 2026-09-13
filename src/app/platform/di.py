@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from boto3 import Session as BotoSession
 from botocore.client import BaseClient as BotoClient
+from celery import Celery
 from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
 from rasterio.session import AWSSession
@@ -16,8 +17,14 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
 
-from app.platform.config.loaders import load_auth_config, load_database_config, load_s3_config
-from app.platform.config.models import AuthConfig, DatabaseConfig, S3Config
+from app.platform.celery import create_celery_app
+from app.platform.config.loaders import (
+    load_auth_config,
+    load_database_config,
+    load_redis_config,
+    load_s3_config,
+)
+from app.platform.config.models import AuthConfig, DatabaseConfig, RedisConfig, S3Config
 from app.platform.database.session import create_async_session_factory
 from app.platform.storage.session import create_aws_session
 
@@ -26,6 +33,17 @@ from app.platform.storage.session import create_aws_session
 def provide_database_config() -> DatabaseConfig:
     """Provide database configuration."""
     return load_database_config()
+
+
+def provide_redis_config() -> RedisConfig:
+    """Provide Redis configuration."""
+    return load_redis_config()
+
+
+# ----- Celery -----
+def provide_celery_app(redis_config: NamedDependency[RedisConfig]) -> Celery:
+    """Provide the Celery application used by the HTTP layer to enqueue tasks."""
+    return create_celery_app(redis_config)
 
 
 def provide_auth_config() -> AuthConfig:
@@ -82,6 +100,8 @@ def provide_aws_session(boto_session: NamedDependency[BotoSession]) -> AWSSessio
 
 platform_dependencies = {
     "database_config": Provide(provide_database_config, use_cache=True, sync_to_thread=False),
+    "redis_config": Provide(provide_redis_config, use_cache=True, sync_to_thread=False),
+    "celery_app": Provide(provide_celery_app, use_cache=True, sync_to_thread=False),
     "auth_config": Provide(provide_auth_config, use_cache=True, sync_to_thread=False),
     "s3_config": Provide(provide_s3_config, use_cache=True, sync_to_thread=False),
     "session_factory": Provide(provide_async_session_factory, use_cache=True, sync_to_thread=False),

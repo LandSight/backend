@@ -42,9 +42,6 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
     locally, persists the metrics, and returns the result.
     """
 
-    _SLOPE_PERCENTILES: tuple[int, ...] = (25, 50, 75, 90)
-    _SLOPE_DISTRIBUTION_BINS = 10
-
     def __init__(
         self,
         local_dem_repository: LocalDemRepository,
@@ -106,9 +103,6 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
         mean_slope = self._dem_metrics_service.calculate_mean_slope(raster)
         max_slope = self._dem_metrics_service.calculate_max_slope(raster)
         slope_percentiles = self._dem_metrics_service.calculate_slope_percentiles(raster)
-        slope_distribution = self._dem_metrics_service.calculate_slope_distribution(
-            raster, self._SLOPE_DISTRIBUTION_BINS
-        )
 
         # Aspect metrics
         dominant_aspect = self._dem_metrics_service.calculate_dominant_aspect(raster)
@@ -132,7 +126,6 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
             mean_slope=mean_slope,
             max_slope=max_slope,
             slope_percentiles=slope_percentiles,
-            slope_distribution=slope_distribution,
             aspect=dominant_aspect,
             south_aspect_percentage=south_aspect_percent,
             area=Area(area),
@@ -158,7 +151,6 @@ class CalculateTopographyMetricsUseCase(BaseUseCase[CalculateTopographyMetricsCo
             mean_slope=persisted_metrics.mean_slope.unwrap(),
             max_slope=persisted_metrics.max_slope.unwrap(),
             slope_percentiles=persisted_metrics.slope_percentiles.to_float_dict(),
-            slope_distribution=persisted_metrics.slope_distribution.to_float_list(),
             aspect=persisted_metrics.aspect.value,
             south_aspect_percentage=persisted_metrics.south_aspect_percentage.unwrap(),
             area=persisted_metrics.area.unwrap(),

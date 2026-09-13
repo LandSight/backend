@@ -6,40 +6,62 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 
-# NOTE: Temporary cross-module coupling (MVP).
-#
-# The aggregate reuses the metric modules' interface-level result DTOs to avoid
-# duplicating the metric models. See
-# ``app.module.analysis.application.dto.response.parcel_analysis`` for details.
-
-
 if TYPE_CHECKING:
+    import datetime
     from uuid import UUID
-
-    from app.module.climate.interface.internal.dto import ClimateMetricsResult
-    from app.module.infrastructure.interface.internal.dto import InfrastructureMetricsResult
-    from app.module.topography.interface.internal.dto import TopographyMetricsResult
 
 
 @dataclass(frozen=True, slots=True)
-class AnalyzeParcelInput:
-    """Input for aggregating a parcel's metrics."""
+class StartAnalysisInput:
+    """Input for starting an analysis of a parcel."""
 
     parcel_id: UUID
+    current_user_id: UUID
+    name: str
+
+
+@dataclass(frozen=True, slots=True)
+class GetAnalysisInput:
+    """Input for retrieving an analysis by its ID."""
+
+    analysis_id: UUID
     current_user_id: UUID
 
 
 @dataclass(frozen=True, slots=True)
-class ParcelAnalysisResult:
-    """Result of aggregating a parcel's metrics."""
+class ListUserAnalysesInput:
+    """Input for listing all analyses of a user."""
 
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class DeleteAnalysisInput:
+    """Input for deleting an analysis by its ID."""
+
+    analysis_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class AnalysisResult:
+    """Result of an analysis operation."""
+
+    id: UUID
     parcel_id: UUID
-    topography: TopographyMetricsResult
-    infrastructure: InfrastructureMetricsResult
-    climate: ClimateMetricsResult
+    parcel_name: str | None
+    name: str
+    status: str
+    stage: str
+    score: float | None
+    status_reason: str | None
+    created_at: datetime.datetime | None
 
 
 __all__ = (
-    "AnalyzeParcelInput",
-    "ParcelAnalysisResult",
+    "AnalysisResult",
+    "DeleteAnalysisInput",
+    "GetAnalysisInput",
+    "ListUserAnalysesInput",
+    "StartAnalysisInput",
 )

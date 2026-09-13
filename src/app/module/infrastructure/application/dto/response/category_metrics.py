@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 @dataclass(frozen=True, slots=True)
@@ -11,6 +16,8 @@ class SchoolMetricsResponse:
 
     Attributes
     ----------
+    id : UUID
+        ID of the persisted metrics record.
     buffer: int
         Buffer radius in meters around the parcel boundary for this category.
     count : int
@@ -19,6 +26,7 @@ class SchoolMetricsResponse:
         Distance to the nearest object in meters, or ``None`` if none found.
     """
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -30,6 +38,8 @@ class HospitalMetricsResponse:
 
     Attributes
     ----------
+    id : UUID
+        ID of the persisted metrics record.
     buffer: int
         Buffer radius in meters around the parcel boundary for this category.
     count : int
@@ -38,6 +48,7 @@ class HospitalMetricsResponse:
         Distance to the nearest object in meters, or ``None`` if none found.
     """
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -49,6 +60,8 @@ class ShopMetricsResponse:
 
     Attributes
     ----------
+    id : UUID
+        ID of the persisted metrics record.
     buffer: int
         Buffer radius in meters around the parcel boundary for this category.
     count : int
@@ -57,6 +70,7 @@ class ShopMetricsResponse:
         Distance to the nearest object in meters, or ``None`` if none found.
     """
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -68,6 +82,8 @@ class TransitStopMetricsResponse:
 
     Attributes
     ----------
+    id : UUID
+        ID of the persisted metrics record.
     buffer: int
         Buffer radius in meters around the parcel boundary for this category.
     count : int
@@ -76,6 +92,7 @@ class TransitStopMetricsResponse:
         Distance to the nearest object in meters, or ``None`` if none found.
     """
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None
@@ -89,6 +106,8 @@ class WaterBodyMetricsResponse:
 
     Attributes
     ----------
+    id : UUID
+        ID of the persisted metrics record.
     buffer: int
         Buffer radius in meters around the parcel boundary for this category.
     count : int
@@ -99,6 +118,7 @@ class WaterBodyMetricsResponse:
         Coverage ratio of water within the buffer zone.
     """
 
+    id: UUID
     buffer: int
     count: int
     min_distance_to: float | None

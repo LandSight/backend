@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .parcel_analysis import ParcelAnalysisResponse
+from .analysis import AnalysisResponse
 
 
-__all__ = ("ParcelAnalysisResponse",)
+__all__ = ("AnalysisResponse",)

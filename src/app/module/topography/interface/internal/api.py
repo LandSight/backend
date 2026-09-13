@@ -1,55 +1,63 @@
 """Concrete implementation of the Topography module's internal API.
 
 See :class:`app.module.topography.interface.internal.port.TopographyInternalAPI`
-for the abstract interface.
+for the abstract interface. Metrics are projected straight from the use case
+response DTOs into the shared neutral contract, using the domain metric catalog.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from app.module.shared.interface.internal import (
+    MetricsResponse,
+    NumberMetricValue,
+    build_metric_value,
+)
 from app.module.topography.application.dto.command import (
     CalculateTopographyMetricsCommand,
+    DeleteTopographyMetricsCommand,
     GetLatestParcelTopographyMetricsCommand,
     GetTopographyMetricsCommand,
 )
-from app.module.topography.interface.internal.dto import (
-    CalculateMetricsInput,
-    GetMetricsInput,
-    GetParcelMetricsInput,
-    TopographyMetricsResult,
-)
+from app.module.topography.domain.metric_catalog import CATALOG
 from app.module.topography.interface.internal.port import TopographyInternalAPI
 
 
 if TYPE_CHECKING:
+    from app.module.shared.interface.internal import MetricValue
     from app.module.topography.application.dto.response import TopographyMetricsResponse
     from app.module.topography.application.use_case import (
         CalculateTopographyMetricsUseCase,
+        DeleteTopographyMetricsUseCase,
         GetParcelTopographyMetricsUseCase,
         GetTopographyMetricsUseCase,
+    )
+    from app.module.topography.interface.internal.dto import (
+        CalculateMetricsInput,
+        DeleteMetricsInput,
+        GetMetricsInput,
+        GetParcelMetricsInput,
     )
 
 
 class TopographyInternal(TopographyInternalAPI):
-    """Concrete implementation of the Topography internal API.
-
-    Wraps the application-layer use cases into a single cohesive
-    interface that the HTTP layer calls.
-    """
+    """Concrete implementation of the Topography internal API."""
 
     def __init__(
         self,
         calculate_metrics_use_case: CalculateTopographyMetricsUseCase,
         get_metrics_use_case: GetTopographyMetricsUseCase,
         get_parcel_metrics_use_case: GetParcelTopographyMetricsUseCase,
+        delete_metrics_use_case: DeleteTopographyMetricsUseCase,
     ) -> None:
         self._calculate_metrics = calculate_metrics_use_case
         self._get_metrics = get_metrics_use_case
         self._get_parcel_metrics = get_parcel_metrics_use_case
+        self._delete_metrics = delete_metrics_use_case
 
     @override
-    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> TopographyMetricsResult:
+    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> MetricsResponse:
         """See :meth:`TopographyInternalAPI.calculate_metrics`."""
         result = await self._calculate_metrics(
             CalculateTopographyMetricsCommand(
@@ -57,10 +65,10 @@ class TopographyInternal(TopographyInternalAPI):
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
 
     @override
-    async def get_metrics(self, input_data: GetMetricsInput) -> TopographyMetricsResult:
+    async def get_metrics(self, input_data: GetMetricsInput) -> MetricsResponse:
         """See :meth:`TopographyInternalAPI.get_metrics`."""
         result = await self._get_metrics(
             GetTopographyMetricsCommand(
@@ -68,41 +76,51 @@ class TopographyInternal(TopographyInternalAPI):
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
 
     @override
-    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> TopographyMetricsResult:
-        """See :meth:`TopographyInternalAPI.get_latest_parcel_metrics`."""
+    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> MetricsResponse:
+        """See :meth:`TopographyInternalAPI.get_parcel_metrics`."""
         result = await self._get_parcel_metrics(
             GetLatestParcelTopographyMetricsCommand(
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
+
+    @override
+    async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
+        """See :meth:`TopographyInternalAPI.delete_metrics`."""
+        await self._delete_metrics(DeleteTopographyMetricsCommand(metrics_ids=input_data.metrics_ids))
 
     @staticmethod
-    def _to_result(result: TopographyMetricsResponse) -> TopographyMetricsResult:
-        """Map an application response DTO to an internal result DTO."""
-        return TopographyMetricsResult(
+    def to_metrics_response(result: TopographyMetricsResponse) -> MetricsResponse:
+        """Project a topography use case response into the shared neutral contract."""
+        metrics: list[MetricValue] = [
+            build_metric_value(
+                key=definition.key,
+                label=definition.label,
+                unit=definition.unit,
+                value_type=definition.kind,
+                raw=getattr(result, definition.key),
+            )
+            for definition in CATALOG
+        ]
+        metrics.extend(
+            NumberMetricValue(
+                key=f"slope_p{percentile}",
+                label=f"Slope p{percentile}",
+                unit="deg",
+                value=value,
+            )
+            for percentile, value in result.slope_percentiles.items()
+        )
+        return MetricsResponse(
+            module="topography",
+            category=None,
             id=result.id,
-            parcel_id=result.parcel_id,
-            mean_elevation=result.mean_elevation,
-            max_elevation=result.max_elevation,
-            min_elevation=result.min_elevation,
-            elevation_range=result.elevation_range,
-            elevation_std=result.elevation_std,
-            mean_slope=result.mean_slope,
-            max_slope=result.max_slope,
-            slope_percentiles=result.slope_percentiles,
-            slope_distribution=result.slope_distribution,
-            aspect=result.aspect,
-            south_aspect_percentage=result.south_aspect_percentage,
-            area=result.area,
-            perimeter=result.perimeter,
-            compactness_index=result.compactness_index,
-            elongation_index=result.elongation_index,
-            created_at=result.created_at,
+            metrics=metrics,
         )
 
 

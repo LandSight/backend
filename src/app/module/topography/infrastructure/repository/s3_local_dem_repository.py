@@ -272,12 +272,27 @@ class S3LocalDemRepository(S3GeoRepository, LocalDemRepository):
 
     @staticmethod
     def _read_window(src: rasterio.io.DatasetReader, bounds: BoundingBox) -> np.ndarray:
-        """Read the requested sub-region from the COG as a NaN-filled array."""
+        """Read the requested sub-region from the COG as a NaN-filled array.
+
+        Small parcels are snapped to at least one pixel so a point-like extent
+        (e.g. a small garden plot) still yields the enclosing cell value.
+        """
+        res_x, res_y = src.res
+        left = src.bounds.left + float(np.floor((bounds.min_lon.unwrap() - src.bounds.left) / res_x)) * res_x
+        right = src.bounds.left + float(np.ceil((bounds.max_lon.unwrap() - src.bounds.left) / res_x)) * res_x
+        top = src.bounds.top - float(np.floor((src.bounds.top - bounds.max_lat.unwrap()) / res_y)) * res_y
+        bottom = src.bounds.top - float(np.ceil((src.bounds.top - bounds.min_lat.unwrap()) / res_y)) * res_y
+
+        left = max(left, src.bounds.left)
+        right = min(max(right, left + res_x), src.bounds.right)
+        top = min(top, src.bounds.top)
+        bottom = max(min(bottom, top - res_y), src.bounds.bottom)
+
         window = rasterio.windows.from_bounds(
-            left=bounds.min_lon.unwrap(),
-            bottom=bounds.min_lat.unwrap(),
-            right=bounds.max_lon.unwrap(),
-            top=bounds.max_lat.unwrap(),
+            left=left,
+            bottom=bottom,
+            right=right,
+            top=top,
             transform=src.transform,
         )
         data = src.read(1, window=window, masked=True)

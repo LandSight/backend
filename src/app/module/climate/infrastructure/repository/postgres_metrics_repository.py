@@ -20,6 +20,8 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -47,15 +49,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             precipitation_wettest_month=metrics.precipitation_wettest_month.unwrap(),
             precipitation_driest_month=metrics.precipitation_driest_month.unwrap(),
         )
-        # MVP keeps at most one row per parcel: recalculating overwrites the
-        # previous snapshot instead of accumulating history.
-        await self._session.execute(
-            delete(ClimateMetricsModel).where(ClimateMetricsModel.parcel_id == metrics.parcel_id.unwrap())
-        )
+        # Append-only: every calculation is stored as a new snapshot so that
+        # analyses can keep referencing the exact metrics they were computed from.
         self._session.add(model)
         await self._session.flush()
 
         return self._to_domain(model)
+
+    @override
+    async def delete(self, metrics_ids: list[UUID]) -> None:
+        """See :class:`app.module.climate.application.port.MetricsRepository.delete`."""
+        if not metrics_ids:
+            return
+        await self._session.execute(delete(ClimateMetricsModel).where(ClimateMetricsModel.id.in_(metrics_ids)))
+        await self._session.flush()
 
     @override
     async def get(self, metrics_id: ClimateMetricsId) -> ClimateMetrics | None:

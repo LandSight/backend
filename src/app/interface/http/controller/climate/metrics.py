@@ -1,4 +1,8 @@
-"""Climate metrics HTTP endpoints."""
+"""Climate metrics HTTP endpoints.
+
+Responses use the shared neutral metrics response schema, matching the module's
+internal API so the transferred shape can be inspected uniformly.
+"""
 
 from __future__ import annotations
 
@@ -8,15 +12,12 @@ from litestar import get, post
 from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 
-from app.interface.http.schema.climate import (
-    CalculateClimateMetricsRequest,
-    ClimateMetricsResponse as ClimateMetricsSchema,
-)
+from app.interface.http.schema.climate import CalculateClimateMetricsRequest
 from app.interface.http.schema.current_user import CurrentUser
+from app.interface.http.schema.metric_value import MetricsResponseSchema, metrics_response_to_schema
 from app.interface.http.util.guards import require_authorization
 from app.module.climate.interface.internal.dto import (
     CalculateMetricsInput,
-    ClimateMetricsResult,
     GetMetricsInput,
     GetParcelMetricsInput,
 )
@@ -40,15 +41,15 @@ class ClimateMetricsController(Controller):
         data: CalculateClimateMetricsRequest,
         climate_api: ClimateInternalAPI,
         current_user: CurrentUser,
-    ) -> ClimateMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Calculate climate metrics for a parcel."""
-        result = await climate_api.calculate_metrics(
+        response = await climate_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
             )
         )
-        return self._to_schema(result)
+        return metrics_response_to_schema(response)
 
     @get(
         "/{metrics_id:uuid}",
@@ -60,10 +61,12 @@ class ClimateMetricsController(Controller):
         metrics_id: UUID,
         climate_api: ClimateInternalAPI,
         current_user: CurrentUser,
-    ) -> ClimateMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Get a specific climate metrics snapshot by its ID."""
-        result = await climate_api.get_metrics(GetMetricsInput(metrics_id=metrics_id, current_user_id=current_user.id))
-        return self._to_schema(result)
+        response = await climate_api.get_metrics(
+            GetMetricsInput(metrics_id=metrics_id, current_user_id=current_user.id)
+        )
+        return metrics_response_to_schema(response)
 
     @get(
         "/parcel/{parcel_id:uuid}",
@@ -75,29 +78,12 @@ class ClimateMetricsController(Controller):
         parcel_id: UUID,
         climate_api: ClimateInternalAPI,
         current_user: CurrentUser,
-    ) -> ClimateMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Get the climate metrics for a parcel."""
-        result = await climate_api.get_parcel_metrics(
+        response = await climate_api.get_parcel_metrics(
             GetParcelMetricsInput(parcel_id=parcel_id, current_user_id=current_user.id),
         )
-        return self._to_schema(result)
-
-    @staticmethod
-    def _to_schema(result: ClimateMetricsResult) -> ClimateMetricsSchema:
-        """Map an internal result DTO to the HTTP response schema."""
-        return ClimateMetricsSchema(
-            id=result.id,
-            parcel_id=result.parcel_id,
-            created_at=result.created_at,
-            mean_annual_temperature=result.mean_annual_temperature,
-            annual_precipitation=result.annual_precipitation,
-            temperature_seasonality=result.temperature_seasonality,
-            precipitation_seasonality=result.precipitation_seasonality,
-            max_temperature_warmest_month=result.max_temperature_warmest_month,
-            min_temperature_coldest_month=result.min_temperature_coldest_month,
-            precipitation_wettest_month=result.precipitation_wettest_month,
-            precipitation_driest_month=result.precipitation_driest_month,
-        )
+        return metrics_response_to_schema(response)
 
 
 __all__ = ("ClimateMetricsController",)

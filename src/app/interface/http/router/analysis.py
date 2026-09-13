@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from litestar import Router
 
-from app.interface.http.controller.analysis.parcel import AnalysisController
+from app.interface.http.controller.analysis.analysis import AnalysisController
 
 
 analysis_router = Router(

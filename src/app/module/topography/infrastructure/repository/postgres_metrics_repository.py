@@ -18,7 +18,6 @@ from app.module.topography.domain.value_object.metric import (
     Percentage,
     Perimeter,
     Slope,
-    SlopeDistribution,
     SlopePercentiles,
     TopographyMetricsId,
 )
@@ -27,6 +26,8 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -53,7 +54,6 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             mean_slope=metrics.mean_slope.unwrap(),
             max_slope=metrics.max_slope.unwrap(),
             slope_percentiles=metrics.slope_percentiles.to_float_dict(),
-            slope_distribution=metrics.slope_distribution.to_float_list(),
             aspect=metrics.aspect.value,
             south_aspect_percentage=metrics.south_aspect_percentage.unwrap(),
             area=metrics.area.unwrap(),
@@ -61,15 +61,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             compactness_index=metrics.compactness_index.unwrap(),
             elongation_index=metrics.elongation_index.unwrap(),
         )
-        # MVP keeps at most one row per parcel: recalculating overwrites the
-        # previous snapshot instead of accumulating history.
-        await self._session.execute(
-            delete(TopographyMetricsModel).where(TopographyMetricsModel.parcel_id == metrics.parcel_id.unwrap())
-        )
+        # Append-only: every calculation is stored as a new snapshot so that
+        # analyses can keep referencing the exact metrics they were computed from.
         self._session.add(model)
         await self._session.flush()
 
         return self._to_domain(model)
+
+    @override
+    async def delete(self, metrics_ids: list[UUID]) -> None:
+        """See :class:`app.module.topography.application.port.MetricsRepository.delete`."""
+        if not metrics_ids:
+            return
+        await self._session.execute(delete(TopographyMetricsModel).where(TopographyMetricsModel.id.in_(metrics_ids)))
+        await self._session.flush()
 
     @override
     async def get(self, metrics_id: TopographyMetricsId) -> TopographyMetrics | None:
@@ -109,9 +114,6 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             max_slope=Slope(model.max_slope),
             slope_percentiles=SlopePercentiles(
                 {Percentage(float(k)): Slope(v) for k, v in model.slope_percentiles.items()},
-            ),
-            slope_distribution=SlopeDistribution(
-                [Percentage(v) for v in model.slope_distribution],
             ),
             aspect=AspectDirection(model.aspect),
             south_aspect_percentage=Percentage(model.south_aspect_percentage),

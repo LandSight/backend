@@ -16,7 +16,6 @@ from app.module.topography.domain.value_object.metric import (
     Percentage,
     Perimeter,
     Slope,
-    SlopeDistribution,
     SlopePercentiles,
     TopographyMetricsId,
 )
@@ -51,8 +50,6 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         Maximum slope in degrees.
     slope_percentiles : SlopePercentiles
         Slope values at key percentiles (25, 50, 75, 90).
-    slope_distribution : SlopeDistribution
-        Slope histogram with 10 bins from 0° to 90°.
     aspect : AspectDirection
         Dominant slope aspect direction.
     south_aspect_percentage : Percentage
@@ -83,7 +80,6 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         mean_slope: Slope,
         max_slope: Slope,
         slope_percentiles: SlopePercentiles,
-        slope_distribution: SlopeDistribution,
         aspect: AspectDirection,
         south_aspect_percentage: Percentage,
         area: Area,
@@ -101,7 +97,6 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
         self._mean_slope: Slope = mean_slope
         self._max_slope: Slope = max_slope
         self._slope_percentiles: SlopePercentiles = slope_percentiles
-        self._slope_distribution: SlopeDistribution = slope_distribution
         self._aspect: AspectDirection = aspect
         self._south_aspect_percentage: Percentage = south_aspect_percentage
         self._area: Area = area
@@ -164,11 +159,6 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
     def slope_percentiles(self) -> SlopePercentiles:
         """Slope values at key percentiles (25, 50, 75, 90)."""
         return self._slope_percentiles
-
-    @property
-    def slope_distribution(self) -> SlopeDistribution:
-        """Slope histogram with 10 bins from 0° to 90°."""
-        return self._slope_distribution
 
     @property
     def aspect(self) -> AspectDirection:

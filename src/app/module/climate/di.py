@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.module.climate.application.use_case import (
     CalculateClimateMetricsUseCase,
+    DeleteClimateMetricsUseCase,
     GetClimateMetricsUseCase,
     GetParcelClimateMetricsUseCase,
 )
@@ -86,16 +87,24 @@ def provide_get_parcel_climate_metrics_use_case(
     return GetParcelClimateMetricsUseCase(climate_metrics_repository, climate_metrics_permission_service)
 
 
+def provide_delete_climate_metrics_use_case(
+    climate_metrics_repository: NamedDependency[PostgresMetricsRepository],
+) -> DeleteClimateMetricsUseCase:
+    return DeleteClimateMetricsUseCase(climate_metrics_repository)
+
+
 # ----- Internal API -----
 def provide_climate_internal(
     calculate_climate_metrics_use_case: NamedDependency[CalculateClimateMetricsUseCase],
     get_climate_metrics_use_case: NamedDependency[GetClimateMetricsUseCase],
     get_parcel_climate_metrics_use_case: NamedDependency[GetParcelClimateMetricsUseCase],
+    delete_climate_metrics_use_case: NamedDependency[DeleteClimateMetricsUseCase],
 ) -> ClimateInternal:
     return ClimateInternal(
         calculate_metrics_use_case=calculate_climate_metrics_use_case,
         get_metrics_use_case=get_climate_metrics_use_case,
         get_parcel_metrics_use_case=get_parcel_climate_metrics_use_case,
+        delete_metrics_use_case=delete_climate_metrics_use_case,
     )
 
 
@@ -109,6 +118,10 @@ climate_dependencies = {
     "get_climate_metrics_use_case": Provide(provide_get_climate_metrics_use_case, sync_to_thread=False),
     "get_parcel_climate_metrics_use_case": Provide(
         provide_get_parcel_climate_metrics_use_case,
+        sync_to_thread=False,
+    ),
+    "delete_climate_metrics_use_case": Provide(
+        provide_delete_climate_metrics_use_case,
         sync_to_thread=False,
     ),
     "climate_api": Provide(provide_climate_internal, sync_to_thread=False),

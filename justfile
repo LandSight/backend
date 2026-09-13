@@ -12,6 +12,7 @@ DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env("DOCS_PORT", "8008")
 
 COMPOSE_CMD := env("COMPOSE_CMD", "docker compose")
+CELERY_CONCURRENCY := env("CELERY_CONCURRENCY", "1")
 
 
 default:
@@ -81,21 +82,17 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start all infrastructure services (PostgreSQL + Redis)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker)
 up:
-    @{{ COMPOSE_CMD }} up --detach --wait
+    @{{ COMPOSE_CMD }} up --detach --wait --build
 
-# Stop all infrastructure services
+# Start only infrastructure services (PostgreSQL, Redis, MinIO)
+infra-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis
+
+# Stop all services
 down:
     @{{ COMPOSE_CMD }} down
-
-# Start only PostgreSQL
-db-up:
-    @{{ COMPOSE_CMD }} up --detach --wait postgres
-
-# Stop only PostgreSQL
-db-down:
-    @{{ COMPOSE_CMD }} stop postgres
 
 # View service logs
 logs:
@@ -112,6 +109,10 @@ migration-create module description:
 
 migration-upgrade module:
     @uv run alembic -n {{ module }} upgrade head
+
+# Apply migrations for every module (in dependency order)
+migration-upgrade-all:
+    for module in platform identity parcel topography infrastructure climate analysis; do echo "Upgrading $module..."; uv run alembic -n $module upgrade head || exit 1; done
 
 migration-downgrade module steps:
     @uv run alembic -n {{ module }} downgrade -{{ steps }}
@@ -134,3 +135,9 @@ app-serve:
         --reload \
         --reload-paths="{{ SRC_DIR }}" \
         app.interface.http.asgi:create_asgi_application
+
+# Run the Celery worker that processes analyses
+worker:
+    @uv run celery -A app.worker.celery_app:celery_app worker \
+        --loglevel="INFO" \
+        --concurrency="{{ CELERY_CONCURRENCY }}"

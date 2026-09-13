@@ -1,6 +1,13 @@
 from functools import cache
 
-from app.platform.config.models import AppConfig, AuthConfig, DatabaseConfig, LoggingConfig, S3Config
+from app.platform.config.models import (
+    AppConfig,
+    AuthConfig,
+    DatabaseConfig,
+    LoggingConfig,
+    RedisConfig,
+    S3Config,
+)
 
 
 @cache
@@ -49,6 +56,17 @@ def load_auth_config() -> AuthConfig:
     return load_app_config().auth
 
 
+def load_redis_config() -> RedisConfig:
+    """Load Redis settings from environment variables.
+
+    Returns
+    -------
+    RedisConfig
+        Redis configuration populated from the environment.
+    """
+    return load_app_config().redis
+
+
 def load_s3_config() -> S3Config:
     """Load S3 storage settings from environment variables.
 
@@ -65,5 +83,6 @@ __all__ = (
     "load_auth_config",
     "load_database_config",
     "load_logging_config",
+    "load_redis_config",
     "load_s3_config",
 )

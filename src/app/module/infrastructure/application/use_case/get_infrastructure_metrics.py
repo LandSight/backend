@@ -15,6 +15,7 @@ from app.module.infrastructure.application.dto.response import (
     TransitStopMetricsResponse,
     WaterBodyMetricsResponse,
 )
+from app.module.infrastructure.application.error import UnknownCategoryError
 from app.module.infrastructure.domain.value_object import Buffer, Category, ParcelId
 from app.module.shared.application.error import ForbiddenError
 from app.module.shared.application.use_case import BaseUseCase
@@ -73,7 +74,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
         results: dict[Category, Any] = {}
 
         for category_request in command.categories:
-            category = Category(category_request.category)
+            category = self._parse_category(category_request.category)
             buffer = Buffer(category_request.buffer)
 
             result = await self._handlers[category](parcel_id, buffer)
@@ -94,6 +95,14 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             water_body=results.get(Category.WATER_BODY),
         )
 
+    @staticmethod
+    def _parse_category(category: str) -> Category:
+        """Parse a category string, raising a 400-mapped error if unknown."""
+        try:
+            return Category(category)
+        except ValueError as exc:
+            raise UnknownCategoryError(category) from exc
+
     async def _handle_schools(self, parcel_id: ParcelId, buffer: Buffer) -> SchoolMetricsResponse | None:
         """Retrieve school metrics for a parcel and buffer."""
         entity = await self._metrics_repository.get_schools(parcel_id, buffer)
@@ -101,6 +110,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return SchoolMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -113,6 +123,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return HospitalMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -125,6 +136,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return ShopMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -137,6 +149,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return TransitStopMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
@@ -149,6 +162,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             return None
 
         return WaterBodyMetricsResponse(
+            id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,

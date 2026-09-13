@@ -12,7 +12,6 @@ if TYPE_CHECKING:
         Elevation,
         Percentage,
         Slope,
-        SlopeDistribution,
         SlopePercentiles,
     )
     from app.module.topography.domain.value_object.raster import RasterData
@@ -137,24 +136,6 @@ class DemMetricsService(ABC):
         -------
         SlopePercentiles
             Slope values at key percentiles.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def calculate_slope_distribution(self, raster: RasterData, num_bins: int = 10) -> SlopeDistribution:
-        """Calculate slope distribution histogram.
-
-        Parameters
-        ----------
-        raster : RasterData
-            Raster data containing elevation array and resolution.
-        num_bins : int
-            Number of equal-width bins (default: 10).
-
-        Returns
-        -------
-        SlopeDistribution
-            Slope histogram with bins from 0° to 90°.
         """
         raise NotImplementedError
 

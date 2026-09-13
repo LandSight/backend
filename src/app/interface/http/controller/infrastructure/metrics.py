@@ -1,4 +1,8 @@
-"""Infrastructure metrics HTTP endpoints."""
+"""Infrastructure metrics HTTP endpoints.
+
+Metric responses use the shared neutral metrics response schema, matching the
+module's internal API so the transferred shape can be inspected uniformly.
+"""
 
 from __future__ import annotations
 
@@ -10,25 +14,17 @@ from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.infrastructure import (
     CalculateInfrastructureMetricsRequest,
     CategoryInfoSchema,
+    GetInfrastructureMetricsByIdsRequest,
     GetInfrastructureMetricsRequest,
-    HospitalMetricsSchema,
-    InfrastructureMetricsResponse,
-    SchoolMetricsSchema,
-    ShopMetricsSchema,
-    TransitStopMetricsSchema,
-    WaterBodyMetricsSchema,
 )
+from app.interface.http.schema.metric_value import MetricsResponseSchema, metrics_response_to_schema
 from app.interface.http.util.guards import require_authorization
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
+    CategoryMetricRefInput,
     CategoryRequestInput,
+    GetMetricsByIdsInput,
     GetMetricsInput,
-    HospitalMetricsResult,
-    InfrastructureMetricsResult,
-    SchoolMetricsResult,
-    ShopMetricsResult,
-    TransitStopMetricsResult,
-    WaterBodyMetricsResult,
 )
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
 
@@ -50,16 +46,16 @@ class InfrastructureMetricsController(Controller):
         data: CalculateInfrastructureMetricsRequest,
         infrastructure_api: InfrastructureInternalAPI,
         current_user: CurrentUser,
-    ) -> InfrastructureMetricsResponse:
+    ) -> list[MetricsResponseSchema]:
         """Calculate infrastructure metrics for a parcel."""
-        result = await infrastructure_api.calculate_metrics(
+        responses = await infrastructure_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 categories=[CategoryRequestInput(c.category, c.buffer) for c in data.categories],
             )
         )
-        return InfrastructureMetricsController._to_response(result)
+        return [metrics_response_to_schema(response) for response in responses]
 
     @post(
         "/",
@@ -71,16 +67,37 @@ class InfrastructureMetricsController(Controller):
         data: GetInfrastructureMetricsRequest,
         infrastructure_api: InfrastructureInternalAPI,
         current_user: CurrentUser,
-    ) -> InfrastructureMetricsResponse:
+    ) -> list[MetricsResponseSchema]:
         """Get infrastructure metrics for a parcel by its ID."""
-        result = await infrastructure_api.get_metrics(
+        responses = await infrastructure_api.get_metrics(
             GetMetricsInput(
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 categories=[CategoryRequestInput(c.category, c.buffer) for c in data.categories],
             )
         )
-        return InfrastructureMetricsController._to_response(result)
+        return [metrics_response_to_schema(response) for response in responses]
+
+    @post(
+        "/by-ids",
+        status_code=HTTP_200_OK,
+        description="Get specific infrastructure metrics records by their IDs.",
+    )
+    async def get_infrastructure_metrics_by_ids(
+        self,
+        data: GetInfrastructureMetricsByIdsRequest,
+        infrastructure_api: InfrastructureInternalAPI,
+        current_user: CurrentUser,
+    ) -> list[MetricsResponseSchema]:
+        """Get specific infrastructure metrics records by their IDs."""
+        responses = await infrastructure_api.get_metrics_by_ids(
+            GetMetricsByIdsInput(
+                parcel_id=data.parcel_id,
+                current_user_id=current_user.id,
+                metrics=[CategoryMetricRefInput(m.category, m.metrics_id) for m in data.metrics],
+            )
+        )
+        return [metrics_response_to_schema(response) for response in responses]
 
     @get(
         "/categories",
@@ -95,74 +112,6 @@ class InfrastructureMetricsController(Controller):
         """List all available infrastructure categories."""
         results = await infrastructure_api.get_available_categories()
         return [CategoryInfoSchema(category=r.category) for r in results]
-
-    @staticmethod
-    def _to_response(result: InfrastructureMetricsResult) -> InfrastructureMetricsResponse:
-        """Convert an internal result into an HTTP response schema."""
-        return InfrastructureMetricsResponse(
-            parcel_id=result.parcel_id,
-            school=InfrastructureMetricsController._to_school(result.school),
-            hospital=InfrastructureMetricsController._to_hospital(result.hospital),
-            shop=InfrastructureMetricsController._to_shop(result.shop),
-            transit_stop=InfrastructureMetricsController._to_transit_stop(result.transit_stop),
-            water_body=InfrastructureMetricsController._to_water_body(result.water_body),
-        )
-
-    @staticmethod
-    def _to_school(result: SchoolMetricsResult | None) -> SchoolMetricsSchema | None:
-        """Convert a school metrics result into an HTTP schema."""
-        if result is None:
-            return None
-        return SchoolMetricsSchema(
-            buffer=result.buffer,
-            count=result.count,
-            min_distance_to=result.min_distance_to,
-        )
-
-    @staticmethod
-    def _to_hospital(result: HospitalMetricsResult | None) -> HospitalMetricsSchema | None:
-        """Convert a hospital metrics result into an HTTP schema."""
-        if result is None:
-            return None
-        return HospitalMetricsSchema(
-            buffer=result.buffer,
-            count=result.count,
-            min_distance_to=result.min_distance_to,
-        )
-
-    @staticmethod
-    def _to_shop(result: ShopMetricsResult | None) -> ShopMetricsSchema | None:
-        """Convert a shop metrics result into an HTTP schema."""
-        if result is None:
-            return None
-        return ShopMetricsSchema(
-            buffer=result.buffer,
-            count=result.count,
-            min_distance_to=result.min_distance_to,
-        )
-
-    @staticmethod
-    def _to_transit_stop(result: TransitStopMetricsResult | None) -> TransitStopMetricsSchema | None:
-        """Convert a transit stop metrics result into an HTTP schema."""
-        if result is None:
-            return None
-        return TransitStopMetricsSchema(
-            buffer=result.buffer,
-            count=result.count,
-            min_distance_to=result.min_distance_to,
-        )
-
-    @staticmethod
-    def _to_water_body(result: WaterBodyMetricsResult | None) -> WaterBodyMetricsSchema | None:
-        """Convert a water body metrics result into an HTTP schema."""
-        if result is None:
-            return None
-        return WaterBodyMetricsSchema(
-            buffer=result.buffer,
-            count=result.count,
-            min_distance_to=result.min_distance_to,
-            coverage_ratio=result.coverage_ratio,
-        )
 
 
 __all__ = ("InfrastructureMetricsController",)

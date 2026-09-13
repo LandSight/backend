@@ -20,7 +20,6 @@ class RasterDataArray(BaseValueObject[np.ndarray]):
 
     _EXPECTED_DIMENSIONS = 2
     _MIN_DIMENSION = 1
-    _MIN_PIXELS = 4
 
     @override
     def _normalize(self, value: np.ndarray) -> np.ndarray:
@@ -34,11 +33,7 @@ class RasterDataArray(BaseValueObject[np.ndarray]):
 
         h, w = self._value.shape
         if h < self._MIN_DIMENSION or w < self._MIN_DIMENSION:
-            message = f"Dimensions must be >= {self._MIN_DIMENSION}, got {h}x{w}"
-            raise ValidationError(message)
-
-        if h * w < self._MIN_PIXELS:
-            message = f"Raster must have at least {self._MIN_PIXELS} pixels for metric calculations, got {h * w}"
+            message = f"Raster must have at least {self._MIN_DIMENSION} pixel, got {h}x{w}"
             raise ValidationError(message)
 
     @property
