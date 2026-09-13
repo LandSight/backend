@@ -35,7 +35,6 @@ CATALOG: tuple[MetricDefinition, ...] = (
     MetricDefinition("perimeter", "Perimeter", "m", MetricValueKind.NUMBER),
     MetricDefinition("compactness_index", "Compactness index", "", MetricValueKind.NUMBER),
     MetricDefinition("elongation_index", "Elongation index", "", MetricValueKind.NUMBER),
-    MetricDefinition("slope_distribution", "Slope distribution", "", MetricValueKind.SERIES),
 )
 
 

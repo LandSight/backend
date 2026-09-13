@@ -69,7 +69,6 @@ class GetParcelTopographyMetricsUseCase(
             mean_slope=metrics.mean_slope.unwrap(),
             max_slope=metrics.max_slope.unwrap(),
             slope_percentiles=metrics.slope_percentiles.to_float_dict(),
-            slope_distribution=metrics.slope_distribution.to_float_list(),
             aspect=metrics.aspect.value,
             south_aspect_percentage=metrics.south_aspect_percentage.unwrap(),
             area=metrics.area.unwrap(),

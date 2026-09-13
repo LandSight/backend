@@ -18,7 +18,6 @@ from app.module.topography.domain.value_object.metric import (
     Percentage,
     Perimeter,
     Slope,
-    SlopeDistribution,
     SlopePercentiles,
     TopographyMetricsId,
 )
@@ -53,7 +52,6 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             mean_slope=metrics.mean_slope.unwrap(),
             max_slope=metrics.max_slope.unwrap(),
             slope_percentiles=metrics.slope_percentiles.to_float_dict(),
-            slope_distribution=metrics.slope_distribution.to_float_list(),
             aspect=metrics.aspect.value,
             south_aspect_percentage=metrics.south_aspect_percentage.unwrap(),
             area=metrics.area.unwrap(),
@@ -106,9 +104,6 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             max_slope=Slope(model.max_slope),
             slope_percentiles=SlopePercentiles(
                 {Percentage(float(k)): Slope(v) for k, v in model.slope_percentiles.items()},
-            ),
-            slope_distribution=SlopeDistribution(
-                [Percentage(v) for v in model.slope_distribution],
             ),
             aspect=AspectDirection(model.aspect),
             south_aspect_percentage=Percentage(model.south_aspect_percentage),

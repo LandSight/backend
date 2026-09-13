@@ -37,8 +37,6 @@ class TopographyMetricsResponse:
         Maximum slope in degrees.
     slope_percentiles : dict[int, float]
         Slope values at percentiles 25, 50, 75, 90.
-    slope_distribution : list[float]
-        Slope histogram bins (10 bins, 0-90°).
     aspect : str
         Dominant slope aspect direction (N/NE/E/SE/S/SW/W/NW/FLAT).
     south_aspect_percentage : float
@@ -66,7 +64,6 @@ class TopographyMetricsResponse:
     mean_slope: float
     max_slope: float
     slope_percentiles: dict[int, float] = field(default_factory=dict)
-    slope_distribution: list[float] = field(default_factory=list)
     aspect: str = ""
     south_aspect_percentage: float = 0.0
     area: float = 0.0

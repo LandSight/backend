@@ -12,7 +12,6 @@ from app.module.topography.domain.value_object.metric import (
     Elevation,
     Percentage,
     Slope,
-    SlopeDistribution,
     SlopePercentiles,
 )
 
@@ -107,25 +106,6 @@ class NumpyDemMetricsService(DemMetricsService):
             }
 
         return SlopePercentiles(percentiles_dict)
-
-    @override
-    def calculate_slope_distribution(self, raster: RasterData, num_bins: int = 10) -> SlopeDistribution:
-        """See :class:`app.module.topography.application.port.DemMetricsService.calculate_slope_distribution`."""
-        elevation = raster.array._value
-        resolution = raster.resolution._value
-        slope = self._calculate_slope_array(elevation, resolution)
-
-        valid = slope[~np.isnan(slope)]
-        if len(valid) == 0:
-            return SlopeDistribution([Percentage(0.0)] * num_bins)
-
-        hist, _ = np.histogram(valid, bins=num_bins, range=(0, 90))
-        total = float(np.sum(hist))
-        if total == 0:
-            return SlopeDistribution([Percentage(0.0)] * num_bins)
-
-        percentages = [Percentage(float(h / total * 100)) for h in hist]
-        return SlopeDistribution(percentages)
 
     @override
     def calculate_dominant_aspect(self, raster: RasterData) -> AspectDirection:

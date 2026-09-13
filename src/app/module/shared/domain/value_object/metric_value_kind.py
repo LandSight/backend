@@ -11,7 +11,6 @@ class MetricValueKind(StrEnum):
     NUMBER = "number"
     INTEGER = "integer"
     TEXT = "text"
-    SERIES = "series"
 
 
 __all__ = ("MetricValueKind",)

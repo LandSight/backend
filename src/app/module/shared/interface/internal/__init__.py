@@ -8,7 +8,6 @@ from .metric_value import (
     MetricValue,
     MetricValueBase,
     NumberMetricValue,
-    SeriesMetricValue,
     TextMetricValue,
     build_metric_value,
 )
@@ -20,7 +19,6 @@ __all__ = (
     "MetricValueBase",
     "MetricsResponse",
     "NumberMetricValue",
-    "SeriesMetricValue",
     "TextMetricValue",
     "build_metric_value",
 )

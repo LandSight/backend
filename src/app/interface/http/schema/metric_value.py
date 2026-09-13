@@ -12,7 +12,6 @@ from app.module.shared.interface.internal import (
     MetricsResponse,
     MetricValue,
     NumberMetricValue,
-    TextMetricValue,
 )
 
 
@@ -45,15 +44,8 @@ class TextMetricValueSchema(MetricValueSchemaBase):
     value: str = Field(description="Textual (categorical) metric value.")
 
 
-class SeriesMetricValueSchema(MetricValueSchemaBase):
-    """A series metric value."""
-
-    value_type: Literal["series"] = "series"
-    value: list[float] = Field(default_factory=list, description="Series metric value.")
-
-
 MetricValueSchema = Annotated[
-    NumberMetricValueSchema | IntegerMetricValueSchema | TextMetricValueSchema | SeriesMetricValueSchema,
+    NumberMetricValueSchema | IntegerMetricValueSchema | TextMetricValueSchema,
     Field(discriminator="value_type"),
 ]
 
@@ -73,9 +65,7 @@ def _metric_value_to_schema(metric: MetricValue) -> MetricValueSchema:
         return NumberMetricValueSchema(key=metric.key, label=metric.label, unit=metric.unit, value=metric.value)
     if isinstance(metric, IntegerMetricValue):
         return IntegerMetricValueSchema(key=metric.key, label=metric.label, unit=metric.unit, value=metric.value)
-    if isinstance(metric, TextMetricValue):
-        return TextMetricValueSchema(key=metric.key, label=metric.label, unit=metric.unit, value=metric.value)
-    return SeriesMetricValueSchema(key=metric.key, label=metric.label, unit=metric.unit, value=metric.value)
+    return TextMetricValueSchema(key=metric.key, label=metric.label, unit=metric.unit, value=metric.value)
 
 
 def metrics_response_to_schema(response: MetricsResponse) -> MetricsResponseSchema:
@@ -94,7 +84,6 @@ __all__ = (
     "MetricValueSchemaBase",
     "MetricsResponseSchema",
     "NumberMetricValueSchema",
-    "SeriesMetricValueSchema",
     "TextMetricValueSchema",
     "metrics_response_to_schema",
 )

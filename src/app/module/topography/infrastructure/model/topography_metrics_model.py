@@ -15,7 +15,7 @@ class TopographyMetricsModel(TimestampedModel):
     Maps to the ``topography.metrics`` table.
 
     Stores all computed topography metrics as scalar columns,
-    with JSONB for complex structures (percentiles, distribution).
+    with JSONB for complex structures (percentiles).
     """
 
     __tablename__ = "metrics"
@@ -65,11 +65,6 @@ class TopographyMetricsModel(TimestampedModel):
         JSONB,
         nullable=False,
         comment="Slope values at percentiles 25, 50, 75, 90 as JSON dict",
-    )
-    slope_distribution: Mapped[list] = mapped_column(
-        JSONB,
-        nullable=False,
-        comment="Slope histogram bins (10 bins, 0-90°) as JSON array",
     )
     aspect: Mapped[str] = mapped_column(
         String(4),

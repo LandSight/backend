@@ -55,15 +55,7 @@ class TextMetricValue(MetricValueBase):
     value: str = ""
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class SeriesMetricValue(MetricValueBase):
-    """A series metric value (e.g. a histogram or distribution)."""
-
-    value_type: Literal["series"] = "series"
-    value: list[float] = field(default_factory=list)
-
-
-MetricValue = NumberMetricValue | IntegerMetricValue | TextMetricValue | SeriesMetricValue
+MetricValue = NumberMetricValue | IntegerMetricValue | TextMetricValue
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -128,13 +120,6 @@ def build_metric_value(
             return IntegerMetricValue(key=key, label=label, unit=unit, value=int(cast("int", raw)))
         case MetricValueKind.TEXT:
             return TextMetricValue(key=key, label=label, unit=unit, value=str(raw))
-        case MetricValueKind.SERIES:
-            return SeriesMetricValue(
-                key=key,
-                label=label,
-                unit=unit,
-                value=[float(item) for item in cast("list[float]", raw)],
-            )
 
 
 __all__ = (
@@ -143,7 +128,6 @@ __all__ = (
     "MetricValueBase",
     "MetricsResponse",
     "NumberMetricValue",
-    "SeriesMetricValue",
     "TextMetricValue",
     "build_metric_value",
 )
