@@ -94,8 +94,6 @@ infra-up:
 down:
     @{{ COMPOSE_CMD }} down
 
-
-
 # View service logs
 logs:
     @{{ COMPOSE_CMD }} logs --follow
