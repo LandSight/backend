@@ -183,23 +183,33 @@ class RedisConfig(BaseConfig):
         return f"redis://{credentials}{self.host}:{self.port}/{self.db}"
 
 
+def _default_infra_buffers() -> dict[str, int]:
+    """Return the default per-category infrastructure buffer radii (meters)."""
+    return {
+        "school": 1000,
+        "hospital": 2000,
+        "shop": 500,
+        "transit_stop": 500,
+        "water_body": 2000,
+    }
+
+
 class AnalysisConfig(BaseConfig):
     """Analysis module configuration.
 
     Attributes
     ----------
-    infra_buffer_m : int
-        Buffer radius (meters) applied to every infrastructure category when
-        an analysis calculates its infrastructure metrics.
+    infra_buffers : dict[str, int]
+        Buffer radius in meters per infrastructure category. Categories missing
+        from the mapping are skipped when an analysis calculates its metrics.
     """
 
     model_config = SettingsConfigDict(
         env_prefix="ANALYSIS_",
     )
-    infra_buffer_m: int = Field(
-        default=1000,
-        description="Buffer radius (meters) applied to each infrastructure category during analysis",
-        ge=1,
+    infra_buffers: dict[str, int] = Field(
+        default_factory=_default_infra_buffers,
+        description="Per-category infrastructure buffer radius in meters (JSON object in ANALYSIS_INFRA_BUFFERS)",
     )
 
 
