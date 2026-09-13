@@ -62,9 +62,28 @@ services:
     networks:
       - landsight-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: landsight-redis
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-landsight}"
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-landsight}"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - landsight-network
+
 volumes:
   pgdata:
   minio_data:
+  redisdata:
 
 networks:
   landsight-network:
