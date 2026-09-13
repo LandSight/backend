@@ -1,7 +1,8 @@
 """Concrete implementation of the Climate module's internal API.
 
 See :class:`app.module.climate.interface.internal.port.ClimateInternalAPI`
-for the abstract interface.
+for the abstract interface. Metrics are projected straight from the use case
+response DTOs into the shared neutral contract, using the domain metric catalog.
 """
 
 from __future__ import annotations
@@ -13,13 +14,9 @@ from app.module.climate.application.dto.command import (
     GetClimateMetricsCommand,
     GetParcelClimateMetricsCommand,
 )
-from app.module.climate.interface.internal.dto import (
-    CalculateMetricsInput,
-    ClimateMetricsResult,
-    GetMetricsInput,
-    GetParcelMetricsInput,
-)
+from app.module.climate.domain.metric_catalog import CATALOG
 from app.module.climate.interface.internal.port import ClimateInternalAPI
+from app.module.shared.interface.internal import MetricsResponse, build_metric_value
 
 
 if TYPE_CHECKING:
@@ -29,14 +26,15 @@ if TYPE_CHECKING:
         GetClimateMetricsUseCase,
         GetParcelClimateMetricsUseCase,
     )
+    from app.module.climate.interface.internal.dto import (
+        CalculateMetricsInput,
+        GetMetricsInput,
+        GetParcelMetricsInput,
+    )
 
 
 class ClimateInternal(ClimateInternalAPI):
-    """Concrete implementation of the Climate internal API.
-
-    Wraps the application-layer use cases into a single cohesive
-    interface that the HTTP layer calls.
-    """
+    """Concrete implementation of the Climate internal API."""
 
     def __init__(
         self,
@@ -49,7 +47,7 @@ class ClimateInternal(ClimateInternalAPI):
         self._get_parcel_metrics = get_parcel_metrics_use_case
 
     @override
-    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> ClimateMetricsResult:
+    async def calculate_metrics(self, input_data: CalculateMetricsInput) -> MetricsResponse:
         """See :meth:`ClimateInternalAPI.calculate_metrics`."""
         result = await self._calculate_metrics(
             CalculateClimateMetricsCommand(
@@ -57,10 +55,10 @@ class ClimateInternal(ClimateInternalAPI):
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
 
     @override
-    async def get_metrics(self, input_data: GetMetricsInput) -> ClimateMetricsResult:
+    async def get_metrics(self, input_data: GetMetricsInput) -> MetricsResponse:
         """See :meth:`ClimateInternalAPI.get_metrics`."""
         result = await self._get_metrics(
             GetClimateMetricsCommand(
@@ -68,10 +66,10 @@ class ClimateInternal(ClimateInternalAPI):
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
 
     @override
-    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> ClimateMetricsResult:
+    async def get_parcel_metrics(self, input_data: GetParcelMetricsInput) -> MetricsResponse:
         """See :meth:`ClimateInternalAPI.get_parcel_metrics`."""
         result = await self._get_parcel_metrics(
             GetParcelClimateMetricsCommand(
@@ -79,23 +77,25 @@ class ClimateInternal(ClimateInternalAPI):
                 current_user_id=input_data.current_user_id,
             )
         )
-        return self._to_result(result)
+        return self.to_metrics_response(result)
 
     @staticmethod
-    def _to_result(result: ClimateMetricsResponse) -> ClimateMetricsResult:
-        """Map an application response DTO to an internal result DTO."""
-        return ClimateMetricsResult(
+    def to_metrics_response(result: ClimateMetricsResponse) -> MetricsResponse:
+        """Project a climate use case response into the shared neutral contract."""
+        return MetricsResponse(
+            module="climate",
+            category=None,
             id=result.id,
-            parcel_id=result.parcel_id,
-            created_at=result.created_at,
-            mean_annual_temperature=result.mean_annual_temperature,
-            annual_precipitation=result.annual_precipitation,
-            temperature_seasonality=result.temperature_seasonality,
-            precipitation_seasonality=result.precipitation_seasonality,
-            max_temperature_warmest_month=result.max_temperature_warmest_month,
-            min_temperature_coldest_month=result.min_temperature_coldest_month,
-            precipitation_wettest_month=result.precipitation_wettest_month,
-            precipitation_driest_month=result.precipitation_driest_month,
+            metrics=[
+                build_metric_value(
+                    key=definition.key,
+                    label=definition.label,
+                    unit=definition.unit,
+                    value_type=definition.kind,
+                    raw=getattr(result, definition.key),
+                )
+                for definition in CATALOG
+            ],
         )
 
 

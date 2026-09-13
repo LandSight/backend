@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    import datetime
     from uuid import UUID
 
 
@@ -35,26 +34,8 @@ class GetParcelMetricsInput:
     current_user_id: UUID
 
 
-@dataclass(frozen=True, slots=True)
-class ClimateMetricsResult:
-    """Result of climate metrics operations."""
-
-    id: UUID
-    parcel_id: UUID
-    created_at: datetime.datetime | None
-    mean_annual_temperature: float
-    annual_precipitation: float
-    temperature_seasonality: float
-    precipitation_seasonality: float
-    max_temperature_warmest_month: float
-    min_temperature_coldest_month: float
-    precipitation_wettest_month: float
-    precipitation_driest_month: float
-
-
 __all__ = (
     "CalculateMetricsInput",
-    "ClimateMetricsResult",
     "GetMetricsInput",
     "GetParcelMetricsInput",
 )
