@@ -13,6 +13,7 @@ from app.module.analysis.domain.value_object import (
     AnalysisMetricRef,
     AnalysisName,
     AnalysisScore,
+    AnalysisStage,
     AnalysisStatus,
     MetricType,
     ParcelId,
@@ -43,6 +44,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 parcel_id=analysis.parcel_id.unwrap(),
                 name=analysis.name.unwrap(),
                 status=analysis.status.value,
+                stage=analysis.stage.value,
                 score=analysis.score.unwrap() if analysis.score is not None else None,
                 status_reason=analysis.status_reason,
             )
@@ -50,6 +52,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         else:
             model.name = analysis.name.unwrap()
             model.status = analysis.status.value
+            model.stage = analysis.stage.value
             model.score = analysis.score.unwrap() if analysis.score is not None else None
             model.status_reason = analysis.status_reason
 
@@ -79,8 +82,15 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
     @override
     async def save_metrics(self, analysis_id: AnalysisId, metrics: list[AnalysisMetricRef]) -> None:
         """See :class:`app.module.analysis.application.port.AnalysisRepository.save_metrics`."""
+        if not metrics:
+            return
+
+        metric_types = {ref.metric_type.value for ref in metrics}
         await self._session.execute(
-            delete(AnalysisMetricModel).where(AnalysisMetricModel.analysis_id == analysis_id.unwrap()),
+            delete(AnalysisMetricModel).where(
+                AnalysisMetricModel.analysis_id == analysis_id.unwrap(),
+                AnalysisMetricModel.metric_type.in_(metric_types),
+            ),
         )
         self._session.add_all(
             [
@@ -118,6 +128,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             parcel_id=ParcelId(model.parcel_id),
             name=AnalysisName(model.name),
             status=AnalysisStatus(model.status),
+            stage=AnalysisStage(model.stage),
             score=AnalysisScore(model.score) if model.score is not None else None,
             status_reason=model.status_reason,
             created_at=model.created_at,

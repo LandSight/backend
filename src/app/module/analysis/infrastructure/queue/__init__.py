@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .noop_analysis_task_queue import NoopAnalysisTaskQueue
+from .celery_analysis_task_queue import CeleryAnalysisTaskQueue
 
 
-__all__ = ("NoopAnalysisTaskQueue",)
+__all__ = ("CeleryAnalysisTaskQueue",)
