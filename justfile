@@ -12,6 +12,7 @@ DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env("DOCS_PORT", "8008")
 
 COMPOSE_CMD := env("COMPOSE_CMD", "docker compose")
+CELERY_CONCURRENCY := env("CELERY_CONCURRENCY", "1")
 
 
 default:
@@ -81,11 +82,15 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start all infrastructure services (PostgreSQL + Redis)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker)
 up:
-    @{{ COMPOSE_CMD }} up --detach --wait
+    @{{ COMPOSE_CMD }} up --detach --wait --build
 
-# Stop all infrastructure services
+# Start only infrastructure services (PostgreSQL, Redis, MinIO)
+infra-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis
+
+# Stop all services
 down:
     @{{ COMPOSE_CMD }} down
 
@@ -137,4 +142,6 @@ app-serve:
 
 # Run the Celery worker that processes analyses
 worker:
-    @uv run celery -A app.worker.celery_app:celery_app worker --loglevel="INFO"
+    @uv run celery -A app.worker.celery_app:celery_app worker \
+        --loglevel="INFO" \
+        --concurrency="{{ CELERY_CONCURRENCY }}"

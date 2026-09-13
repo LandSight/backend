@@ -1,3 +1,17 @@
+x-backend: &backend
+  build:
+    context: .
+  image: landsight-backend:latest
+  env_file: .env
+  environment:
+    DATABASE_HOST: postgres
+    DATABASE_PORT: "5432"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    S3_ENDPOINT: http://minio:9000
+  networks:
+    - landsight-network
+
 services:
   postgres:
     image: postgis/postgis:17-3.5
@@ -16,6 +30,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - landsight-network
 
   minio:
     image: minio/minio:latest
@@ -79,6 +95,53 @@ services:
       retries: 5
     networks:
       - landsight-network
+
+  migrate:
+    <<: *backend
+    container_name: landsight-migrate
+    command:
+      - sh
+      - -c
+      - >-
+        for module in platform identity parcel topography infrastructure climate analysis; do
+        echo "Migrating $$module..."; uv run alembic -n $$module upgrade head || exit 1; done
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    <<: *backend
+    container_name: landsight-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  worker:
+    <<: *backend
+    container_name: landsight-worker
+    command:
+      - uv
+      - run
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=${CELERY_CONCURRENCY:-1}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
 volumes:
   pgdata:
