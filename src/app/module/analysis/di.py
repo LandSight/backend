@@ -25,6 +25,7 @@ from app.module.analysis.application.use_case import (
     ScoreAnalysisUseCase,
     StartAnalysisUseCase,
 )
+from app.module.analysis.domain.analysis_policy import INFRASTRUCTURE_BUFFERS
 from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
 from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
@@ -38,7 +39,6 @@ from app.module.climate.interface.internal.port import ClimateInternalAPI
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.topography.interface.internal.port import TopographyInternalAPI
-from app.platform.config.loaders import load_analysis_config
 
 
 COLLECT_METRICS_USE_CASE_KEY = "collect_metrics_use_case"
@@ -131,7 +131,7 @@ def provide_metrics_reader(
 
 
 def provide_analysis_infrastructure_buffers() -> dict[str, int]:
-    return load_analysis_config().infra_buffers
+    return dict(INFRASTRUCTURE_BUFFERS)
 
 
 def provide_fail_analysis_use_case(

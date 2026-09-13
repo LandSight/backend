@@ -1,8 +1,7 @@
-import json
 import typing
 
-from pydantic import Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic import Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.platform.constants import ENV_FILE
 
@@ -184,60 +183,6 @@ class RedisConfig(BaseConfig):
         return f"redis://{credentials}{self.host}:{self.port}/{self.db}"
 
 
-def _default_infra_buffers() -> dict[str, int]:
-    """Return the default per-category infrastructure buffer radii (meters)."""
-    return {
-        "school": 1000,
-        "hospital": 2000,
-        "shop": 500,
-        "transit_stop": 500,
-        "water_body": 2000,
-    }
-
-
-class AnalysisConfig(BaseConfig):
-    """Analysis module configuration.
-
-    Attributes
-    ----------
-    infra_buffers : dict[str, int]
-        Buffer radius in meters per infrastructure category. Categories missing
-        from the mapping are skipped when an analysis calculates its metrics.
-        Configured via ``ANALYSIS_INFRA_BUFFERS`` as comma-separated
-        ``category=meters`` pairs (or a JSON object).
-    """
-
-    model_config = SettingsConfigDict(
-        env_prefix="ANALYSIS_",
-    )
-    infra_buffers: typing.Annotated[dict[str, int], NoDecode] = Field(
-        default_factory=_default_infra_buffers,
-        description="Per-category infrastructure buffer radius in meters",
-    )
-
-    @field_validator("infra_buffers", mode="before")
-    @classmethod
-    def _parse_infra_buffers(cls, value: object) -> object:
-        """Parse ``category=meters`` pairs (or a JSON object) into a mapping."""
-        if not isinstance(value, str):
-            return value
-
-        raw = value.strip()
-        if not raw:
-            return _default_infra_buffers()
-        if raw.startswith("{"):
-            return json.loads(raw)
-
-        buffers: dict[str, int] = {}
-        for pair in raw.split(","):
-            category, separator, meters = pair.partition("=")
-            if not separator or not category.strip() or not meters.strip():
-                message = f"Invalid infrastructure buffer entry: {pair!r} (expected 'category=meters')."
-                raise ValueError(message)
-            buffers[category.strip()] = int(meters.strip())
-        return buffers
-
-
 class AuthConfig(BaseConfig):
     """Authentication configuration.
 
@@ -352,6 +297,5 @@ class AppConfig(BaseConfig):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     redis: RedisConfig = Field(default_factory=RedisConfig)
-    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     s3: S3Config = Field(default_factory=S3Config)
