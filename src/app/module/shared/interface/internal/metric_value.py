@@ -29,10 +29,14 @@ class MetricValueBase:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class NumberMetricValue(MetricValueBase):
-    """A floating-point metric value."""
+    """A floating-point metric value.
+
+    ``value`` may be ``None`` when the metric is defined but has no measured
+    value (e.g. distance to the nearest object when none was found).
+    """
 
     value_type: Literal["number"] = "number"
-    value: float = 0.0
+    value: float | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -114,7 +118,12 @@ def build_metric_value(
     """
     match value_type:
         case MetricValueKind.NUMBER:
-            return NumberMetricValue(key=key, label=label, unit=unit, value=float(cast("float", raw)))
+            return NumberMetricValue(
+                key=key,
+                label=label,
+                unit=unit,
+                value=None if raw is None else float(cast("float", raw)),
+            )
         case MetricValueKind.INTEGER:
             return IntegerMetricValue(key=key, label=label, unit=unit, value=int(cast("int", raw)))
         case MetricValueKind.TEXT:

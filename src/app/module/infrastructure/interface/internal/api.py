@@ -161,8 +161,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         """Project the fields shared by every infrastructure category."""
         values: list[MetricValue] = []
         for definition in CATEGORY_CATALOG:
-            raw = getattr(metrics, definition.key, None)
-            if raw is None:
+            if not hasattr(metrics, definition.key):
                 continue
             values.append(
                 build_metric_value(
@@ -170,7 +169,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                     label=definition.label,
                     unit=definition.unit,
                     value_type=definition.kind,
-                    raw=raw,
+                    raw=getattr(metrics, definition.key),
                 ),
             )
         return values
