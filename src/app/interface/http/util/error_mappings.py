@@ -11,7 +11,10 @@ from litestar.status_codes import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from app.module.analysis.application.error import AnalysisNotFoundError
+from app.module.analysis.application.error import (
+    AnalysisNotDeletableError,
+    AnalysisNotFoundError,
+)
 from app.module.climate.application.error import (
     ClimateDataNotFoundError,
     ClimateMetricsNotFoundError,
@@ -127,6 +130,7 @@ def _get_analysis_application_error_mappings() -> dict[type[ApplicationError], i
     """Return application error to HTTP status mappings for Analysis module."""
     return {
         AnalysisNotFoundError: HTTP_404_NOT_FOUND,
+        AnalysisNotDeletableError: HTTP_409_CONFLICT,
     }
 
 

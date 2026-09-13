@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.command import FailAnalysisCommand, ScoreAnalysisCommand
@@ -29,6 +30,8 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
     Runs as the final pipeline phase. On error it rolls back and records the
     failure in a separate transaction, then re-raises.
     """
+
+    _DEMO_STEP_DELAY_SECONDS = 5
 
     def __init__(
         self,
@@ -69,7 +72,14 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
             return
 
         if analysis.stage is AnalysisStage.METRICS:
+            # Demo-only delay so the "running" state stays visible.
+            await asyncio.sleep(self._DEMO_STEP_DELAY_SECONDS)
             analysis.mark_metrics_calculated()
+            await self._analysis_repository.save(analysis)
+            # Commit the stage transition so "scoring" is observable.
+            await self._unit_of_work.commit()
+            # Demo-only delay so the "scoring" state stays visible.
+            await asyncio.sleep(self._DEMO_STEP_DELAY_SECONDS)
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
         values = await self._metrics_reader.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)

@@ -15,6 +15,7 @@ from app.module.analysis.application.port import (
     AnalysisTaskQueue,
     MetricsCollector,
     MetricsReader,
+    MetricsRemover,
     UnitOfWork,
 )
 from app.module.analysis.application.use_case import (
@@ -32,6 +33,7 @@ from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
 from app.module.analysis.infrastructure.reader import MetricsReaderImpl
+from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
 from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository
 from app.module.analysis.infrastructure.scoring import RandomAnalysisScorer
 from app.module.analysis.infrastructure.uow import SqlAlchemyUnitOfWork
@@ -109,8 +111,9 @@ def provide_list_user_analyses_use_case(
 def provide_delete_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+    metrics_remover: NamedDependency[MetricsRemover],
 ) -> DeleteAnalysisUseCase:
-    return DeleteAnalysisUseCase(analysis_repository, analysis_permission_service)
+    return DeleteAnalysisUseCase(analysis_repository, analysis_permission_service, metrics_remover)
 
 
 # ----- Internal API -----
@@ -149,6 +152,14 @@ def provide_metrics_reader(
     infrastructure_api: NamedDependency[InfrastructureInternalAPI],
 ) -> MetricsReaderImpl:
     return MetricsReaderImpl(topography_api, climate_api, infrastructure_api)
+
+
+def provide_metrics_remover(
+    topography_api: NamedDependency[TopographyInternalAPI],
+    climate_api: NamedDependency[ClimateInternalAPI],
+    infrastructure_api: NamedDependency[InfrastructureInternalAPI],
+) -> MetricsRemoverImpl:
+    return MetricsRemoverImpl(topography_api, climate_api, infrastructure_api)
 
 
 def provide_analysis_infrastructure_buffers() -> dict[str, int]:
@@ -198,6 +209,7 @@ analysis_dependencies = {
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
     "owned_parcels_provider": Provide(provide_owned_parcels_provider, sync_to_thread=False),
     "analysis_scorer": Provide(provide_random_analysis_scorer, sync_to_thread=False),
+    "metrics_remover": Provide(provide_metrics_remover, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),
     "start_analysis_use_case": Provide(provide_start_analysis_use_case, sync_to_thread=False),
     "get_analysis_use_case": Provide(provide_get_analysis_use_case, sync_to_thread=False),

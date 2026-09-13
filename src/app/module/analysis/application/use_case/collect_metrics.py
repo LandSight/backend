@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.command import (
@@ -33,6 +34,8 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
     failure in a separate transaction, then re-raises so the pipeline stops.
     """
 
+    _DEMO_STEP_DELAY_SECONDS = 5
+
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
@@ -63,9 +66,12 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
             raise AnalysisNotFoundError(str(command.analysis_id))
 
         if analysis.status is AnalysisStatus.PENDING:
-            # Queued until a worker picks the analysis up; mark it as running.
+            # Demo-only delay so the "queued" state stays visible on the client.
+            await asyncio.sleep(self._DEMO_STEP_DELAY_SECONDS)
             analysis.mark_running()
             await self._analysis_repository.save(analysis)
+            # Commit the transition so "running" is observable before metrics load.
+            await self._unit_of_work.commit()
         elif analysis.status is not AnalysisStatus.RUNNING:
             self._logger.warning(
                 "Analysis is not in progress, skipping metrics: analysis_id=%s status=%s",

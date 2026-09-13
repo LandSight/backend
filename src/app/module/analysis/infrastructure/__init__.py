@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import collector, model, parcel, permission, queue, reader, repository, scoring, uow
+from . import collector, model, parcel, permission, queue, reader, remover, repository, scoring, uow
 
 
 __all__ = (
@@ -12,6 +12,7 @@ __all__ = (
     "permission",
     "queue",
     "reader",
+    "remover",
     "repository",
     "scoring",
     "uow",

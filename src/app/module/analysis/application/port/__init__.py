@@ -8,6 +8,7 @@ from .analysis_scorer import AnalysisScorer
 from .analysis_task_queue import AnalysisTaskQueue
 from .metrics_collector import MetricsCollector
 from .metrics_reader import MetricsReader, MetricsResponse
+from .metrics_remover import MetricsRemover
 from .owned_parcels_provider import OwnedParcelsProvider
 from .unit_of_work import UnitOfWork
 
@@ -19,6 +20,7 @@ __all__ = (
     "AnalysisTaskQueue",
     "MetricsCollector",
     "MetricsReader",
+    "MetricsRemover",
     "MetricsResponse",
     "OwnedParcelsProvider",
     "UnitOfWork",
