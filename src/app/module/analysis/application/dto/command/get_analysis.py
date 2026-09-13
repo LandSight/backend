@@ -1,4 +1,4 @@
-"""Analyze parcel command."""
+"""Get analysis command."""
 
 from __future__ import annotations
 
@@ -11,19 +11,19 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class AnalyzeParcelCommand:
-    """Command for aggregating all metrics of a parcel.
+class GetAnalysisCommand:
+    """Command for retrieving an analysis by its ID.
 
     Attributes
     ----------
-    parcel_id : UUID
-        ID of the parcel to aggregate metrics for.
+    analysis_id : UUID
+        ID of the analysis to retrieve.
     current_user_id : UUID
         ID of the user performing the request.
     """
 
-    parcel_id: UUID
+    analysis_id: UUID
     current_user_id: UUID
 
 
-__all__ = ("AnalyzeParcelCommand",)
+__all__ = ("GetAnalysisCommand",)
