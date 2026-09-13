@@ -11,12 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal, cast
 
+from app.module.shared.domain.value_object import MetricValueKind
+
 
 if TYPE_CHECKING:
     from uuid import UUID
-
-
-MetricValueType = Literal["number", "integer", "text", "series"]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -90,7 +89,7 @@ def build_metric_value(
     key: str,
     label: str,
     unit: str,
-    value_type: MetricValueType,
+    value_type: MetricValueKind,
     raw: object,
 ) -> MetricValue:
     """Build the metric value variant matching ``value_type``.
@@ -103,7 +102,7 @@ def build_metric_value(
         Human-readable metric name.
     unit : str
         Unit of the value.
-    value_type : MetricValueType
+    value_type : MetricValueKind
         Variant discriminator.
     raw : object
         Raw value read from the module result.
@@ -114,13 +113,13 @@ def build_metric_value(
         The matching metric value variant.
     """
     match value_type:
-        case "number":
+        case MetricValueKind.NUMBER:
             return NumberMetricValue(key=key, label=label, unit=unit, value=float(cast("float", raw)))
-        case "integer":
+        case MetricValueKind.INTEGER:
             return IntegerMetricValue(key=key, label=label, unit=unit, value=int(cast("int", raw)))
-        case "text":
+        case MetricValueKind.TEXT:
             return TextMetricValue(key=key, label=label, unit=unit, value=str(raw))
-        case "series":
+        case MetricValueKind.SERIES:
             return SeriesMetricValue(
                 key=key,
                 label=label,
@@ -133,7 +132,6 @@ __all__ = (
     "IntegerMetricValue",
     "MetricValue",
     "MetricValueBase",
-    "MetricValueType",
     "MetricsResponse",
     "NumberMetricValue",
     "SeriesMetricValue",
