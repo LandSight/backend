@@ -32,6 +32,11 @@ class AnalysisModel(TimestampedModel):
         nullable=False,
         comment="Lifecycle status (pending/running/completed/failed)",
     )
+    stage: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        comment="Pipeline stage (metrics/scoring)",
+    )
     score: Mapped[float | None] = mapped_column(
         Float,
         nullable=True,
