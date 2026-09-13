@@ -112,9 +112,8 @@ def http_exception_handler(request: Request, exc: HTTPException) -> Response:
         )
 
     detail = exc.detail or "HTTP error"
-    if exc.extra:
-        detail = f"{detail}: {exc.extra}"
-    return make_error_response(exc.status_code, detail)
+    errors = exc.extra if isinstance(exc.extra, list) else None
+    return make_error_response(exc.status_code, detail, errors)
 
 
 def serialization_exception_handler(
