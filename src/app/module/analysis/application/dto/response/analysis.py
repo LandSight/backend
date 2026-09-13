@@ -25,6 +25,8 @@ class AnalysisResponse:
         Human-readable name of the analysis.
     status : str
         Lifecycle status (pending/running/completed/failed).
+    stage : str
+        Pipeline stage (metrics/scoring).
     score : float | None
         Final score in [0, 10]; ``None`` until completed.
     status_reason : str | None
@@ -37,6 +39,7 @@ class AnalysisResponse:
     parcel_id: UUID
     name: str
     status: str
+    stage: str
     score: float | None
     status_reason: str | None
     created_at: datetime.datetime | None
