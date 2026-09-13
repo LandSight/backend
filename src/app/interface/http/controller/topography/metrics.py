@@ -1,4 +1,8 @@
-"""Topography metrics HTTP endpoints."""
+"""Topography metrics HTTP endpoints.
+
+Responses use the shared neutral metrics response schema, matching the module's
+internal API so the transferred shape can be inspected uniformly.
+"""
 
 from __future__ import annotations
 
@@ -9,16 +13,13 @@ from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 
 from app.interface.http.schema.current_user import CurrentUser
-from app.interface.http.schema.topography import (
-    CalculateTopographyMetricsRequest,
-    TopographyMetricsResponse as TopographyMetricsSchema,
-)
+from app.interface.http.schema.metric_value import MetricsResponseSchema, metrics_response_to_schema
+from app.interface.http.schema.topography import CalculateTopographyMetricsRequest
 from app.interface.http.util.guards import require_authorization
 from app.module.topography.interface.internal.dto import (
     CalculateMetricsInput,
     GetMetricsInput,
     GetParcelMetricsInput,
-    TopographyMetricsResult,
 )
 from app.module.topography.interface.internal.port import TopographyInternalAPI
 
@@ -40,15 +41,15 @@ class TopographyMetricsController(Controller):
         data: CalculateTopographyMetricsRequest,
         topography_api: TopographyInternalAPI,
         current_user: CurrentUser,
-    ) -> TopographyMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Calculate topography metrics for a parcel."""
-        result = await topography_api.calculate_metrics(
+        response = await topography_api.calculate_metrics(
             CalculateMetricsInput(
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
             )
         )
-        return self._to_schema(result)
+        return metrics_response_to_schema(response)
 
     @get(
         "/{metrics_id:uuid}",
@@ -60,12 +61,12 @@ class TopographyMetricsController(Controller):
         metrics_id: UUID,
         topography_api: TopographyInternalAPI,
         current_user: CurrentUser,
-    ) -> TopographyMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Get a specific topography metrics snapshot by its ID."""
-        result = await topography_api.get_metrics(
+        response = await topography_api.get_metrics(
             GetMetricsInput(metrics_id=metrics_id, current_user_id=current_user.id)
         )
-        return self._to_schema(result)
+        return metrics_response_to_schema(response)
 
     @get(
         "/parcel/{parcel_id:uuid}",
@@ -77,36 +78,12 @@ class TopographyMetricsController(Controller):
         parcel_id: UUID,
         topography_api: TopographyInternalAPI,
         current_user: CurrentUser,
-    ) -> TopographyMetricsSchema:
+    ) -> MetricsResponseSchema:
         """Get the topography metrics for a parcel."""
-        result = await topography_api.get_parcel_metrics(
+        response = await topography_api.get_parcel_metrics(
             GetParcelMetricsInput(parcel_id=parcel_id, current_user_id=current_user.id),
         )
-        return self._to_schema(result)
-
-    @staticmethod
-    def _to_schema(result: TopographyMetricsResult) -> TopographyMetricsSchema:
-        """Map an internal result DTO to the HTTP response schema."""
-        return TopographyMetricsSchema(
-            id=result.id,
-            parcel_id=result.parcel_id,
-            mean_elevation=result.mean_elevation,
-            max_elevation=result.max_elevation,
-            min_elevation=result.min_elevation,
-            elevation_range=result.elevation_range,
-            elevation_std=result.elevation_std,
-            mean_slope=result.mean_slope,
-            max_slope=result.max_slope,
-            slope_percentiles=result.slope_percentiles,
-            slope_distribution=result.slope_distribution,
-            aspect=result.aspect,
-            south_aspect_percentage=result.south_aspect_percentage,
-            area=result.area,
-            perimeter=result.perimeter,
-            compactness_index=result.compactness_index,
-            elongation_index=result.elongation_index,
-            created_at=result.created_at,
-        )
+        return metrics_response_to_schema(response)
 
 
 __all__ = ("TopographyMetricsController",)
