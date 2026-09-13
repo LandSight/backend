@@ -1,10 +1,11 @@
-from . import geojson, identity, infrastructure, parcel, system, topography
+from . import geojson, identity, infrastructure, metric_value, parcel, system, topography
 
 
 __all__ = (
     "geojson",
     "identity",
     "infrastructure",
+    "metric_value",
     "parcel",
     "system",
     "topography",
