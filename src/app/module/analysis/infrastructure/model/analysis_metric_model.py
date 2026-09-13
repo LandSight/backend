@@ -2,7 +2,7 @@
 
 from uuid import UUID  # noqa: TC003
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.database.base import BaseModel
@@ -17,12 +17,14 @@ class AnalysisMetricModel(BaseModel):
     """
 
     __tablename__ = "analysis_metrics"
-    __table_args__ = {"schema": "analysis"}  # noqa: RUF012
+    __table_args__ = (
+        Index("ix_analysis_metrics_analysis_id", "analysis_id"),
+        {"schema": "analysis"},
+    )
 
     analysis_id: Mapped[UUID] = mapped_column(
         ForeignKey("analysis.analyses.id", ondelete="CASCADE"),
         nullable=False,
-        index=True,
         comment="ID of the owning analysis",
     )
     metric_type: Mapped[str] = mapped_column(

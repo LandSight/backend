@@ -28,7 +28,7 @@ class BaseModel(MappedAsDataclass, DeclarativeBase, kw_only=True):
     id: Mapped[uuid.UUID] = mapped_column(
         sa.UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid6,
+        default_factory=uuid.uuid6,
         kw_only=True,
     )
 

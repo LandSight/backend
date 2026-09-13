@@ -54,7 +54,6 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             parcel_id=ParcelId(command.parcel_id),
             name=AnalysisName(command.name),
         )
-        analysis.mark_running()
         saved = await self._analysis_repository.save(analysis)
         await self._task_queue.enqueue(saved.id, command.current_user_id)
 

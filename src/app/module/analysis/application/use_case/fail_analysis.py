@@ -21,6 +21,8 @@ class FailAnalysisUseCase(BaseUseCase[FailAnalysisCommand, None]):
     one that was rolled back.
     """
 
+    _MAX_REASON_LENGTH = 512
+
     def __init__(self, analysis_repository: AnalysisRepository) -> None:
         self._analysis_repository = analysis_repository
         self._logger = get_logger("app.analysis.use_case.fail_analysis")
@@ -40,7 +42,8 @@ class FailAnalysisUseCase(BaseUseCase[FailAnalysisCommand, None]):
             )
             return
 
-        analysis.fail(command.reason)
+        reason = command.reason.strip() or "Analysis failed."
+        analysis.fail(reason[: self._MAX_REASON_LENGTH])
         await self._analysis_repository.save(analysis)
         self._logger.info("Analysis marked as failed: analysis_id=%s", command.analysis_id)
 

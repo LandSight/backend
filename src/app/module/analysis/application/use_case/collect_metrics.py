@@ -62,7 +62,11 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         if analysis is None:
             raise AnalysisNotFoundError(str(command.analysis_id))
 
-        if analysis.status not in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
+        if analysis.status is AnalysisStatus.PENDING:
+            # Queued until a worker picks the analysis up; mark it as running.
+            analysis.mark_running()
+            await self._analysis_repository.save(analysis)
+        elif analysis.status is not AnalysisStatus.RUNNING:
             self._logger.warning(
                 "Analysis is not in progress, skipping metrics: analysis_id=%s status=%s",
                 command.analysis_id,
