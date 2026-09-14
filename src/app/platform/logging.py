@@ -1,3 +1,9 @@
+"""Logging configuration for the application.
+
+Uses Python's ``logging.config.dictConfig`` under the hood.
+Configuration is driven by :class:`LoggingConfig` from the settings.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +16,7 @@ if typing.TYPE_CHECKING:
 
 
 def _build_dict_config(config: LoggingConfig) -> dict[str, typing.Any]:
-    """Convert LoggingConfig into the dictionary expected by logging.config.dictConfig.
+    """Convert *LoggingConfig* into the dictionary expected by ``logging.config.dictConfig``.
 
     Parameters
     ----------
@@ -27,19 +33,52 @@ def _build_dict_config(config: LoggingConfig) -> dict[str, typing.Any]:
                 "format": "[%(asctime)s] [%(levelname)-8s] %(message)s [%(name)s] [%(filename)s:%(funcName)s:%(lineno)d]",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
+            "brief": {
+                "()": "logging.Formatter",
+                "format": "[%(asctime)s] [%(levelname)-8s] %(message)s",
+                "datefmt": "%H:%M:%S",
+            },
         },
         "handlers": {
             "stdout": {
                 "class": "logging.StreamHandler",
                 "formatter": config.formatter,
                 "stream": "ext://sys.stdout",
-            }
+            },
         },
         "root": {
             "level": config.level,
             "handlers": ["stdout"],
         },
-        "loggers": {},
+        "loggers": {
+            # Application loggers — must be declared explicitly because
+            # disable_existing_loggers=True prevents runtime logger creation.
+            "app": {
+                "level": config.level,
+                "handlers": ["stdout"],
+                "propagate": False,
+            },
+            "app.http.access": {
+                "level": config.level,
+                "handlers": ["stdout"],
+                "propagate": False,
+            },
+            "app.interface.http.exception_handlers": {
+                "level": config.level,
+                "handlers": ["stdout"],
+                "propagate": False,
+            },
+            "app.identity.use_case": {
+                "level": config.level,
+                "handlers": ["stdout"],
+                "propagate": False,
+            },
+            "app.platform.database.session": {
+                "level": config.level,
+                "handlers": ["stdout"],
+                "propagate": False,
+            },
+        },
     }
 
 

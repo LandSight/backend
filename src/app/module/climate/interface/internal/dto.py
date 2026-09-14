@@ -1,0 +1,49 @@
+"""Internal DTOs for the Climate module."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+
+@dataclass(frozen=True, slots=True)
+class CalculateMetricsInput:
+    """Input for calculating climate metrics."""
+
+    parcel_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class GetMetricsInput:
+    """Input for retrieving a specific climate metrics snapshot by its ID."""
+
+    metrics_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class GetParcelMetricsInput:
+    """Input for retrieving the climate metrics for a parcel."""
+
+    parcel_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
+class DeleteMetricsInput:
+    """Input for deleting climate metrics snapshots by their IDs."""
+
+    metrics_ids: list[UUID]
+
+
+__all__ = (
+    "CalculateMetricsInput",
+    "DeleteMetricsInput",
+    "GetMetricsInput",
+    "GetParcelMetricsInput",
+)

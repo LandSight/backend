@@ -11,8 +11,9 @@ addopts = [
   "--strict-config",
   "--strict-markers",
   "--disable-warnings",
-  "--cov",
+  "--cov=src/app",
 ]
 xfail_strict = true
 log_cli = true
 log_cli_level = "INFO"
+anyio_mode = "auto"

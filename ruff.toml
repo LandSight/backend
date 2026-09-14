@@ -1,4 +1,4 @@
-required-version = ">=0.14"
+required-version = ">=0.15"
 target-version = "py314"
 line-length = 120
 src = [ "src", "tests" ]
@@ -48,13 +48,6 @@ ignore = [
   "E203", # conflicts with formatter
   "E501", # formatter enforces line length
 ]
-per-file-ignores."**/__init__.py" = [
-  "F401", # allow unused re-exports
-]
-per-file-ignores."tests/**.py" = [
-  "PLR2004", # magic value comparison
-  "S101",    # allow assert statements in tests (Bandit S101)
-]
 
 pydocstyle.convention = "numpy"
 
@@ -62,3 +55,29 @@ isort.combine-as-imports = true
 isort.force-single-line = false
 isort.known-first-party = [ "app" ]
 isort.lines-after-imports = 2
+
+[lint.per-file-ignores]
+"**/__init__.py" = [
+  "F401", # allow unused re-exports
+]
+"tests/**.py" = [
+  "PLR6301", # allow unused self in test classes
+  "PLR2004", # magic value comparison
+  "S101",    # allow assert statements in tests (Bandit S101)
+]
+"src/app/interface/http/controller/**.py" = [
+  "PLR6301", # allow unused self
+  "RUF012",  # allow mutable class attributes (guards, tags)
+  "TC001",   # allow runtime imports in controllers
+  "TC002",   # allow runtime imports in controllers
+  "TC003",   # allow runtime stdlib imports (UUID for path params)
+]
+"src/app/interface/http/schema/**.py" = [
+  "TC001",   # allow runtime imports in Pydantic schemas
+  "TC002",   # allow runtime imports in Pydantic schemas
+  "TC003",   # allow runtime stdlib imports (UUID for Pydantic fields)
+]
+"src/app/**/di.py" = [
+  "TC001",   # runtime imports needed for dependency injection in controllers
+  "TC002",   # NamedDependency and use cases must be available at runtime
+]

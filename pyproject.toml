@@ -1,6 +1,10 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
 [project]
 name = "land-sight-backend"
-version = "0.1.0"
+version = "1.0.0"
 description = "LandSight backend."
 readme = "README.md"
 license = "MIT"
@@ -9,17 +13,39 @@ authors = [
   { name = "Vlad Korneev", email = "veenrok@veenrok.com" },
 ]
 requires-python = ">=3.14"
-classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.14" ]
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
+  "alembic>=1.18.5",
+  "asyncpg>=0.31",
+  "bcrypt>=5",
+  "boto3>=1.37",
+  "celery[redis]>=5.5",
+  "fabdem>=0.2.2",
+  "gdal==3.8.4",
+  "geoalchemy2>=0.20",
+  "granian>=2.7.2",
+  "litestar>=2.21",
+  "numpy>=2.2",
+  "pydantic>=2.12.5",
   "pydantic-settings>=2.12",
+  "pyjwt>=2.13",
+  "pyproj>=3.7.2",
+  "rasterio>=1.5",
+  "redis>=6",
+  "shapely>=2.1.2",
+  "sqlalchemy[asyncio]>=2.0.51",
 ]
 
 [dependency-groups]
 dev = [
+  "granian[reload]>=2.7.2",
   { include-group = "changelog" },
   { include-group = "docs" },
+  { include-group = "git-hooks" },
   { include-group = "lint" },
-  { include-group = "pre-commit" },
   { include-group = "test" },
 ]
 test = [
@@ -27,17 +53,15 @@ test = [
   "pytest-cov>=7",
 ]
 docs = [
-  "mkdocs>=1.6.1",
-  "mkdocs-material>=9.7.1",
-  "mkdocs-minify-plugin>=0.8",
-]
-lint = [
-  "ruff>=0.14.10",
-  "ty>=0.0.12",
-]
-pre-commit = [
-  "pre-commit>=4.5.1",
+  "zensical>=0.0.30",
 ]
 changelog = [
   "towncrier>=25.8",
+]
+git-hooks = [
+  "prek>=0.3.2",
+]
+lint = [
+  "ruff>=0.15",
+  "ty>=0.0.19",
 ]

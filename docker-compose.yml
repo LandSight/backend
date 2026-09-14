@@ -1,0 +1,153 @@
+x-backend: &backend
+  build:
+    context: .
+  image: landsight-backend:latest
+  env_file: .env
+  environment:
+    DATABASE_HOST: postgres
+    DATABASE_PORT: "5432"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    S3_ENDPOINT: http://minio:9000
+  networks:
+    - landsight-network
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: landsight-postgres
+    environment:
+      POSTGRES_DB: landsight
+      POSTGRES_USER: landsight
+      POSTGRES_PASSWORD: landsight
+    ports:
+      - "15432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U landsight -d landsight"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - landsight-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: landsight-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - landsight-network
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: landsight-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO to be ready...';
+      sleep 2;
+      echo 'Setting up MinIO alias...';
+      mc alias set local http://minio:9000 admin password123;
+      echo 'Creating buckets...';
+      mc mb local/landsight-dem --ignore-existing;
+      mc mb local/landsight-climate --ignore-existing;
+      echo 'Setting bucket policies (public read for DEM)...';
+      mc anonymous set download local/landsight-dem;
+      echo 'Setting bucket policies (public read for Climate)...';
+      mc anonymous set download local/landsight-climate;
+      echo 'MinIO initialization completed.';
+      exit 0;
+      "
+    networks:
+      - landsight-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: landsight-redis
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-landsight}"
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-landsight}"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - landsight-network
+
+  migrate:
+    <<: *backend
+    container_name: landsight-migrate
+    command:
+      - sh
+      - -c
+      - >-
+        for module in platform identity parcel topography infrastructure climate analysis; do
+        echo "Migrating $$module..."; uv run alembic -n $$module upgrade head || exit 1; done
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    <<: *backend
+    container_name: landsight-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  worker:
+    <<: *backend
+    container_name: landsight-worker
+    command:
+      - uv
+      - run
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=${CELERY_CONCURRENCY:-1}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  minio_data:
+  redisdata:
+
+networks:
+  landsight-network:
+    driver: bridge

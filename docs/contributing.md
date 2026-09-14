@@ -21,7 +21,7 @@ cd backend
 
 2. Create a virtual environment and install dependencies:
 ```bash
-just install
+just setup
 ```
 
 ## Code Style
@@ -50,6 +50,13 @@ More information on the [testing](standarts/testing.md) page.
 To run the test suites, use command:
 ```bash
 just test
+```
+
+## Running the Application
+
+To run the application in development mode, use command:
+```bash
+just app-serve
 ```
 
 ## Commit Style
