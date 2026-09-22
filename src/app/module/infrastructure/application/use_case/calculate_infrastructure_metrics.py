@@ -66,7 +66,7 @@ class CalculateInfrastructureMetricsUseCase(
     aggregates the results into a single response.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         buffer_service: BufferService,
         local_infrastructure_repository: LocalInfrastructureRepository,
