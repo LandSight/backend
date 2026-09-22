@@ -105,12 +105,14 @@ def provide_get_available_categories_use_case() -> GetAvailableCategoriesUseCase
 def provide_get_infrastructure_objects_use_case(
     buffer_service: NamedDependency[ShapelyBufferService],
     local_infrastructure_repository: NamedDependency[PostgresLocalInfrastructureRepository],
+    infrastructure_metrics_service: NamedDependency[ShapelyInfrastructureMetricsService],
     metrics_repository: NamedDependency[PostgresMetricsRepository],
     infrastructure_parcel_provider: NamedDependency[ParcelProviderImpl],
 ) -> GetInfrastructureObjectsUseCase:
     return GetInfrastructureObjectsUseCase(
         buffer_service=buffer_service,
         local_infrastructure_repository=local_infrastructure_repository,
+        infrastructure_metrics_service=infrastructure_metrics_service,
         metrics_repository=metrics_repository,
         parcel_provider=infrastructure_parcel_provider,
     )

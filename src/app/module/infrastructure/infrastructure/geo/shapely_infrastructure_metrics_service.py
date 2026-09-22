@@ -16,6 +16,7 @@ from shapely.geometry import (
 from shapely.ops import unary_union
 
 from app.module.infrastructure.application.port import InfrastructureMetricsService
+from app.module.infrastructure.domain.entity import InfrastructureObject
 from app.module.infrastructure.domain.value_object import (
     BufferZone,
     Count,
@@ -29,8 +30,6 @@ from app.module.shared.infrastructure.geo.projection import reproject_to, to_loc
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
-    from app.module.infrastructure.domain.entity import InfrastructureObject
 
 
 _ShapelyGeometry = (
@@ -69,6 +68,27 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         geoms, _ = self._reproject_all(objects)
         merged = unary_union(geoms)
         return Count(len(self._components(merged)))
+
+    @override
+    def to_point_objects(self, objects: list[InfrastructureObject]) -> list[InfrastructureObject]:
+        """See :class:`app.module.infrastructure.application.port.InfrastructureMetricsService.to_point_objects`."""
+        points: list[InfrastructureObject] = []
+        for obj in objects:
+            if not isinstance(obj.geometry, Polygon):
+                points.append(obj)
+                continue
+
+            representative = self._polygon_to_shapely(obj.geometry).representative_point()
+            points.append(
+                InfrastructureObject(
+                    id=obj.id,
+                    category=obj.category,
+                    geometry=GeoPoint.create(float(representative.y), float(representative.x)),
+                    name=obj.name,
+                    tags=obj.tags,
+                )
+            )
+        return points
 
     @override
     def min_distance(

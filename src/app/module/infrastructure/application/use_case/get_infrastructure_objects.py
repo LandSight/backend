@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
     from app.module.infrastructure.application.port import (
         BufferService,
+        InfrastructureMetricsService,
         LocalInfrastructureRepository,
         MetricsRepository,
         ParcelProvider,
@@ -62,11 +63,13 @@ class GetInfrastructureObjectsUseCase(
         self,
         buffer_service: BufferService,
         local_infrastructure_repository: LocalInfrastructureRepository,
+        infrastructure_metrics_service: InfrastructureMetricsService,
         metrics_repository: MetricsRepository,
         parcel_provider: ParcelProvider,
     ) -> None:
         self._buffer_service = buffer_service
         self._local_infrastructure_repository = local_infrastructure_repository
+        self._infrastructure_metrics_service = infrastructure_metrics_service
         self._metrics_repository = metrics_repository
         self._parcel_provider = parcel_provider
         self._logger = get_logger("app.infrastructure.use_case.get_infrastructure_objects")
@@ -90,15 +93,16 @@ class GetInfrastructureObjectsUseCase(
             Category.GEOGRAPHIC_POSITION: self._load_geographic_position,
         }
 
+        facility = self._facility_objects
         point = self._point_objects
         line = self._line_objects
         polygon = self._polygon_objects
         self._object_handlers: dict[Category, _ObjectLoader] = {
-            Category.SCHOOL: point,
-            Category.HOSPITAL: point,
-            Category.GROCERY: point,
-            Category.BUS_STOP: point,
-            Category.RAILWAY_STATION: point,
+            Category.SCHOOL: facility,
+            Category.HOSPITAL: facility,
+            Category.GROCERY: facility,
+            Category.BUS_STOP: facility,
+            Category.RAILWAY_STATION: facility,
             Category.GEOGRAPHIC_POSITION: point,
             Category.WATER_BODY: self._water_body_objects,
             Category.FOREST: polygon,
@@ -206,6 +210,21 @@ class GetInfrastructureObjectsUseCase(
     ) -> GeographicPositionMetrics | None:
         """Load a geographic position snapshot."""
         return await self._metrics_repository.get_geographic_position_by_id(metrics_id)
+
+    async def _facility_objects(
+        self,
+        zone: BufferZone,
+        category: Category,
+    ) -> list[InfrastructureObject]:
+        """Read facility objects from both layers, reducing areas to a point.
+
+        Schools, hospitals, shops and stops may be mapped as nodes or as areas;
+        areas are turned into their representative point so the map and the
+        metrics use a single location per object.
+        """
+        points = await self._local_infrastructure_repository.get_point_objects(zone, category)
+        polygons = await self._local_infrastructure_repository.get_polygon_objects(zone, category)
+        return self._infrastructure_metrics_service.to_point_objects([*points, *polygons])
 
     async def _point_objects(
         self,

@@ -43,6 +43,17 @@ class InfrastructureMetricsService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def to_point_objects(self, objects: list[InfrastructureObject]) -> list[InfrastructureObject]:
+        """Reduce area objects to their representative point.
+
+        Point-based categories (schools, hospitals, shops, stops) are treated as
+        single locations, while OSM may map them either as nodes or as areas.
+        Area objects are replaced with an object carrying a representative point
+        inside their geometry, so counting and distance stay uniform.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def min_distance(
         self,
         objects: list[InfrastructureObject],

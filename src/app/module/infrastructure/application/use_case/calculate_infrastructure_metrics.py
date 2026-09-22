@@ -157,7 +157,10 @@ class CalculateInfrastructureMetricsUseCase(
         buffer_zone: BufferZone,
         category: Category,
     ) -> FacilityMetricsResponse:
-        objects = await self._local_infrastructure_repository.get_point_objects(buffer_zone, category)
+        points = await self._local_infrastructure_repository.get_point_objects(buffer_zone, category)
+        polygons = await self._local_infrastructure_repository.get_polygon_objects(buffer_zone, category)
+        objects = self._infrastructure_metrics_service.to_point_objects([*points, *polygons])
+
         count = self._infrastructure_metrics_service.count_objects(objects)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
 

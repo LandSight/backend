@@ -166,6 +166,16 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
                 return and_(tags["man_made"] == "pipeline", tags["substance"] == "water")
 
         if source == "polygon":
+            if category == Category.SCHOOL:
+                return tags["amenity"] == "school"
+            if category == Category.HOSPITAL:
+                return tags["amenity"] == "hospital"
+            if category == Category.GROCERY:
+                return tags["shop"].in_(GROCERY_SHOPS)
+            if category == Category.BUS_STOP:
+                return tags["highway"] == "bus_stop"
+            if category == Category.RAILWAY_STATION:
+                return tags["railway"].in_(RAILWAY_STATION_KINDS)
             if category == Category.WATER_BODY:
                 return or_(tags["natural"] == "water", tags["landuse"] == "reservoir")
             if category == Category.FOREST:
