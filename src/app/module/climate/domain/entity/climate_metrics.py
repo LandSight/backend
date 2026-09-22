@@ -51,7 +51,7 @@ class ClimateMetrics(BaseEntity[ClimateMetricsId]):
         When these metrics were created (UTC); ``None`` if not yet persisted.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         id: ClimateMetricsId,
         parcel_id: ParcelId,
