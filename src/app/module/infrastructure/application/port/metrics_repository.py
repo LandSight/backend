@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.infrastructure.domain.entity import (
-        HospitalMetrics,
-        SchoolMetrics,
-        ShopMetrics,
-        TransitStopMetrics,
-        WaterBodyMetrics,
+        EcologyMetrics,
+        FacilityMetrics,
+        GeographicPositionMetrics,
+        RoadAccessibilityMetrics,
+        UtilityMetrics,
     )
     from app.module.infrastructure.domain.value_object import (
         Buffer,
@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 class MetricsRepository(ABC):
     """Port for infrastructure metrics persistence.
 
-    Each category has its own save and get methods dispatching to its dedicated
-    table (e.g. ``parcel_school_metrics``).
+    Metrics are grouped into families that share the same storage table. Methods
+    are per family and take the category so the correct type row is loaded.
 
     Implementations:
     - :class:`app.module.infrastructure.infrastructure.repository.postgres_metrics_repository.PostgresMetricsRepository`
@@ -34,278 +34,121 @@ class MetricsRepository(ABC):
 
     @abstractmethod
     async def delete(self, refs: list[tuple[Category, InfrastructureMetricsId]]) -> None:
-        """Delete metrics snapshots for the given ``(category, id)`` references.
-
-        Parameters
-        ----------
-        refs : list[tuple[Category, InfrastructureMetricsId]]
-            References to delete.
-        """
+        """Delete metrics snapshots for the given ``(category, id)`` references."""
         raise NotImplementedError
 
-    # ----- Schools -----
+    # ----- Facility -----
 
     @abstractmethod
-    async def save_schools(self, metrics: SchoolMetrics) -> None:
-        """Persist school metrics.
-
-        Parameters
-        ----------
-        metrics : SchoolMetrics
-            School metrics entity to persist.
-        """
+    async def save_facility(self, metrics: FacilityMetrics) -> None:
+        """Persist facility metrics."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_schools(
+    async def get_facility(
+        self,
+        parcel_id: ParcelId,
+        category: Category,
+        buffer: Buffer | None = None,
+    ) -> FacilityMetrics | None:
+        """Retrieve facility metrics for a parcel and category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_facility_by_id(self, metrics_id: InfrastructureMetricsId) -> FacilityMetrics | None:
+        """Retrieve a specific facility metrics record by its ID."""
+        raise NotImplementedError
+
+    # ----- Ecology -----
+
+    @abstractmethod
+    async def save_ecology(self, metrics: EcologyMetrics) -> None:
+        """Persist ecology metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_ecology(
+        self,
+        parcel_id: ParcelId,
+        category: Category,
+        buffer: Buffer | None = None,
+    ) -> EcologyMetrics | None:
+        """Retrieve ecology metrics for a parcel and category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_ecology_by_id(self, metrics_id: InfrastructureMetricsId) -> EcologyMetrics | None:
+        """Retrieve a specific ecology metrics record by its ID."""
+        raise NotImplementedError
+
+    # ----- Utility -----
+
+    @abstractmethod
+    async def save_utility(self, metrics: UtilityMetrics) -> None:
+        """Persist utility metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_utility(
+        self,
+        parcel_id: ParcelId,
+        category: Category,
+        buffer: Buffer | None = None,
+    ) -> UtilityMetrics | None:
+        """Retrieve utility metrics for a parcel and category."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_utility_by_id(self, metrics_id: InfrastructureMetricsId) -> UtilityMetrics | None:
+        """Retrieve a specific utility metrics record by its ID."""
+        raise NotImplementedError
+
+    # ----- Road accessibility -----
+
+    @abstractmethod
+    async def save_road_accessibility(self, metrics: RoadAccessibilityMetrics) -> None:
+        """Persist road accessibility metrics."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_road_accessibility(
         self,
         parcel_id: ParcelId,
         buffer: Buffer | None = None,
-    ) -> SchoolMetrics | None:
-        """Retrieve school metrics for a parcel.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-        buffer : Buffer | None
-            Buffer radius in meters. If provided, returns metrics for this
-            exact buffer. If ``None``, returns the most recent metrics
-            (ordered by ``computed_at DESC``).
-
-        Returns
-        -------
-        SchoolMetrics | None
-            School metrics if found, ``None`` otherwise.
-        """
+    ) -> RoadAccessibilityMetrics | None:
+        """Retrieve road accessibility metrics for a parcel."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_schools_by_id(self, metrics_id: InfrastructureMetricsId) -> SchoolMetrics | None:
-        """Retrieve a specific school metrics record by its ID.
-
-        Parameters
-        ----------
-        metrics_id : InfrastructureMetricsId
-            ID of the metrics record.
-
-        Returns
-        -------
-        SchoolMetrics | None
-            School metrics if found, ``None`` otherwise.
-        """
+    async def get_road_accessibility_by_id(
+        self,
+        metrics_id: InfrastructureMetricsId,
+    ) -> RoadAccessibilityMetrics | None:
+        """Retrieve a specific road accessibility metrics record by its ID."""
         raise NotImplementedError
 
-    # ----- Hospitals -----
+    # ----- Geographic position -----
 
     @abstractmethod
-    async def save_hospitals(self, metrics: HospitalMetrics) -> None:
-        """Persist hospital metrics.
-
-        Parameters
-        ----------
-        metrics : HospitalMetrics
-            Hospital metrics entity to persist.
-        """
+    async def save_geographic_position(self, metrics: GeographicPositionMetrics) -> None:
+        """Persist geographic position metrics."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_hospitals(
+    async def get_geographic_position(
         self,
         parcel_id: ParcelId,
         buffer: Buffer | None = None,
-    ) -> HospitalMetrics | None:
-        """Retrieve hospital metrics for a parcel.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-        buffer : Buffer | None
-            Buffer radius in meters. If provided, returns metrics for this
-            exact buffer. If ``None``, returns the most recent metrics
-            (ordered by ``computed_at DESC``).
-
-        Returns
-        -------
-        HospitalMetrics | None
-            Hospital metrics if found, ``None`` otherwise.
-        """
+    ) -> GeographicPositionMetrics | None:
+        """Retrieve geographic position metrics for a parcel."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_hospitals_by_id(self, metrics_id: InfrastructureMetricsId) -> HospitalMetrics | None:
-        """Retrieve a specific hospital metrics record by its ID.
-
-        Parameters
-        ----------
-        metrics_id : InfrastructureMetricsId
-            ID of the metrics record.
-
-        Returns
-        -------
-        HospitalMetrics | None
-            Hospital metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    # ----- Shops -----
-
-    @abstractmethod
-    async def save_shops(self, metrics: ShopMetrics) -> None:
-        """Persist shop metrics.
-
-        Parameters
-        ----------
-        metrics : ShopMetrics
-            Shop metrics entity to persist.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_shops(
+    async def get_geographic_position_by_id(
         self,
-        parcel_id: ParcelId,
-        buffer: Buffer | None = None,
-    ) -> ShopMetrics | None:
-        """Retrieve shop metrics for a parcel.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-        buffer : Buffer | None
-            Buffer radius in meters. If provided, returns metrics for this
-            exact buffer. If ``None``, returns the most recent metrics
-            (ordered by ``computed_at DESC``).
-
-        Returns
-        -------
-        ShopMetrics | None
-            Shop metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_shops_by_id(self, metrics_id: InfrastructureMetricsId) -> ShopMetrics | None:
-        """Retrieve a specific shop metrics record by its ID.
-
-        Parameters
-        ----------
-        metrics_id : InfrastructureMetricsId
-            ID of the metrics record.
-
-        Returns
-        -------
-        ShopMetrics | None
-            Shop metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    # ----- Transit stops -----
-
-    @abstractmethod
-    async def save_transit_stops(self, metrics: TransitStopMetrics) -> None:
-        """Persist transit stop metrics.
-
-        Parameters
-        ----------
-        metrics : TransitStopMetrics
-            Transit stop metrics entity to persist.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_transit_stops(
-        self,
-        parcel_id: ParcelId,
-        buffer: Buffer | None = None,
-    ) -> TransitStopMetrics | None:
-        """Retrieve transit stop metrics for a parcel.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-        buffer : Buffer | None
-            Buffer radius in meters. If provided, returns metrics for this
-            exact buffer. If ``None``, returns the most recent metrics
-            (ordered by ``computed_at DESC``).
-
-        Returns
-        -------
-        TransitStopMetrics | None
-            Transit stop metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_transit_stops_by_id(self, metrics_id: InfrastructureMetricsId) -> TransitStopMetrics | None:
-        """Retrieve a specific transit stop metrics record by its ID.
-
-        Parameters
-        ----------
-        metrics_id : InfrastructureMetricsId
-            ID of the metrics record.
-
-        Returns
-        -------
-        TransitStopMetrics | None
-            Transit stop metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    # ----- Water bodies -----
-
-    @abstractmethod
-    async def save_water_bodies(self, metrics: WaterBodyMetrics) -> None:
-        """Persist water body metrics.
-
-        Parameters
-        ----------
-        metrics : WaterBodyMetrics
-            Water body metrics entity to persist.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_water_bodies(
-        self,
-        parcel_id: ParcelId,
-        buffer: Buffer | None = None,
-    ) -> WaterBodyMetrics | None:
-        """Retrieve water body metrics for a parcel.
-
-        Parameters
-        ----------
-        parcel_id : ParcelId
-            Parcel identifier.
-        buffer : Buffer | None
-            Buffer radius in meters. If provided, returns metrics for this
-            exact buffer. If ``None``, returns the most recent metrics
-            (ordered by ``computed_at DESC``).
-
-        Returns
-        -------
-        WaterBodyMetrics | None
-            Water body metrics if found, ``None`` otherwise.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_water_bodies_by_id(self, metrics_id: InfrastructureMetricsId) -> WaterBodyMetrics | None:
-        """Retrieve a specific water body metrics record by its ID.
-
-        Parameters
-        ----------
-        metrics_id : InfrastructureMetricsId
-            ID of the metrics record.
-
-        Returns
-        -------
-        WaterBodyMetrics | None
-            Water body metrics if found, ``None`` otherwise.
-        """
+        metrics_id: InfrastructureMetricsId,
+    ) -> GeographicPositionMetrics | None:
+        """Retrieve a specific geographic position metrics record by its ID."""
         raise NotImplementedError
 
 
