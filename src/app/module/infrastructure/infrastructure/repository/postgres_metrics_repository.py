@@ -23,9 +23,7 @@ from app.module.infrastructure.domain.value_object import (
     Density,
     Distance,
     InfrastructureMetricsId,
-    MetricFamily,
     ParcelId,
-    family_of,
 )
 from app.module.infrastructure.infrastructure.model import (
     EcologyMetricsModel,
@@ -38,11 +36,7 @@ from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from sqlalchemy.ext.asyncio import AsyncSession
-
-    from app.platform.database.base import BaseModel
 
 
 ModelT = TypeVar("ModelT")
@@ -66,28 +60,8 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
     disambiguated by a type column.
     """
 
-    _MODEL_BY_FAMILY: dict[MetricFamily, type[BaseModel]] = {  # noqa: RUF012
-        MetricFamily.FACILITY: FacilityMetricsModel,
-        MetricFamily.ECOLOGY: EcologyMetricsModel,
-        MetricFamily.UTILITY: UtilityMetricsModel,
-        MetricFamily.ROAD_ACCESSIBILITY: RoadAccessibilityMetricsModel,
-        MetricFamily.GEOGRAPHIC_POSITION: GeographicPositionMetricsModel,
-    }
-
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
-
-    @override
-    async def delete(self, refs: list[tuple[Category, InfrastructureMetricsId]]) -> None:
-        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete`."""
-        grouped: dict[MetricFamily, list[UUID]] = {}
-        for category, metrics_id in refs:
-            grouped.setdefault(family_of(category), []).append(metrics_id.unwrap())
-
-        for family, metrics_ids in grouped.items():
-            model = self._MODEL_BY_FAMILY[family]
-            await self._session.execute(sa_delete(model).where(model.id.in_(metrics_ids)))
-        await self._session.flush()
 
     # ----- Facility -----
 
@@ -126,6 +100,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_facility_by_id`."""
         model = await self._get_by_id(FacilityMetricsModel, metrics_id)
         return self._facility_to_domain(model) if model is not None else None
+
+    @override
+    async def get_facilities_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[FacilityMetrics]:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_facilities_by_ids`."""
+        models = await self._get_by_ids(FacilityMetricsModel, metrics_ids)
+        return [self._facility_to_domain(model) for model in models]
+
+    @override
+    async def delete_facility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete_facility`."""
+        await self._delete_by_ids(FacilityMetricsModel, metrics_ids)
 
     # ----- Ecology -----
 
@@ -169,6 +157,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         model = await self._get_by_id(EcologyMetricsModel, metrics_id)
         return self._ecology_to_domain(model) if model is not None else None
 
+    @override
+    async def get_ecologies_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[EcologyMetrics]:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_ecologies_by_ids`."""
+        models = await self._get_by_ids(EcologyMetricsModel, metrics_ids)
+        return [self._ecology_to_domain(model) for model in models]
+
+    @override
+    async def delete_ecology(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete_ecology`."""
+        await self._delete_by_ids(EcologyMetricsModel, metrics_ids)
+
     # ----- Utility -----
 
     @override
@@ -206,6 +208,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         model = await self._get_by_id(UtilityMetricsModel, metrics_id)
         return self._utility_to_domain(model) if model is not None else None
 
+    @override
+    async def get_utilities_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[UtilityMetrics]:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_utilities_by_ids`."""
+        models = await self._get_by_ids(UtilityMetricsModel, metrics_ids)
+        return [self._utility_to_domain(model) for model in models]
+
+    @override
+    async def delete_utility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete_utility`."""
+        await self._delete_by_ids(UtilityMetricsModel, metrics_ids)
+
     # ----- Road accessibility -----
 
     @override
@@ -240,6 +256,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_road_accessibility_by_id`."""
         model = await self._get_by_id(RoadAccessibilityMetricsModel, metrics_id)
         return self._road_accessibility_to_domain(model) if model is not None else None
+
+    @override
+    async def get_road_accessibility_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[RoadAccessibilityMetrics]:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_road_accessibility_by_ids`."""
+        models = await self._get_by_ids(RoadAccessibilityMetricsModel, metrics_ids)
+        return [self._road_accessibility_to_domain(model) for model in models]
+
+    @override
+    async def delete_road_accessibility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete_road_accessibility`."""
+        await self._delete_by_ids(RoadAccessibilityMetricsModel, metrics_ids)
 
     # ----- Geographic position -----
 
@@ -276,7 +306,33 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
         model = await self._get_by_id(GeographicPositionMetricsModel, metrics_id)
         return self._geographic_position_to_domain(model) if model is not None else None
 
+    @override
+    async def get_geographic_positions_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[GeographicPositionMetrics]:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.get_geographic_positions_by_ids`."""
+        models = await self._get_by_ids(GeographicPositionMetricsModel, metrics_ids)
+        return [self._geographic_position_to_domain(model) for model in models]
+
+    @override
+    async def delete_geographic_position(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """See :class:`app.module.infrastructure.application.port.MetricsRepository.delete_geographic_position`."""
+        await self._delete_by_ids(GeographicPositionMetricsModel, metrics_ids)
+
     # ----- Helpers -----
+
+    async def _delete_by_ids(
+        self,
+        model_cls: type[ModelT],
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> None:
+        """Delete rows of one metrics family by their IDs."""
+        if not metrics_ids:
+            return
+        ids = [metrics_id.unwrap() for metrics_id in metrics_ids]
+        await self._session.execute(sa_delete(model_cls).where(cast("Any", model_cls).id.in_(ids)))
+        await self._session.flush()
 
     async def _insert(self, model: MetricsModel) -> None:
         """Append a new metrics row.
@@ -297,6 +353,20 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             select(model_cls).where(cast("Any", model_cls).id == metrics_id.unwrap()),
         )
         return result.scalar_one_or_none()
+
+    async def _get_by_ids(
+        self,
+        model_cls: type[ModelT],
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[ModelT]:
+        """Retrieve several metrics rows of one family in a single query."""
+        if not metrics_ids:
+            return []
+        ids = [metrics_id.unwrap() for metrics_id in metrics_ids]
+        result = await self._session.execute(
+            select(model_cls).where(cast("Any", model_cls).id.in_(ids)),
+        )
+        return list(result.scalars().all())
 
     async def _get_latest(
         self,
