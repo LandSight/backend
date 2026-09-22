@@ -29,6 +29,15 @@ class GetAnalysisInput:
 
 
 @dataclass(frozen=True, slots=True)
+class GetAnalysisMetricsInput:
+    """Input for retrieving the metric references of an analysis."""
+
+    analysis_id: UUID
+    current_user_id: UUID
+    module: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ListUserAnalysesInput:
     """Input for listing all analyses of a user."""
 
@@ -58,10 +67,21 @@ class AnalysisResult:
     created_at: datetime.datetime | None
 
 
+@dataclass(frozen=True, slots=True)
+class AnalysisMetricResult:
+    """Result of a single analysis metric reference."""
+
+    module: str
+    category: str | None
+    metrics_id: UUID
+
+
 __all__ = (
+    "AnalysisMetricResult",
     "AnalysisResult",
     "DeleteAnalysisInput",
     "GetAnalysisInput",
+    "GetAnalysisMetricsInput",
     "ListUserAnalysesInput",
     "StartAnalysisInput",
 )

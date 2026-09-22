@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.analysis.interface.internal.dto import (
+        AnalysisMetricResult,
         AnalysisResult,
         DeleteAnalysisInput,
         GetAnalysisInput,
+        GetAnalysisMetricsInput,
         ListUserAnalysesInput,
         StartAnalysisInput,
     )
@@ -31,6 +33,11 @@ class AnalysisInternalAPI(ABC):
     @abstractmethod
     async def get_analysis(self, input_data: GetAnalysisInput) -> AnalysisResult:
         """Retrieve an analysis by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_analysis_metrics(self, input_data: GetAnalysisMetricsInput) -> list[AnalysisMetricResult]:
+        """Retrieve the metric references recorded for an analysis."""
         raise NotImplementedError
 
     @abstractmethod
