@@ -17,6 +17,7 @@ from app.module.parcel.domain.value_object import (
 )
 from app.module.parcel.infrastructure.model import ParcelModel
 from app.module.shared.domain.value_object import GeoPoint, Polygon
+from app.module.shared.infrastructure.geo import Srid
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -40,7 +41,7 @@ class PostgresParcelRepository(BaseSQLAlchemyRepository, ParcelRepository):
     async def save(self, parcel: Parcel) -> Parcel:
         """See :class:`app.module.parcel.application.port.ParcelRepository.save`."""
         shapely_geom = self._domain_to_shapely(parcel.polygon)
-        wkb_element = from_shape(shapely_geom, srid=4326)
+        wkb_element = from_shape(shapely_geom, srid=Srid.WGS84)
 
         model = ParcelModel(
             id=parcel.id.unwrap(),
