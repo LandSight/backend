@@ -111,7 +111,7 @@ class InfrastructureMetricsController(Controller):
     ) -> list[CategoryInfoSchema]:
         """List all available infrastructure categories."""
         results = await infrastructure_api.get_available_categories()
-        return [CategoryInfoSchema(category=r.category) for r in results]
+        return [CategoryInfoSchema(category=r.category, label=r.label) for r in results]
 
 
 __all__ = ("InfrastructureMetricsController",)

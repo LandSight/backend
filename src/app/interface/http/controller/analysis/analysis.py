@@ -8,13 +8,18 @@ from litestar import delete, get, post
 from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_204_NO_CONTENT
 
-from app.interface.http.schema.analysis import AnalysisResponse, StartAnalysisRequest
+from app.interface.http.schema.analysis import (
+    AnalysisMetricSchema,
+    AnalysisResponse,
+    StartAnalysisRequest,
+)
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.util.guards import require_authorization
 from app.module.analysis.interface.internal.dto import (
     AnalysisResult,
     DeleteAnalysisInput,
     GetAnalysisInput,
+    GetAnalysisMetricsInput,
     ListUserAnalysesInput,
     StartAnalysisInput,
 )
@@ -81,6 +86,35 @@ class AnalysisController(Controller):
             GetAnalysisInput(analysis_id=analysis_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)
+
+    @get(
+        "/{analysis_id:uuid}/metrics",
+        status_code=HTTP_200_OK,
+        description="List the metric references recorded for an analysis.",
+    )
+    async def get_analysis_metrics(
+        self,
+        analysis_id: UUID,
+        analysis_api: AnalysisInternalAPI,
+        current_user: CurrentUser,
+        module: str | None = None,
+    ) -> list[AnalysisMetricSchema]:
+        """List the metric references recorded for an analysis."""
+        results = await analysis_api.get_analysis_metrics(
+            GetAnalysisMetricsInput(
+                analysis_id=analysis_id,
+                current_user_id=current_user.id,
+                module=module,
+            ),
+        )
+        return [
+            AnalysisMetricSchema(
+                module=result.module,
+                category=result.category,
+                metrics_id=result.metrics_id,
+            )
+            for result in results
+        ]
 
     @delete(
         "/{analysis_id:uuid}",
