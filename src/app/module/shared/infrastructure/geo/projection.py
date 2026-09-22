@@ -18,8 +18,10 @@ from shapely.geometry import (
 )
 from shapely.ops import transform
 
+from app.module.shared.infrastructure.geo.srid import Srid
 
-WGS84_EPSG = "EPSG:4326"
+
+WGS84_EPSG = Srid.WGS84.to_epsg()
 
 # UTM zone width in degrees.
 _UTM_ZONE_WIDTH = 6.0
