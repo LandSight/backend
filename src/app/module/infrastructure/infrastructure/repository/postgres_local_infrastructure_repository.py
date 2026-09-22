@@ -195,16 +195,20 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
         shapely_geom = to_shape(wkb_element)
 
         geometry: GeoPoint | LineString | Polygon
-        if isinstance(shapely_geom, ShapelyPoint):
-            geometry = GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
-        elif isinstance(shapely_geom, (ShapelyLineString, ShapelyMultiLineString)):
-            line = cls._largest_line(shapely_geom)
-            points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in line.coords]
-            geometry = LineString(tuple(points))
-        else:
-            polygon = cls._largest_polygon(shapely_geom)
-            points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in polygon.exterior.coords]
-            geometry = Polygon(tuple(points))
+        match shapely_geom:
+            case ShapelyPoint():
+                geometry = GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
+            case ShapelyLineString() | ShapelyMultiLineString():
+                line = cls._largest_line(shapely_geom)
+                points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in line.coords]
+                geometry = LineString(tuple(points))
+            case ShapelyPolygon() | ShapelyMultiPolygon():
+                polygon = cls._largest_polygon(shapely_geom)
+                points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in polygon.exterior.coords]
+                geometry = Polygon(tuple(points))
+            case _:
+                message = f"Unsupported geometry type: {type(shapely_geom).__name__}."
+                raise TypeError(message)
 
         return InfrastructureObject(
             id=InfrastructureObjectId(str(osm_id)),

@@ -34,6 +34,7 @@ from app.module.infrastructure.interface.internal.port import InfrastructureInte
 from app.module.shared.application.dto.geojson import (
     GeoJSONLineString as ApplicationGeoJSONLineString,
     GeoJSONPoint as ApplicationGeoJSONPoint,
+    GeoJSONPolygon as ApplicationGeoJSONPolygon,
 )
 from app.module.shared.interface.internal import MetricsResponse, build_metric_value
 from app.module.shared.interface.internal.geojson import (
@@ -57,7 +58,6 @@ if TYPE_CHECKING:
         GetInfrastructureObjectsUseCase,
     )
     from app.module.infrastructure.domain.metric_catalog import MetricDefinition
-    from app.module.shared.application.dto.geojson import GeoJSONPolygon as ApplicationGeoJSONPolygon
     from app.module.shared.interface.internal import MetricValue
 
 
@@ -160,11 +160,16 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         geometry: ApplicationGeoJSONPoint | ApplicationGeoJSONLineString | ApplicationGeoJSONPolygon,
     ) -> InternalGeoJSONPoint | InternalGeoJSONLineString | InternalGeoJSONPolygon:
         """Convert application-layer GeoJSON geometry to the internal representation."""
-        if isinstance(geometry, ApplicationGeoJSONPoint):
-            return InternalGeoJSONPoint(coordinates=geometry.coordinates)
-        if isinstance(geometry, ApplicationGeoJSONLineString):
-            return InternalGeoJSONLineString(coordinates=geometry.coordinates)
-        return InternalGeoJSONPolygon(coordinates=geometry.coordinates)
+        match geometry:
+            case ApplicationGeoJSONPoint():
+                return InternalGeoJSONPoint(coordinates=geometry.coordinates)
+            case ApplicationGeoJSONLineString():
+                return InternalGeoJSONLineString(coordinates=geometry.coordinates)
+            case ApplicationGeoJSONPolygon():
+                return InternalGeoJSONPolygon(coordinates=geometry.coordinates)
+            case _:
+                message = f"Unsupported GeoJSON geometry type: {type(geometry).__name__}."
+                raise TypeError(message)
 
     @override
     async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:

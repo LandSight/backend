@@ -79,11 +79,16 @@ class InfrastructureObjectsController(Controller):
         geometry: InternalGeoJSONPoint | InternalGeoJSONLineString | InternalGeoJSONPolygon,
     ) -> GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon:
         """Map an internal GeoJSON geometry to the HTTP schema."""
-        if isinstance(geometry, InternalGeoJSONPoint):
-            return GeoJSONPoint(coordinates=geometry.coordinates)
-        if isinstance(geometry, InternalGeoJSONLineString):
-            return GeoJSONLineString(coordinates=geometry.coordinates)
-        return GeoJSONPolygon(coordinates=geometry.coordinates)
+        match geometry:
+            case InternalGeoJSONPoint():
+                return GeoJSONPoint(coordinates=geometry.coordinates)
+            case InternalGeoJSONLineString():
+                return GeoJSONLineString(coordinates=geometry.coordinates)
+            case InternalGeoJSONPolygon():
+                return GeoJSONPolygon(coordinates=geometry.coordinates)
+            case _:
+                message = f"Unsupported GeoJSON geometry type: {type(geometry).__name__}."
+                raise TypeError(message)
 
 
 __all__ = ("InfrastructureObjectsController",)

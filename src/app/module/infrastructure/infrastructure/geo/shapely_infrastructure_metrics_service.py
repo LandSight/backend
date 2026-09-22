@@ -271,12 +271,17 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         geometry: GeoPoint | LineString | Polygon,
     ) -> ShapelyPoint | ShapelyLineString | ShapelyPolygon:
         """Convert a domain geometry to a Shapely geometry."""
-        if isinstance(geometry, GeoPoint):
-            return ShapelyPoint(geometry.longitude.unwrap(), geometry.latitude.unwrap())
-        if isinstance(geometry, LineString):
-            coords = [(point.longitude.unwrap(), point.latitude.unwrap()) for point in geometry.points]
-            return ShapelyLineString(coords)
-        return ShapelyInfrastructureMetricsService._polygon_to_shapely(geometry)
+        match geometry:
+            case GeoPoint():
+                return ShapelyPoint(geometry.longitude.unwrap(), geometry.latitude.unwrap())
+            case LineString():
+                coords = [(point.longitude.unwrap(), point.latitude.unwrap()) for point in geometry.points]
+                return ShapelyLineString(coords)
+            case Polygon():
+                return ShapelyInfrastructureMetricsService._polygon_to_shapely(geometry)
+            case _:
+                message = f"Unsupported geometry type: {type(geometry).__name__}."
+                raise TypeError(message)
 
 
 __all__ = ("ShapelyInfrastructureMetricsService",)
