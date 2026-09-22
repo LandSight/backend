@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import override
 
 from app.module.infrastructure.application.dto.response import CategoryInfoResponse
+from app.module.infrastructure.domain.metric_catalog import CATEGORY_LABELS
 from app.module.infrastructure.domain.value_object import Category
 from app.module.shared.application.use_case import BaseUseCase
 
@@ -14,7 +15,10 @@ class GetAvailableCategoriesUseCase(BaseUseCase[None, list[CategoryInfoResponse]
 
     @override
     async def __call__(self, command: None = None) -> list[CategoryInfoResponse]:
-        return [CategoryInfoResponse(category=category.value) for category in Category]
+        return [
+            CategoryInfoResponse(category=category.value, label=CATEGORY_LABELS[category.value])
+            for category in Category
+        ]
 
 
 __all__ = ("GetAvailableCategoriesUseCase",)

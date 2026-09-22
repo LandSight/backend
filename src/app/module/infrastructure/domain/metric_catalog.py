@@ -83,4 +83,23 @@ CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingPro
 )
 
 
-__all__ = ("CATEGORY_METRICS", "MetricDefinition")
+CATEGORY_LABELS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "school": "Schools",
+        "hospital": "Hospitals",
+        "grocery": "Grocery shops",
+        "bus_stop": "Bus stops",
+        "railway_station": "Railway stations",
+        "water_body": "Water bodies",
+        "forest": "Forests",
+        "protected_area": "Protected areas",
+        "power_line": "Power lines",
+        "gas_pipeline": "Gas pipelines",
+        "water_pipeline": "Water pipelines",
+        "road_accessibility": "Roads",
+        "geographic_position": "Major city",
+    },
+)
+
+
+__all__ = ("CATEGORY_LABELS", "CATEGORY_METRICS", "MetricDefinition")

@@ -12,10 +12,13 @@ class CategoryInfoResponse:
     Attributes
     ----------
     category : str
-        Category identifier (e.g., "schools", "hospitals").
+        Category identifier (e.g. "school", "water_body").
+    label : str
+        Human-readable category name for the UI (e.g. "Schools").
     """
 
     category: str
+    label: str
 
 
 __all__ = ("CategoryInfoResponse",)
