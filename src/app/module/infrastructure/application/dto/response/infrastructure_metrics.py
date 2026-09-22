@@ -9,21 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.infrastructure.application.dto.response.category_metrics import (
-        EcologyMetricsResponse,
-        FacilityMetricsResponse,
-        GeographicPositionMetricsResponse,
-        RoadAccessibilityMetricsResponse,
-        UtilityMetricsResponse,
-    )
-
-    CategoryMetricsResponse = (
-        FacilityMetricsResponse
-        | EcologyMetricsResponse
-        | UtilityMetricsResponse
-        | RoadAccessibilityMetricsResponse
-        | GeographicPositionMetricsResponse
-    )
+    from app.module.infrastructure.application.dto.response.category_metrics import CategoryMetricsResponse
 
 
 @dataclass(frozen=True, slots=True)

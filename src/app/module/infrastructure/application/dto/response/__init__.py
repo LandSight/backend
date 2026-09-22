@@ -1,5 +1,6 @@
 from .category_info import CategoryInfoResponse
 from .category_metrics import (
+    CategoryMetricsResponse,
     EcologyMetricsResponse,
     FacilityMetricsResponse,
     GeographicPositionMetricsResponse,
@@ -16,6 +17,7 @@ from .infrastructure_objects import (
 
 __all__ = (
     "CategoryInfoResponse",
+    "CategoryMetricsResponse",
     "EcologyMetricsResponse",
     "FacilityMetricsResponse",
     "GeographicPositionMetricsResponse",

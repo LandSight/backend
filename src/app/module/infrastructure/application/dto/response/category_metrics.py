@@ -61,7 +61,17 @@ class GeographicPositionMetricsResponse:
     city_tier: str
 
 
+# Union of all per-category metrics responses.
+CategoryMetricsResponse = (
+    FacilityMetricsResponse
+    | EcologyMetricsResponse
+    | UtilityMetricsResponse
+    | RoadAccessibilityMetricsResponse
+    | GeographicPositionMetricsResponse
+)
+
 __all__ = (
+    "CategoryMetricsResponse",
     "EcologyMetricsResponse",
     "FacilityMetricsResponse",
     "GeographicPositionMetricsResponse",
