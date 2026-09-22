@@ -56,6 +56,14 @@ class MetricsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_facilities_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[FacilityMetrics]:
+        """Retrieve several facility metrics records by their IDs in one query."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def delete_facility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
         """Delete facility metrics by their IDs."""
         raise NotImplementedError
@@ -83,6 +91,14 @@ class MetricsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_ecologies_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[EcologyMetrics]:
+        """Retrieve several ecology metrics records by their IDs in one query."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def delete_ecology(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
         """Delete ecology metrics by their IDs."""
         raise NotImplementedError
@@ -107,6 +123,14 @@ class MetricsRepository(ABC):
     @abstractmethod
     async def get_utility_by_id(self, metrics_id: InfrastructureMetricsId) -> UtilityMetrics | None:
         """Retrieve a specific utility metrics record by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_utilities_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[UtilityMetrics]:
+        """Retrieve several utility metrics records by their IDs in one query."""
         raise NotImplementedError
 
     @abstractmethod
@@ -139,6 +163,14 @@ class MetricsRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_road_accessibility_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[RoadAccessibilityMetrics]:
+        """Retrieve several road accessibility records by their IDs in one query."""
+        raise NotImplementedError
+
+    @abstractmethod
     async def delete_road_accessibility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
         """Delete road accessibility metrics by their IDs."""
         raise NotImplementedError
@@ -165,6 +197,14 @@ class MetricsRepository(ABC):
         metrics_id: InfrastructureMetricsId,
     ) -> GeographicPositionMetrics | None:
         """Retrieve a specific geographic position metrics record by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_geographic_positions_by_ids(
+        self,
+        metrics_ids: list[InfrastructureMetricsId],
+    ) -> list[GeographicPositionMetrics]:
+        """Retrieve several geographic position records by their IDs in one query."""
         raise NotImplementedError
 
     @abstractmethod
