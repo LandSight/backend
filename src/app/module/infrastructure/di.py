@@ -10,6 +10,7 @@ from app.module.infrastructure.application.use_case import (
     GetInfrastructureMetricsByIdsUseCase,
     GetInfrastructureMetricsUseCase,
 )
+from app.module.infrastructure.infrastructure.classification import OsmInfrastructureObjectClassifier
 from app.module.infrastructure.infrastructure.geo import (
     ShapelyBufferService,
     ShapelyInfrastructureMetricsService,
@@ -46,6 +47,10 @@ def provide_shapely_infrastructure_metrics_service() -> ShapelyInfrastructureMet
     return ShapelyInfrastructureMetricsService()
 
 
+def provide_osm_infrastructure_object_classifier() -> OsmInfrastructureObjectClassifier:
+    return OsmInfrastructureObjectClassifier()
+
+
 # ----- Parcel integration -----
 def provide_infrastructure_parcel_provider(
     parcel_api: NamedDependency[ParcelInternalAPI],
@@ -60,12 +65,13 @@ def provide_infrastructure_metrics_permission_service(
 
 
 # ----- Use Cases -----
-def provide_calculate_infrastructure_metrics_use_case(
+def provide_calculate_infrastructure_metrics_use_case(  # noqa: PLR0913
     buffer_service: NamedDependency[ShapelyBufferService],
     local_infrastructure_repository: NamedDependency[PostgresLocalInfrastructureRepository],
     infrastructure_metrics_service: NamedDependency[ShapelyInfrastructureMetricsService],
     metrics_repository: NamedDependency[PostgresMetricsRepository],
     infrastructure_parcel_provider: NamedDependency[ParcelProviderImpl],
+    object_classifier: NamedDependency[OsmInfrastructureObjectClassifier],
 ) -> CalculateInfrastructureMetricsUseCase:
     return CalculateInfrastructureMetricsUseCase(
         buffer_service=buffer_service,
@@ -73,6 +79,7 @@ def provide_calculate_infrastructure_metrics_use_case(
         infrastructure_metrics_service=infrastructure_metrics_service,
         metrics_repository=metrics_repository,
         parcel_provider=infrastructure_parcel_provider,
+        object_classifier=object_classifier,
     )
 
 
@@ -126,6 +133,10 @@ infrastructure_dependencies = {
     "buffer_service": Provide(provide_shapely_buffer_service, sync_to_thread=False),
     "infrastructure_metrics_service": Provide(
         provide_shapely_infrastructure_metrics_service,
+        sync_to_thread=False,
+    ),
+    "object_classifier": Provide(
+        provide_osm_infrastructure_object_classifier,
         sync_to_thread=False,
     ),
     "infrastructure_parcel_provider": Provide(
