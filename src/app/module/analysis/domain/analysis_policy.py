@@ -18,9 +18,17 @@ INFRASTRUCTURE_BUFFERS: Final[Mapping[str, int]] = MappingProxyType(
     {
         "school": 1000,
         "hospital": 2000,
-        "shop": 500,
-        "transit_stop": 500,
-        "water_body": 2000,
+        "grocery": 500,
+        "bus_stop": 500,
+        "railway_station": 2000,
+        "water_body": 1500,
+        "forest": 1000,
+        "protected_area": 2000,
+        "power_line": 1000,
+        "gas_pipeline": 1000,
+        "water_pipeline": 1000,
+        "road_accessibility": 1000,
+        "geographic_position": 150000,
     },
 )
 
