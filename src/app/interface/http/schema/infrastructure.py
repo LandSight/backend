@@ -11,11 +11,15 @@ class CategoryRequestSchema(BaseModel):
     """Requested infrastructure category with its own buffer radius."""
 
     category: str = Field(
-        description="Infrastructure category (school, hospital, shop, transit_stop, water_body).",
+        description=(
+            "Infrastructure category (school, hospital, grocery, bus_stop, railway_station, "
+            "water_body, forest, protected_area, power_line, gas_pipeline, water_pipeline, "
+            "road_accessibility, geographic_position)."
+        ),
     )
     buffer: int = Field(
         ge=1,
-        le=10000,
+        le=200000,
         description="Buffer radius in meters around the parcel boundary.",
     )
 
@@ -44,7 +48,11 @@ class CategoryMetricRefSchema(BaseModel):
     """Reference to a specific infrastructure metrics record within a category."""
 
     category: str = Field(
-        description="Infrastructure category (school, hospital, shop, transit_stop, water_body).",
+        description=(
+            "Infrastructure category (school, hospital, grocery, bus_stop, railway_station, "
+            "water_body, forest, protected_area, power_line, gas_pipeline, water_pipeline, "
+            "road_accessibility, geographic_position)."
+        ),
     )
     metrics_id: UUID = Field(description="ID of the persisted metrics record.")
 
