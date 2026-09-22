@@ -17,7 +17,7 @@ from app.module.infrastructure.application.dto.command import (
     GetInfrastructureMetricsByIdsCommand,
     GetInfrastructureMetricsCommand,
 )
-from app.module.infrastructure.domain.metric_catalog import CATEGORY_CATALOG, COVERAGE_RATIO
+from app.module.infrastructure.domain.metric_catalog import CATEGORY_METRICS
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
     CategoryInfoResult,
@@ -30,14 +30,7 @@ from app.module.shared.interface.internal import MetricsResponse, build_metric_v
 
 
 if TYPE_CHECKING:
-    from app.module.infrastructure.application.dto.response import (
-        HospitalMetricsResponse,
-        InfrastructureMetricsResponse,
-        SchoolMetricsResponse,
-        ShopMetricsResponse,
-        TransitStopMetricsResponse,
-        WaterBodyMetricsResponse,
-    )
+    from app.module.infrastructure.application.dto.response import InfrastructureMetricsResponse
     from app.module.infrastructure.application.use_case import (
         CalculateInfrastructureMetricsUseCase,
         DeleteInfrastructureMetricsUseCase,
@@ -45,15 +38,8 @@ if TYPE_CHECKING:
         GetInfrastructureMetricsByIdsUseCase,
         GetInfrastructureMetricsUseCase,
     )
+    from app.module.infrastructure.domain.metric_catalog import MetricDefinition
     from app.module.shared.interface.internal import MetricValue
-
-    _CategoryMetrics = (
-        SchoolMetricsResponse
-        | HospitalMetricsResponse
-        | ShopMetricsResponse
-        | TransitStopMetricsResponse
-        | WaterBodyMetricsResponse
-    )
 
 
 class InfrastructureInternal(InfrastructureInternalAPI):
@@ -132,51 +118,28 @@ class InfrastructureInternal(InfrastructureInternalAPI):
     def to_metrics_responses(result: InfrastructureMetricsResponse) -> list[MetricsResponse]:
         """Project an infrastructure use case response into neutral responses per category."""
         responses: list[MetricsResponse] = []
-        for category, metrics in (
-            ("school", result.school),
-            ("hospital", result.hospital),
-            ("shop", result.shop),
-            ("transit_stop", result.transit_stop),
-        ):
-            if metrics is not None:
-                responses.append(InfrastructureInternal._response(category, metrics, extra=[]))
-
-        if result.water_body is not None:
-            water_body = result.water_body
+        for category, metrics in result.categories.items():
+            definitions = CATEGORY_METRICS.get(category)
+            if definitions is None:
+                continue
             responses.append(
-                InfrastructureInternal._response(
-                    "water_body",
-                    water_body,
-                    extra=[
-                        build_metric_value(
-                            key=COVERAGE_RATIO.key,
-                            label=COVERAGE_RATIO.label,
-                            unit=COVERAGE_RATIO.unit,
-                            value_type=COVERAGE_RATIO.kind,
-                            raw=water_body.coverage_ratio,
-                        ),
-                    ],
-                ),
+                MetricsResponse(
+                    module="infrastructure",
+                    category=category,
+                    id=metrics.id,
+                    metrics=InfrastructureInternal._category_values(metrics, definitions),
+                )
             )
         return responses
 
     @staticmethod
-    def _response(category: str, metrics: _CategoryMetrics, *, extra: list[MetricValue]) -> MetricsResponse:
-        """Build a neutral response for a single infrastructure category."""
-        values = InfrastructureInternal._category_values(metrics)
-        values.extend(extra)
-        return MetricsResponse(
-            module="infrastructure",
-            category=category,
-            id=metrics.id,
-            metrics=values,
-        )
-
-    @staticmethod
-    def _category_values(metrics: _CategoryMetrics) -> list[MetricValue]:
-        """Project the fields shared by every infrastructure category."""
+    def _category_values(
+        metrics: object,
+        definitions: tuple[MetricDefinition, ...],
+    ) -> list[MetricValue]:
+        """Build the neutral metric values declared by the category catalog."""
         values: list[MetricValue] = []
-        for definition in CATEGORY_CATALOG:
+        for definition in definitions:
             if not hasattr(metrics, definition.key):
                 continue
             values.append(
@@ -186,7 +149,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                     unit=definition.unit,
                     value_type=definition.kind,
                     raw=getattr(metrics, definition.key),
-                ),
+                )
             )
         return values
 
