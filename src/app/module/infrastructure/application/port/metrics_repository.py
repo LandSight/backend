@@ -25,17 +25,13 @@ if TYPE_CHECKING:
 class MetricsRepository(ABC):
     """Port for infrastructure metrics persistence.
 
-    Metrics are grouped into families that share the same storage table. Methods
-    are per family and take the category so the correct type row is loaded.
+    Metrics are grouped into families that share the same storage table, so the
+    methods are per family. Choosing which family a category belongs to is
+    application logic and stays in the use cases.
 
     Implementations:
     - :class:`app.module.infrastructure.infrastructure.repository.postgres_metrics_repository.PostgresMetricsRepository`
     """
-
-    @abstractmethod
-    async def delete(self, refs: list[tuple[Category, InfrastructureMetricsId]]) -> None:
-        """Delete metrics snapshots for the given ``(category, id)`` references."""
-        raise NotImplementedError
 
     # ----- Facility -----
 
@@ -57,6 +53,11 @@ class MetricsRepository(ABC):
     @abstractmethod
     async def get_facility_by_id(self, metrics_id: InfrastructureMetricsId) -> FacilityMetrics | None:
         """Retrieve a specific facility metrics record by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_facility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """Delete facility metrics by their IDs."""
         raise NotImplementedError
 
     # ----- Ecology -----
@@ -81,6 +82,11 @@ class MetricsRepository(ABC):
         """Retrieve a specific ecology metrics record by its ID."""
         raise NotImplementedError
 
+    @abstractmethod
+    async def delete_ecology(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """Delete ecology metrics by their IDs."""
+        raise NotImplementedError
+
     # ----- Utility -----
 
     @abstractmethod
@@ -101,6 +107,11 @@ class MetricsRepository(ABC):
     @abstractmethod
     async def get_utility_by_id(self, metrics_id: InfrastructureMetricsId) -> UtilityMetrics | None:
         """Retrieve a specific utility metrics record by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_utility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """Delete utility metrics by their IDs."""
         raise NotImplementedError
 
     # ----- Road accessibility -----
@@ -127,6 +138,11 @@ class MetricsRepository(ABC):
         """Retrieve a specific road accessibility metrics record by its ID."""
         raise NotImplementedError
 
+    @abstractmethod
+    async def delete_road_accessibility(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """Delete road accessibility metrics by their IDs."""
+        raise NotImplementedError
+
     # ----- Geographic position -----
 
     @abstractmethod
@@ -149,6 +165,11 @@ class MetricsRepository(ABC):
         metrics_id: InfrastructureMetricsId,
     ) -> GeographicPositionMetrics | None:
         """Retrieve a specific geographic position metrics record by its ID."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_geographic_position(self, metrics_ids: list[InfrastructureMetricsId]) -> None:
+        """Delete geographic position metrics by their IDs."""
         raise NotImplementedError
 
 
