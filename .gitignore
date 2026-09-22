@@ -115,3 +115,8 @@ celerybeat.pid
 
 # System files
 Thumbs.db
+
+# ETL data (OSM extracts, DEM, etc.)
+data/
+*.osm
+*.osm.pbf
