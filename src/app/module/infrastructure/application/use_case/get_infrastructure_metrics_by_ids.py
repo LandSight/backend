@@ -8,12 +8,12 @@ from app.module.infrastructure.application.dto.command import (
     GetInfrastructureMetricsByIdsCommand,
 )
 from app.module.infrastructure.application.dto.response import (
-    HospitalMetricsResponse,
+    EcologyMetricsResponse,
+    FacilityMetricsResponse,
+    GeographicPositionMetricsResponse,
     InfrastructureMetricsResponse,
-    SchoolMetricsResponse,
-    ShopMetricsResponse,
-    TransitStopMetricsResponse,
-    WaterBodyMetricsResponse,
+    RoadAccessibilityMetricsResponse,
+    UtilityMetricsResponse,
 )
 from app.module.infrastructure.application.error import (
     InfrastructureMetricsByIdNotFoundError,
@@ -31,15 +31,17 @@ if TYPE_CHECKING:
 
     from app.module.infrastructure.application.port import MetricsPermissionService, MetricsRepository
 
+    _Handler = Callable[[ParcelId, InfrastructureMetricsId, Category], Awaitable[Any]]
+
 
 class GetInfrastructureMetricsByIdsUseCase(
     BaseUseCase[GetInfrastructureMetricsByIdsCommand, InfrastructureMetricsResponse]
 ):
     """Retrieve specific infrastructure metrics records by their IDs.
 
-    Each reference selects the dedicated metrics table via its category. All
-    records must belong to the requested parcel; access is granted only when the
-    current user owns that parcel.
+    Each reference selects the dedicated metrics family table via its category.
+    All records must belong to the requested parcel; access is granted only when
+    the current user owns that parcel.
     """
 
     def __init__(
@@ -51,15 +53,23 @@ class GetInfrastructureMetricsByIdsUseCase(
         self._metrics_permission_service = metrics_permission_service
         self._logger = get_logger("app.infrastructure.use_case.get_infrastructure_metrics_by_ids")
 
-        self._handlers: dict[
-            Category,
-            Callable[[ParcelId, InfrastructureMetricsId], Awaitable[Any]],
-        ] = {
-            Category.SCHOOL: self._handle_schools,
-            Category.HOSPITAL: self._handle_hospitals,
-            Category.SHOP: self._handle_shops,
-            Category.TRANSIT_STOP: self._handle_transit_stops,
-            Category.WATER_BODY: self._handle_water_bodies,
+        facility = self._handle_facility
+        ecology = self._handle_ecology
+        utility = self._handle_utility
+        self._handlers: dict[Category, _Handler] = {
+            Category.SCHOOL: facility,
+            Category.HOSPITAL: facility,
+            Category.GROCERY: facility,
+            Category.BUS_STOP: facility,
+            Category.RAILWAY_STATION: facility,
+            Category.WATER_BODY: ecology,
+            Category.FOREST: ecology,
+            Category.PROTECTED_AREA: ecology,
+            Category.POWER_LINE: utility,
+            Category.GAS_PIPELINE: utility,
+            Category.WATER_PIPELINE: utility,
+            Category.ROAD_ACCESSIBILITY: self._handle_road_accessibility,
+            Category.GEOGRAPHIC_POSITION: self._handle_geographic_position,
         }
 
     @override
@@ -78,21 +88,14 @@ class GetInfrastructureMetricsByIdsUseCase(
             raise ForbiddenError(reason)
 
         parcel_id = ParcelId(command.parcel_id)
-        results: dict[Category, Any] = {}
+        results: dict[str, Any] = {}
 
         for metric in command.metrics:
             category = self._parse_category(metric.category)
             metrics_id = InfrastructureMetricsId(metric.metrics_id)
-            results[category] = await self._handlers[category](parcel_id, metrics_id)
+            results[category.value] = await self._handlers[category](parcel_id, metrics_id, category)
 
-        return InfrastructureMetricsResponse(
-            parcel_id=command.parcel_id,
-            school=results.get(Category.SCHOOL),
-            hospital=results.get(Category.HOSPITAL),
-            shop=results.get(Category.SHOP),
-            transit_stop=results.get(Category.TRANSIT_STOP),
-            water_body=results.get(Category.WATER_BODY),
-        )
+        return InfrastructureMetricsResponse(parcel_id=command.parcel_id, categories=results)
 
     @staticmethod
     def _parse_category(category: str) -> Category:
@@ -102,95 +105,91 @@ class GetInfrastructureMetricsByIdsUseCase(
         except ValueError as exc:
             raise UnknownCategoryError(category) from exc
 
-    async def _handle_schools(
+    async def _handle_facility(
         self,
         parcel_id: ParcelId,
         metrics_id: InfrastructureMetricsId,
-    ) -> SchoolMetricsResponse:
-        """Load school metrics by ID and convert them to a response."""
-        entity = await self._metrics_repository.get_schools_by_id(metrics_id)
-        if entity is None:
+        category: Category,  # noqa: ARG002
+    ) -> FacilityMetricsResponse:
+        entity = await self._metrics_repository.get_facility_by_id(metrics_id)
+        if entity is None or entity.parcel_id != parcel_id:
             self._raise_not_found(metrics_id)
-        if entity.parcel_id != parcel_id:
-            self._raise_not_found(metrics_id)
-        return SchoolMetricsResponse(
+        return FacilityMetricsResponse(
             id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             count=entity.count.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
         )
 
-    async def _handle_hospitals(
+    async def _handle_ecology(
         self,
         parcel_id: ParcelId,
         metrics_id: InfrastructureMetricsId,
-    ) -> HospitalMetricsResponse:
-        """Load hospital metrics by ID and convert them to a response."""
-        entity = await self._metrics_repository.get_hospitals_by_id(metrics_id)
-        if entity is None:
+        category: Category,  # noqa: ARG002
+    ) -> EcologyMetricsResponse:
+        entity = await self._metrics_repository.get_ecology_by_id(metrics_id)
+        if entity is None or entity.parcel_id != parcel_id:
             self._raise_not_found(metrics_id)
-        if entity.parcel_id != parcel_id:
-            self._raise_not_found(metrics_id)
-        return HospitalMetricsResponse(
+        return EcologyMetricsResponse(
             id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
-            count=entity.count.unwrap(),
-            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
-        )
-
-    async def _handle_shops(
-        self,
-        parcel_id: ParcelId,
-        metrics_id: InfrastructureMetricsId,
-    ) -> ShopMetricsResponse:
-        """Load shop metrics by ID and convert them to a response."""
-        entity = await self._metrics_repository.get_shops_by_id(metrics_id)
-        if entity is None:
-            self._raise_not_found(metrics_id)
-        if entity.parcel_id != parcel_id:
-            self._raise_not_found(metrics_id)
-        return ShopMetricsResponse(
-            id=entity.id.unwrap(),
-            buffer=entity.buffer.unwrap(),
-            count=entity.count.unwrap(),
-            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
-        )
-
-    async def _handle_transit_stops(
-        self,
-        parcel_id: ParcelId,
-        metrics_id: InfrastructureMetricsId,
-    ) -> TransitStopMetricsResponse:
-        """Load transit stop metrics by ID and convert them to a response."""
-        entity = await self._metrics_repository.get_transit_stops_by_id(metrics_id)
-        if entity is None:
-            self._raise_not_found(metrics_id)
-        if entity.parcel_id != parcel_id:
-            self._raise_not_found(metrics_id)
-        return TransitStopMetricsResponse(
-            id=entity.id.unwrap(),
-            buffer=entity.buffer.unwrap(),
-            count=entity.count.unwrap(),
-            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
-        )
-
-    async def _handle_water_bodies(
-        self,
-        parcel_id: ParcelId,
-        metrics_id: InfrastructureMetricsId,
-    ) -> WaterBodyMetricsResponse:
-        """Load water body metrics by ID and convert them to a response."""
-        entity = await self._metrics_repository.get_water_bodies_by_id(metrics_id)
-        if entity is None:
-            self._raise_not_found(metrics_id)
-        if entity.parcel_id != parcel_id:
-            self._raise_not_found(metrics_id)
-        return WaterBodyMetricsResponse(
-            id=entity.id.unwrap(),
-            buffer=entity.buffer.unwrap(),
-            count=entity.count.unwrap(),
-            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
             coverage_ratio=entity.coverage_ratio.unwrap(),
+            count=entity.count.unwrap(),
+            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
+            distance_to_large_object=(
+                entity.distance_to_large_object.unwrap() if entity.distance_to_large_object is not None else None
+            ),
+        )
+
+    async def _handle_utility(
+        self,
+        parcel_id: ParcelId,
+        metrics_id: InfrastructureMetricsId,
+        category: Category,  # noqa: ARG002
+    ) -> UtilityMetricsResponse:
+        entity = await self._metrics_repository.get_utility_by_id(metrics_id)
+        if entity is None or entity.parcel_id != parcel_id:
+            self._raise_not_found(metrics_id)
+        return UtilityMetricsResponse(
+            id=entity.id.unwrap(),
+            buffer=entity.buffer.unwrap(),
+            min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
+        )
+
+    async def _handle_road_accessibility(
+        self,
+        parcel_id: ParcelId,
+        metrics_id: InfrastructureMetricsId,
+        category: Category,  # noqa: ARG002
+    ) -> RoadAccessibilityMetricsResponse:
+        entity = await self._metrics_repository.get_road_accessibility_by_id(metrics_id)
+        if entity is None or entity.parcel_id != parcel_id:
+            self._raise_not_found(metrics_id)
+        return RoadAccessibilityMetricsResponse(
+            id=entity.id.unwrap(),
+            buffer=entity.buffer.unwrap(),
+            distance_to_paved_road=(
+                entity.distance_to_paved_road.unwrap() if entity.distance_to_paved_road is not None else None
+            ),
+            road_density_1km=entity.road_density_1km.unwrap(),
+        )
+
+    async def _handle_geographic_position(
+        self,
+        parcel_id: ParcelId,
+        metrics_id: InfrastructureMetricsId,
+        category: Category,  # noqa: ARG002
+    ) -> GeographicPositionMetricsResponse:
+        entity = await self._metrics_repository.get_geographic_position_by_id(metrics_id)
+        if entity is None or entity.parcel_id != parcel_id:
+            self._raise_not_found(metrics_id)
+        return GeographicPositionMetricsResponse(
+            id=entity.id.unwrap(),
+            buffer=entity.buffer.unwrap(),
+            distance_to_major_city=(
+                entity.distance_to_major_city.unwrap() if entity.distance_to_major_city is not None else None
+            ),
+            city_tier=entity.city_tier.value,
         )
 
     def _raise_not_found(self, metrics_id: InfrastructureMetricsId) -> NoReturn:
