@@ -7,6 +7,11 @@ from .category_metrics import (
     UtilityMetricsResponse,
 )
 from .infrastructure_metrics import InfrastructureMetricsResponse
+from .infrastructure_objects import (
+    InfrastructureObjectFeature,
+    InfrastructureObjectFeatureCollection,
+    InfrastructureObjectProperties,
+)
 
 
 __all__ = (
@@ -15,6 +20,9 @@ __all__ = (
     "FacilityMetricsResponse",
     "GeographicPositionMetricsResponse",
     "InfrastructureMetricsResponse",
+    "InfrastructureObjectFeature",
+    "InfrastructureObjectFeatureCollection",
+    "InfrastructureObjectProperties",
     "RoadAccessibilityMetricsResponse",
     "UtilityMetricsResponse",
 )
