@@ -109,7 +109,7 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
             select(
                 model.osm_id,
                 model.name,
-                func.ST_Transform(model.way, Srid.WGS84).label("way_wgs84"),
+                func.ST_Transform(model.way, Srid.WGS84.value).label("way_wgs84"),
                 model.tags,
             )
             .where(self._tag_filter(category, source, model))
@@ -128,7 +128,7 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
             cast("Geometry", outer_wkb),
             cast("Geometry", inner_wkb),
         )
-        return func.ST_Transform(ring_wgs84, Srid.WEB_MERCATOR)
+        return func.ST_Transform(ring_wgs84, Srid.WEB_MERCATOR.value)
 
     @staticmethod
     def _tag_filter(  # noqa: PLR0911, PLR0912
