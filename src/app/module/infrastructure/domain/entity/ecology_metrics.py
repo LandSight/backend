@@ -30,7 +30,7 @@ class EcologyMetrics(InfrastructureMetrics):
     nearest large one. Maps to the ``parcel_ecology_metrics`` table.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         id: InfrastructureMetricsId,
         parcel_id: ParcelId,
