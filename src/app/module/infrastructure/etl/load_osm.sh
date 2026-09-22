@@ -85,5 +85,11 @@ docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c \
     "SELECT COUNT(*) AS schools FROM infrastructure.planet_osm_point WHERE tags->'amenity' = 'school';"
 docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c \
     "SELECT COUNT(*) AS bus_stops FROM infrastructure.planet_osm_point WHERE tags->'highway' = 'bus_stop';"
+docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c \
+    "SELECT COUNT(*) AS paved_roads FROM infrastructure.planet_osm_line WHERE tags->'highway' IN ('motorway', 'trunk', 'primary', 'secondary', 'tertiary');"
+docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c \
+    "SELECT COUNT(*) AS pipelines FROM infrastructure.planet_osm_line WHERE tags->'man_made' = 'pipeline';"
+docker compose exec -T postgres psql -U "$DB_USER" -d "$DB_NAME" -c \
+    "SELECT COUNT(*) AS rivers FROM infrastructure.planet_osm_line WHERE tags->'waterway' = 'river';"
 
 echo "==> Done."
