@@ -68,7 +68,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
 
     _ELEVATION_RANGE_TOLERANCE = 0.01
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         id: TopographyMetricsId,
         parcel_id: ParcelId,
