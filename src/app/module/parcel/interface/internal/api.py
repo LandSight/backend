@@ -113,7 +113,7 @@ class ParcelInternal(ParcelInternalAPI):
     @staticmethod
     def _to_feature(result: ParcelResponse) -> ParcelResult:
         """Convert an application-layer parcel response into an interface GeoJSON Feature."""
-        return GeoJSONFeature[ParcelProperties](
+        return GeoJSONFeature[GeoJSONPolygon, ParcelProperties](
             geometry=GeoJSONPolygon(
                 type=result.polygon.type,
                 coordinates=result.polygon.coordinates,
