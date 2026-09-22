@@ -11,20 +11,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class SchoolMetricsResponse:
-    """Metrics for a ``school`` category.
-
-    Attributes
-    ----------
-    id : UUID
-        ID of the persisted metrics record.
-    buffer: int
-        Buffer radius in meters around the parcel boundary for this category.
-    count : int
-        Number of objects within the buffer zone.
-    min_distance_to : float | None
-        Distance to the nearest object in meters, or ``None`` if none found.
-    """
+class FacilityMetricsResponse:
+    """Metrics for a facility category (school, hospital, grocery, stops)."""
 
     id: UUID
     buffer: int
@@ -33,102 +21,50 @@ class SchoolMetricsResponse:
 
 
 @dataclass(frozen=True, slots=True)
-class HospitalMetricsResponse:
-    """Metrics for a ``hospital`` category.
-
-    Attributes
-    ----------
-    id : UUID
-        ID of the persisted metrics record.
-    buffer: int
-        Buffer radius in meters around the parcel boundary for this category.
-    count : int
-        Number of objects within the buffer zone.
-    min_distance_to : float | None
-        Distance to the nearest object in meters, or ``None`` if none found.
-    """
+class EcologyMetricsResponse:
+    """Metrics for an ecology category (water body, forest, protected area)."""
 
     id: UUID
     buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class ShopMetricsResponse:
-    """Metrics for a ``shop`` category.
-
-    Attributes
-    ----------
-    id : UUID
-        ID of the persisted metrics record.
-    buffer: int
-        Buffer radius in meters around the parcel boundary for this category.
-    count : int
-        Number of objects within the buffer zone.
-    min_distance_to : float | None
-        Distance to the nearest object in meters, or ``None`` if none found.
-    """
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class TransitStopMetricsResponse:
-    """Metrics for a ``transit_stop`` category.
-
-    Attributes
-    ----------
-    id : UUID
-        ID of the persisted metrics record.
-    buffer: int
-        Buffer radius in meters around the parcel boundary for this category.
-    count : int
-        Number of objects within the buffer zone.
-    min_distance_to : float | None
-        Distance to the nearest object in meters, or ``None`` if none found.
-    """
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
-
-
-@dataclass(frozen=True, slots=True)
-class WaterBodyMetricsResponse:
-    """Metrics for the ``water_body`` category.
-
-    Holds raw (primitive) values, as DTOs do not carry value objects.
-
-    Attributes
-    ----------
-    id : UUID
-        ID of the persisted metrics record.
-    buffer: int
-        Buffer radius in meters around the parcel boundary for this category.
-    count : int
-        Number of water bodies within the buffer zone.
-    min_distance_to : float | None
-        Distance to the nearest water body in meters, or ``None`` if none found.
-    coverage_ratio : float
-        Coverage ratio of water within the buffer zone.
-    """
-
-    id: UUID
-    buffer: int
-    count: int
-    min_distance_to: float | None
     coverage_ratio: float
+    count: int
+    min_distance_to: float | None
+    distance_to_large_object: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class UtilityMetricsResponse:
+    """Metrics for a utility category (power line, gas / water pipeline)."""
+
+    id: UUID
+    buffer: int
+    min_distance_to: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class RoadAccessibilityMetricsResponse:
+    """Metrics for the ``road_accessibility`` category."""
+
+    id: UUID
+    buffer: int
+    distance_to_paved_road: float | None
+    road_density_1km: float
+
+
+@dataclass(frozen=True, slots=True)
+class GeographicPositionMetricsResponse:
+    """Metrics for the ``geographic_position`` category."""
+
+    id: UUID
+    buffer: int
+    distance_to_major_city: float | None
+    city_tier: str
 
 
 __all__ = (
-    "HospitalMetricsResponse",
-    "SchoolMetricsResponse",
-    "ShopMetricsResponse",
-    "TransitStopMetricsResponse",
-    "WaterBodyMetricsResponse",
+    "EcologyMetricsResponse",
+    "FacilityMetricsResponse",
+    "GeographicPositionMetricsResponse",
+    "RoadAccessibilityMetricsResponse",
+    "UtilityMetricsResponse",
 )

@@ -1,20 +1,20 @@
 from .category_info import CategoryInfoResponse
 from .category_metrics import (
-    HospitalMetricsResponse,
-    SchoolMetricsResponse,
-    ShopMetricsResponse,
-    TransitStopMetricsResponse,
-    WaterBodyMetricsResponse,
+    EcologyMetricsResponse,
+    FacilityMetricsResponse,
+    GeographicPositionMetricsResponse,
+    RoadAccessibilityMetricsResponse,
+    UtilityMetricsResponse,
 )
 from .infrastructure_metrics import InfrastructureMetricsResponse
 
 
 __all__ = (
     "CategoryInfoResponse",
-    "HospitalMetricsResponse",
+    "EcologyMetricsResponse",
+    "FacilityMetricsResponse",
+    "GeographicPositionMetricsResponse",
     "InfrastructureMetricsResponse",
-    "SchoolMetricsResponse",
-    "ShopMetricsResponse",
-    "TransitStopMetricsResponse",
-    "WaterBodyMetricsResponse",
+    "RoadAccessibilityMetricsResponse",
+    "UtilityMetricsResponse",
 )
