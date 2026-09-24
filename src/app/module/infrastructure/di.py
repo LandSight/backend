@@ -9,7 +9,9 @@ from app.module.infrastructure.application.use_case import (
     GetAvailableCategoriesUseCase,
     GetInfrastructureMetricsByIdsUseCase,
     GetInfrastructureMetricsUseCase,
+    GetInfrastructureObjectsUseCase,
 )
+from app.module.infrastructure.infrastructure.classification import OsmInfrastructureObjectClassifier
 from app.module.infrastructure.infrastructure.geo import (
     ShapelyBufferService,
     ShapelyInfrastructureMetricsService,
@@ -46,6 +48,10 @@ def provide_shapely_infrastructure_metrics_service() -> ShapelyInfrastructureMet
     return ShapelyInfrastructureMetricsService()
 
 
+def provide_osm_infrastructure_object_classifier() -> OsmInfrastructureObjectClassifier:
+    return OsmInfrastructureObjectClassifier()
+
+
 # ----- Parcel integration -----
 def provide_infrastructure_parcel_provider(
     parcel_api: NamedDependency[ParcelInternalAPI],
@@ -66,6 +72,7 @@ def provide_calculate_infrastructure_metrics_use_case(
     infrastructure_metrics_service: NamedDependency[ShapelyInfrastructureMetricsService],
     metrics_repository: NamedDependency[PostgresMetricsRepository],
     infrastructure_parcel_provider: NamedDependency[ParcelProviderImpl],
+    object_classifier: NamedDependency[OsmInfrastructureObjectClassifier],
 ) -> CalculateInfrastructureMetricsUseCase:
     return CalculateInfrastructureMetricsUseCase(
         buffer_service=buffer_service,
@@ -73,6 +80,7 @@ def provide_calculate_infrastructure_metrics_use_case(
         infrastructure_metrics_service=infrastructure_metrics_service,
         metrics_repository=metrics_repository,
         parcel_provider=infrastructure_parcel_provider,
+        object_classifier=object_classifier,
     )
 
 
@@ -94,6 +102,22 @@ def provide_get_available_categories_use_case() -> GetAvailableCategoriesUseCase
     return GetAvailableCategoriesUseCase()
 
 
+def provide_get_infrastructure_objects_use_case(
+    buffer_service: NamedDependency[ShapelyBufferService],
+    local_infrastructure_repository: NamedDependency[PostgresLocalInfrastructureRepository],
+    infrastructure_metrics_service: NamedDependency[ShapelyInfrastructureMetricsService],
+    metrics_repository: NamedDependency[PostgresMetricsRepository],
+    infrastructure_parcel_provider: NamedDependency[ParcelProviderImpl],
+) -> GetInfrastructureObjectsUseCase:
+    return GetInfrastructureObjectsUseCase(
+        buffer_service=buffer_service,
+        local_infrastructure_repository=local_infrastructure_repository,
+        infrastructure_metrics_service=infrastructure_metrics_service,
+        metrics_repository=metrics_repository,
+        parcel_provider=infrastructure_parcel_provider,
+    )
+
+
 def provide_delete_infrastructure_metrics_use_case(
     metrics_repository: NamedDependency[PostgresMetricsRepository],
 ) -> DeleteInfrastructureMetricsUseCase:
@@ -105,6 +129,7 @@ def provide_infrastructure_internal(
     calculate_infrastructure_metrics_use_case: NamedDependency[CalculateInfrastructureMetricsUseCase],
     get_infrastructure_metrics_use_case: NamedDependency[GetInfrastructureMetricsUseCase],
     get_infrastructure_metrics_by_ids_use_case: NamedDependency[GetInfrastructureMetricsByIdsUseCase],
+    get_infrastructure_objects_use_case: NamedDependency[GetInfrastructureObjectsUseCase],
     get_available_categories_use_case: NamedDependency[GetAvailableCategoriesUseCase],
     delete_infrastructure_metrics_use_case: NamedDependency[DeleteInfrastructureMetricsUseCase],
 ) -> InfrastructureInternal:
@@ -112,6 +137,7 @@ def provide_infrastructure_internal(
         calculate_use_case=calculate_infrastructure_metrics_use_case,
         get_use_case=get_infrastructure_metrics_use_case,
         get_by_ids_use_case=get_infrastructure_metrics_by_ids_use_case,
+        get_objects_use_case=get_infrastructure_objects_use_case,
         get_categories_use_case=get_available_categories_use_case,
         delete_metrics_use_case=delete_infrastructure_metrics_use_case,
     )
@@ -126,6 +152,10 @@ infrastructure_dependencies = {
     "buffer_service": Provide(provide_shapely_buffer_service, sync_to_thread=False),
     "infrastructure_metrics_service": Provide(
         provide_shapely_infrastructure_metrics_service,
+        sync_to_thread=False,
+    ),
+    "object_classifier": Provide(
+        provide_osm_infrastructure_object_classifier,
         sync_to_thread=False,
     ),
     "infrastructure_parcel_provider": Provide(
@@ -150,6 +180,10 @@ infrastructure_dependencies = {
     ),
     "get_available_categories_use_case": Provide(
         provide_get_available_categories_use_case,
+        sync_to_thread=False,
+    ),
+    "get_infrastructure_objects_use_case": Provide(
+        provide_get_infrastructure_objects_use_case,
         sync_to_thread=False,
     ),
     "delete_infrastructure_metrics_use_case": Provide(

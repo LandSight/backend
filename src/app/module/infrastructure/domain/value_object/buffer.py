@@ -12,11 +12,14 @@ class Buffer(BaseValueObject[int]):
     """Buffer radius in meters around the parcel boundary.
 
     Invariants:
-    - Must be a positive integer within [1, 10000]
+    - Must be a positive integer within [1, 200000]
+
+    The upper bound is wide enough for settlement search radii (e.g. the
+    distance to the nearest major city), which exceed the object buffers.
     """
 
     _MIN_VALUE = 1
-    _MAX_VALUE = 10000
+    _MAX_VALUE = 200000
 
     @override
     def _normalize(self, value: int) -> int:

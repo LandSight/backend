@@ -19,6 +19,7 @@ import rasterio
 import rasterio.windows
 
 from app.module.shared.domain.value_object import BoundingBox, RasterDataArray
+from app.module.shared.infrastructure.geo import Srid
 from app.module.topography.application.port.local_dem_repository import LocalDemRepository
 from app.module.topography.domain.value_object.raster import RasterData
 from app.module.topography.domain.value_object.raster.raster_resolution import RasterResolution
@@ -157,7 +158,7 @@ class S3LocalDemRepository(S3GeoRepository, LocalDemRepository):
             "width": width,
             "count": 1,
             "dtype": elevation.dtype,
-            "crs": "EPSG:4326",
+            "crs": Srid.WGS84.to_epsg(),
             "transform": transform,
             "compress": "DEFLATE",
             "blockxsize": 256,

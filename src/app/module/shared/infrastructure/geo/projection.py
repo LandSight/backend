@@ -10,11 +10,18 @@ delegating all coordinate math to ``pyproj``.
 from __future__ import annotations
 
 from pyproj import Transformer
-from shapely.geometry import Point as ShapelyPoint, Polygon as ShapelyPolygon
+from shapely.geometry import (
+    LineString as ShapelyLineString,
+    MultiLineString as ShapelyMultiLineString,
+    Point as ShapelyPoint,
+    Polygon as ShapelyPolygon,
+)
 from shapely.ops import transform
 
+from app.module.shared.infrastructure.geo.srid import Srid
 
-WGS84_EPSG = "EPSG:4326"
+
+WGS84_EPSG = Srid.WGS84.to_epsg()
 
 # UTM zone width in degrees.
 _UTM_ZONE_WIDTH = 6.0
@@ -25,7 +32,7 @@ _UTM_NORTH_EPSG_BASE = 32600
 _UTM_SOUTH_EPSG_BASE = 32700
 
 # Supported geometry types (runtime accepts any Shapely geometry).
-ShapelyGeometry = ShapelyPoint | ShapelyPolygon
+ShapelyGeometry = ShapelyPoint | ShapelyPolygon | ShapelyLineString | ShapelyMultiLineString
 
 
 def utm_epsg(lon: float, lat: float) -> int:

@@ -15,6 +15,22 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
+class GeoJSONPoint:
+    """GeoJSON Point geometry."""
+
+    type: str = "Point"
+    coordinates: list[float] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class GeoJSONLineString:
+    """GeoJSON LineString geometry."""
+
+    type: str = "LineString"
+    coordinates: list[list[float]] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class GeoJSONPolygon:
     """GeoJSON Polygon geometry.
 
@@ -39,36 +55,41 @@ class GeoJSONPolygon:
     coordinates: list[list[list[float]]] = field(default_factory=list)
 
 
-# Union of all supported GeoJSON geometries (only polygon for now)
-GeoJSONGeometry = GeoJSONPolygon
+# Union of all supported GeoJSON geometries.
+GeoJSONGeometry = GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon
 
 
 @dataclass(frozen=True, slots=True)
-class GeoJSONFeature[T]:
+class GeoJSONFeature[GeometryT: GeoJSONGeometry, PropertiesT]:
     """GeoJSON Feature.
 
-    A Feature contains a geometry and associated typed properties.
+    A Feature contains a geometry and associated typed properties. The geometry
+    type is a parameter, so consumers can pin it while mixed collections use the
+    whole union.
     """
 
-    geometry: GeoJSONGeometry
-    properties: T
+    geometry: GeometryT
+    properties: PropertiesT
     type: str = "Feature"
 
 
 @dataclass(frozen=True, slots=True)
-class GeoJSONFeatureCollection[T]:
+class GeoJSONFeatureCollection[GeometryT: GeoJSONGeometry, PropertiesT]:
     """GeoJSON FeatureCollection.
 
-    A collection of GeoJSON Features sharing the same properties type.
+    A collection of GeoJSON Features sharing the same geometry and properties
+    types.
     """
 
     type: str = "FeatureCollection"
-    features: list[GeoJSONFeature[T]] = field(default_factory=list)
+    features: list[GeoJSONFeature[GeometryT, PropertiesT]] = field(default_factory=list)
 
 
 __all__ = (
     "GeoJSONFeature",
     "GeoJSONFeatureCollection",
     "GeoJSONGeometry",
+    "GeoJSONLineString",
+    "GeoJSONPoint",
     "GeoJSONPolygon",
 )

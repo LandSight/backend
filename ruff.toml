@@ -80,4 +80,31 @@ isort.lines-after-imports = 2
 "src/app/**/di.py" = [
   "TC001",   # runtime imports needed for dependency injection in controllers
   "TC002",   # NamedDependency and use cases must be available at runtime
+  "PLR0913", # providers wire many dependencies
+  "PLR0917",
+]
+"src/app/module/*/domain/entity/*.py" = [
+  "PLR0913", # entities take one argument per value
+  "PLR0917",
+]
+"src/app/module/*/application/use_case/*.py" = [
+  "PLR0913", # use cases depend on several ports
+  "PLR0914", # some calculations aggregate many intermediate values
+  "PLR0917",
+]
+"src/app/module/*/application/port/*.py" = [
+  "PLR0904", # ports intentionally expose one method per operation
+]
+"src/app/module/*/infrastructure/repository/*.py" = [
+  "PLR0904", # repositories implement one method per port operation
+]
+"src/app/module/*/interface/internal/*.py" = [
+  "PLR0913", # internal APIs aggregate their use cases
+  "PLR0917",
+]
+"src/app/platform/database/repository.py" = [
+  "B903", # repository base classes intentionally hold behavior methods
+]
+"src/app/platform/storage/repository.py" = [
+  "B903", # repository base classes intentionally hold behavior methods
 ]

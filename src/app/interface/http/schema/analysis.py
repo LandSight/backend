@@ -45,7 +45,19 @@ class AnalysisResponse(BaseModel):
     )
 
 
+class AnalysisMetricSchema(BaseModel):
+    """Response body for a single analysis metric reference."""
+
+    module: str = Field(description="Metric module the snapshot belongs to (e.g. infrastructure).")
+    category: str | None = Field(
+        default=None,
+        description="Infrastructure category; null for single-metric modules.",
+    )
+    metrics_id: UUID = Field(description="ID of the persisted metrics snapshot.")
+
+
 __all__ = (
+    "AnalysisMetricSchema",
     "AnalysisResponse",
     "StartAnalysisRequest",
 )

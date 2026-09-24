@@ -43,7 +43,7 @@ class Analysis(BaseEntity[AnalysisId]):
         When the analysis was created (UTC); ``None`` if not yet persisted.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         id: AnalysisId,
         parcel_id: ParcelId,

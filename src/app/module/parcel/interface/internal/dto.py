@@ -8,13 +8,12 @@ from typing import TYPE_CHECKING
 from app.module.shared.interface.internal.geojson import (
     GeoJSONFeature,
     GeoJSONFeatureCollection,
+    GeoJSONPolygon,
 )
 
 
 if TYPE_CHECKING:
     from uuid import UUID
-
-    from app.module.shared.interface.internal.geojson import GeoJSONPolygon
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,11 +66,11 @@ class ParcelProperties:
 
 
 # Result of a single parcel operation: a GeoJSON Feature with typed properties.
-ParcelResult = GeoJSONFeature[ParcelProperties]
+ParcelResult = GeoJSONFeature[GeoJSONPolygon, ParcelProperties]
 
 
 # Result of listing parcels: a GeoJSON FeatureCollection with typed properties.
-ParcelListResult = GeoJSONFeatureCollection[ParcelProperties]
+ParcelListResult = GeoJSONFeatureCollection[GeoJSONPolygon, ParcelProperties]
 
 
 __all__ = (

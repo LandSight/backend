@@ -13,6 +13,7 @@ from sqlalchemy import BigInteger, Text
 from sqlalchemy.dialects.postgresql import HSTORE
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.module.shared.infrastructure.geo import Srid
 from app.platform.database.base import BaseModel
 
 
@@ -39,7 +40,7 @@ class PlanetOsmPointModel(BaseModel):
         comment="Human-readable name of the feature",
     )
     way: Mapped[Geometry] = mapped_column(
-        Geometry(geometry_type="POINT", srid=3857),
+        Geometry(geometry_type="POINT", srid=Srid.WEB_MERCATOR),
         nullable=False,
         comment="Point geometry in SRID 3857 (Web Mercator)",
     )

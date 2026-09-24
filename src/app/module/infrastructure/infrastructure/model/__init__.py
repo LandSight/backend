@@ -1,20 +1,22 @@
 """Infrastructure ORM models."""
 
-from .hospital_metrics_model import HospitalMetricsModel
+from .ecology_metrics_model import EcologyMetricsModel
+from .facility_metrics_model import FacilityMetricsModel
+from .geographic_position_metrics_model import GeographicPositionMetricsModel
+from .planet_osm_line_model import PlanetOsmLineModel
 from .planet_osm_point_model import PlanetOsmPointModel
 from .planet_osm_polygon_model import PlanetOsmPolygonModel
-from .school_metrics_model import SchoolMetricsModel
-from .shop_metrics_model import ShopMetricsModel
-from .transit_stop_metrics_model import TransitStopMetricsModel
-from .water_body_metrics_model import WaterBodyMetricsModel
+from .road_accessibility_metrics_model import RoadAccessibilityMetricsModel
+from .utility_metrics_model import UtilityMetricsModel
 
 
 __all__ = (
-    "HospitalMetricsModel",
+    "EcologyMetricsModel",
+    "FacilityMetricsModel",
+    "GeographicPositionMetricsModel",
+    "PlanetOsmLineModel",
     "PlanetOsmPointModel",
     "PlanetOsmPolygonModel",
-    "SchoolMetricsModel",
-    "ShopMetricsModel",
-    "TransitStopMetricsModel",
-    "WaterBodyMetricsModel",
+    "RoadAccessibilityMetricsModel",
+    "UtilityMetricsModel",
 )

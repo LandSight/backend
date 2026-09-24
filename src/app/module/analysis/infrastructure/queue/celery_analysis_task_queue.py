@@ -1,15 +1,14 @@
 """Celery-backed analysis task queue.
 
-The metrics phase runs as a ``group`` of independent module tasks; the scoring
-phase is its ``chord`` callback. Chords require a result backend, which is why
-Celery results are enabled.
+An analysis is processed by a single task that runs the whole pipeline
+(collect every metric module, then score) sequentially. This keeps the work of
+one analysis together, so with a single worker an earlier analysis finishes
+completely before the next one starts.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
-
-from celery import chord, group
 
 from app.module.analysis.application.port import AnalysisTaskQueue
 
@@ -18,21 +17,17 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from celery import Celery
-    from celery.canvas import Signature
 
     from app.module.analysis.domain.value_object import AnalysisId
 
 
-CALCULATE_TOPOGRAPHY_TASK_NAME = "analysis.calculate_topography_metrics"
-CALCULATE_CLIMATE_TASK_NAME = "analysis.calculate_climate_metrics"
-CALCULATE_INFRASTRUCTURE_TASK_NAME = "analysis.calculate_infrastructure_metrics"
-SCORE_ANALYSIS_TASK_NAME = "analysis.score_analysis"
+PROCESS_ANALYSIS_TASK_NAME = "analysis.process_analysis"
 
 
 class CeleryAnalysisTaskQueue(AnalysisTaskQueue):
     """Analysis task queue backed by Celery + Redis.
 
-    Enqueues a chord: a group of metrics tasks followed by the scoring task.
+    Enqueues one task per analysis that processes it end to end.
     """
 
     def __init__(self, celery_app: Celery) -> None:
@@ -41,26 +36,10 @@ class CeleryAnalysisTaskQueue(AnalysisTaskQueue):
     @override
     async def enqueue(self, analysis_id: AnalysisId, current_user_id: UUID) -> None:
         """See :class:`app.module.analysis.application.port.AnalysisTaskQueue.enqueue`."""
-        analysis = str(analysis_id.unwrap())
-        user = str(current_user_id)
-
-        header = group(
-            self._signature(CALCULATE_TOPOGRAPHY_TASK_NAME, analysis, user),
-            self._signature(CALCULATE_CLIMATE_TASK_NAME, analysis, user),
-            self._signature(CALCULATE_INFRASTRUCTURE_TASK_NAME, analysis, user),
+        self._celery_app.send_task(
+            PROCESS_ANALYSIS_TASK_NAME,
+            args=[str(analysis_id.unwrap()), str(current_user_id)],
         )
-        callback = self._signature(SCORE_ANALYSIS_TASK_NAME, analysis, user)
-        chord(header)(callback)
-
-    def _signature(self, name: str, analysis_id: str, user_id: str) -> Signature:
-        """Build an immutable signature for a task by name."""
-        return self._celery_app.signature(name, args=[analysis_id, user_id], immutable=True)
 
 
-__all__ = (
-    "CALCULATE_CLIMATE_TASK_NAME",
-    "CALCULATE_INFRASTRUCTURE_TASK_NAME",
-    "CALCULATE_TOPOGRAPHY_TASK_NAME",
-    "SCORE_ANALYSIS_TASK_NAME",
-    "CeleryAnalysisTaskQueue",
-)
+__all__ = ("PROCESS_ANALYSIS_TASK_NAME", "CeleryAnalysisTaskQueue")

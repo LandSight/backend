@@ -41,6 +41,28 @@ class LocalInfrastructureRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_line_objects(
+        self,
+        zone: BufferZone,
+        category: Category,
+    ) -> list[InfrastructureObject]:
+        """Return line-based infrastructure objects of a category within a zone.
+
+        Parameters
+        ----------
+        zone : BufferZone
+            Search zone (buffer ring) to query objects within.
+        category : Category
+            Infrastructure category to filter objects by.
+
+        Returns
+        -------
+        list[InfrastructureObject]
+            Line-based objects of the category located within the zone.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_polygon_objects(
         self,
         zone: BufferZone,

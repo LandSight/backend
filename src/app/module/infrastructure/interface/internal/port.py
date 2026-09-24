@@ -13,6 +13,8 @@ if TYPE_CHECKING:
         DeleteMetricsInput,
         GetMetricsByIdsInput,
         GetMetricsInput,
+        GetObjectsInput,
+        InfrastructureObjectFeatureCollectionResult,
     )
     from app.module.shared.interface.internal import MetricsResponse
 
@@ -45,6 +47,11 @@ class InfrastructureInternalAPI(ABC):
     @abstractmethod
     async def get_available_categories(self) -> list[CategoryInfoResult]:
         """List all available infrastructure categories."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_objects(self, input_data: GetObjectsInput) -> InfrastructureObjectFeatureCollectionResult:
+        """List the objects a metrics snapshot was computed over."""
         raise NotImplementedError
 
     @abstractmethod

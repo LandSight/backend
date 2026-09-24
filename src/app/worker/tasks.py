@@ -1,8 +1,9 @@
 """Celery tasks for the analysis pipeline.
 
-The pipeline is a chord: a group of per-module metrics tasks, followed by a
-scoring task. Each task opens its own session; transaction boundaries are
-managed by the use cases through the unit-of-work port.
+An analysis is processed end to end by a single task: it collects the metrics
+for every module and then scores the analysis. This keeps the pipeline of one
+analysis together, so with a single worker an earlier analysis finishes before
+the next one starts.
 """
 
 from __future__ import annotations
@@ -15,15 +16,15 @@ from app.module.analysis.application.dto.command import CollectMetricsCommand, S
 from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
 from app.module.analysis.domain.value_object import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
-    CALCULATE_CLIMATE_TASK_NAME,
-    CALCULATE_INFRASTRUCTURE_TASK_NAME,
-    CALCULATE_TOPOGRAPHY_TASK_NAME,
-    SCORE_ANALYSIS_TASK_NAME,
+    PROCESS_ANALYSIS_TASK_NAME,
 )
 from app.platform.config.loaders import load_logging_config
 from app.platform.logging import configure_logging
 from app.worker.celery_app import celery_app
 from app.worker.container import WorkerContainer, get_session_factory, run_in_worker_loop
+
+
+_METRIC_MODULES = (MetricType.TOPOGRAPHY, MetricType.CLIMATE, MetricType.INFRASTRUCTURE)
 
 
 @worker_process_init.connect
@@ -32,60 +33,38 @@ def _configure_worker_logging(**_: object) -> None:
     configure_logging(load_logging_config())
 
 
-@celery_app.task(name=CALCULATE_TOPOGRAPHY_TASK_NAME)
-def calculate_topography_metrics(analysis_id: str, current_user_id: str) -> None:
-    """Calculate and record the analysis' topography metrics."""
-    run_in_worker_loop(_collect(MetricType.TOPOGRAPHY, analysis_id, current_user_id))
+@celery_app.task(name=PROCESS_ANALYSIS_TASK_NAME)
+def process_analysis(analysis_id: str, current_user_id: str) -> None:
+    """Process one analysis end to end: collect metrics, then score."""
+    run_in_worker_loop(_process(analysis_id, current_user_id))
 
 
-@celery_app.task(name=CALCULATE_CLIMATE_TASK_NAME)
-def calculate_climate_metrics(analysis_id: str, current_user_id: str) -> None:
-    """Calculate and record the analysis' climate metrics."""
-    run_in_worker_loop(_collect(MetricType.CLIMATE, analysis_id, current_user_id))
-
-
-@celery_app.task(name=CALCULATE_INFRASTRUCTURE_TASK_NAME)
-def calculate_infrastructure_metrics(analysis_id: str, current_user_id: str) -> None:
-    """Calculate and record the analysis' infrastructure metrics."""
-    run_in_worker_loop(_collect(MetricType.INFRASTRUCTURE, analysis_id, current_user_id))
-
-
-@celery_app.task(name=SCORE_ANALYSIS_TASK_NAME)
-def score_analysis(analysis_id: str, current_user_id: str) -> None:
-    """Score the analysis after all metrics have been calculated."""
-    run_in_worker_loop(_score(analysis_id, current_user_id))
-
-
-async def _collect(metric_type: MetricType, analysis_id: str, current_user_id: str) -> None:
-    """Run the metrics-collection use case for one module."""
+async def _process(analysis_id: str, current_user_id: str) -> None:
+    """Run the full analysis pipeline for one analysis."""
     session_factory = get_session_factory()
     async with session_factory() as session:
-        use_case = WorkerContainer(session).resolve(COLLECT_METRICS_USE_CASE_KEY)
-        await use_case(
-            CollectMetricsCommand(
-                analysis_id=UUID(analysis_id),
-                current_user_id=UUID(current_user_id),
-                metric_type=metric_type,
-            ),
-        )
+        container = WorkerContainer(session)
+        collect = container.resolve(COLLECT_METRICS_USE_CASE_KEY)
+        score = container.resolve(SCORE_ANALYSIS_USE_CASE_KEY)
 
+        analysis_id_value = UUID(analysis_id)
+        user_id_value = UUID(current_user_id)
 
-async def _score(analysis_id: str, current_user_id: str) -> None:
-    """Run the scoring use case."""
-    session_factory = get_session_factory()
-    async with session_factory() as session:
-        use_case = WorkerContainer(session).resolve(SCORE_ANALYSIS_USE_CASE_KEY)
-        await use_case(
+        for metric_type in _METRIC_MODULES:
+            await collect(
+                CollectMetricsCommand(
+                    analysis_id=analysis_id_value,
+                    current_user_id=user_id_value,
+                    metric_type=metric_type,
+                )
+            )
+
+        await score(
             ScoreAnalysisCommand(
-                analysis_id=UUID(analysis_id),
-                current_user_id=UUID(current_user_id),
-            ),
+                analysis_id=analysis_id_value,
+                current_user_id=user_id_value,
+            )
         )
 
 
-__all__ = (
-    "calculate_climate_metrics",
-    "calculate_infrastructure_metrics",
-    "calculate_topography_metrics",
-    "score_analysis",
-)
+__all__ = ("process_analysis",)

@@ -6,6 +6,7 @@ from geoalchemy2 import Geometry
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.module.shared.infrastructure.geo import Srid
 from app.platform.database.base import TimestampedModel
 
 
@@ -26,7 +27,7 @@ class ParcelModel(TimestampedModel):
         nullable=False,
     )
     polygon: Mapped[Geometry] = mapped_column(
-        Geometry("Polygon", srid=4326),
+        Geometry("Polygon", srid=Srid.WGS84),
         nullable=False,
         comment="PostGIS Polygon geometry in SRID 4326 (WGS 84)",
     )

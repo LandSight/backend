@@ -16,27 +16,38 @@ from app.module.infrastructure.application.dto.command import (
     DeleteInfrastructureMetricsCommand,
     GetInfrastructureMetricsByIdsCommand,
     GetInfrastructureMetricsCommand,
+    GetInfrastructureObjectsCommand,
 )
-from app.module.infrastructure.domain.metric_catalog import CATEGORY_CATALOG, COVERAGE_RATIO
+from app.module.infrastructure.domain.metric_catalog import CATEGORY_METRICS
 from app.module.infrastructure.interface.internal.dto import (
     CalculateMetricsInput,
     CategoryInfoResult,
     DeleteMetricsInput,
     GetMetricsByIdsInput,
     GetMetricsInput,
+    GetObjectsInput,
+    InfrastructureObjectFeatureCollectionResult,
+    InfrastructureObjectFeatureResult,
+    InfrastructureObjectPropertiesResult,
 )
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
+from app.module.shared.application.dto.geojson import (
+    GeoJSONLineString as ApplicationGeoJSONLineString,
+    GeoJSONPoint as ApplicationGeoJSONPoint,
+    GeoJSONPolygon as ApplicationGeoJSONPolygon,
+)
 from app.module.shared.interface.internal import MetricsResponse, build_metric_value
+from app.module.shared.interface.internal.geojson import (
+    GeoJSONLineString as InternalGeoJSONLineString,
+    GeoJSONPoint as InternalGeoJSONPoint,
+    GeoJSONPolygon as InternalGeoJSONPolygon,
+)
 
 
 if TYPE_CHECKING:
     from app.module.infrastructure.application.dto.response import (
-        HospitalMetricsResponse,
         InfrastructureMetricsResponse,
-        SchoolMetricsResponse,
-        ShopMetricsResponse,
-        TransitStopMetricsResponse,
-        WaterBodyMetricsResponse,
+        InfrastructureObjectFeatureCollection,
     )
     from app.module.infrastructure.application.use_case import (
         CalculateInfrastructureMetricsUseCase,
@@ -44,16 +55,10 @@ if TYPE_CHECKING:
         GetAvailableCategoriesUseCase,
         GetInfrastructureMetricsByIdsUseCase,
         GetInfrastructureMetricsUseCase,
+        GetInfrastructureObjectsUseCase,
     )
+    from app.module.infrastructure.domain.metric_catalog import MetricDefinition
     from app.module.shared.interface.internal import MetricValue
-
-    _CategoryMetrics = (
-        SchoolMetricsResponse
-        | HospitalMetricsResponse
-        | ShopMetricsResponse
-        | TransitStopMetricsResponse
-        | WaterBodyMetricsResponse
-    )
 
 
 class InfrastructureInternal(InfrastructureInternalAPI):
@@ -64,12 +69,14 @@ class InfrastructureInternal(InfrastructureInternalAPI):
         calculate_use_case: CalculateInfrastructureMetricsUseCase,
         get_use_case: GetInfrastructureMetricsUseCase,
         get_by_ids_use_case: GetInfrastructureMetricsByIdsUseCase,
+        get_objects_use_case: GetInfrastructureObjectsUseCase,
         get_categories_use_case: GetAvailableCategoriesUseCase,
         delete_metrics_use_case: DeleteInfrastructureMetricsUseCase,
     ) -> None:
         self._calculate = calculate_use_case
         self._get = get_use_case
         self._get_by_ids = get_by_ids_use_case
+        self._get_objects = get_objects_use_case
         self._get_categories = get_categories_use_case
         self._delete_metrics = delete_metrics_use_case
 
@@ -115,7 +122,54 @@ class InfrastructureInternal(InfrastructureInternalAPI):
     async def get_available_categories(self) -> list[CategoryInfoResult]:
         """See :meth:`InfrastructureInternalAPI.get_available_categories`."""
         results = await self._get_categories()
-        return [CategoryInfoResult(category=r.category) for r in results]
+        return [CategoryInfoResult(category=r.category, label=r.label) for r in results]
+
+    @override
+    async def get_objects(self, input_data: GetObjectsInput) -> InfrastructureObjectFeatureCollectionResult:
+        """See :meth:`InfrastructureInternalAPI.get_objects`."""
+        result = await self._get_objects(
+            GetInfrastructureObjectsCommand(
+                category=input_data.category,
+                metrics_id=input_data.metrics_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
+        return self._to_objects_result(result)
+
+    @staticmethod
+    def _to_objects_result(
+        result: InfrastructureObjectFeatureCollection,
+    ) -> InfrastructureObjectFeatureCollectionResult:
+        """Map an object FeatureCollection to the internal representation."""
+        return InfrastructureObjectFeatureCollectionResult(
+            features=[
+                InfrastructureObjectFeatureResult(
+                    geometry=InfrastructureInternal._to_internal_geometry(feature.geometry),
+                    properties=InfrastructureObjectPropertiesResult(
+                        osm_id=feature.properties.osm_id,
+                        name=feature.properties.name,
+                        category=feature.properties.category,
+                    ),
+                )
+                for feature in result.features
+            ],
+        )
+
+    @staticmethod
+    def _to_internal_geometry(
+        geometry: ApplicationGeoJSONPoint | ApplicationGeoJSONLineString | ApplicationGeoJSONPolygon,
+    ) -> InternalGeoJSONPoint | InternalGeoJSONLineString | InternalGeoJSONPolygon:
+        """Convert application-layer GeoJSON geometry to the internal representation."""
+        match geometry:
+            case ApplicationGeoJSONPoint():
+                return InternalGeoJSONPoint(coordinates=geometry.coordinates)
+            case ApplicationGeoJSONLineString():
+                return InternalGeoJSONLineString(coordinates=geometry.coordinates)
+            case ApplicationGeoJSONPolygon():
+                return InternalGeoJSONPolygon(coordinates=geometry.coordinates)
+            case _:
+                message = f"Unsupported GeoJSON geometry type: {type(geometry).__name__}."
+                raise TypeError(message)
 
     @override
     async def delete_metrics(self, input_data: DeleteMetricsInput) -> None:
@@ -132,51 +186,28 @@ class InfrastructureInternal(InfrastructureInternalAPI):
     def to_metrics_responses(result: InfrastructureMetricsResponse) -> list[MetricsResponse]:
         """Project an infrastructure use case response into neutral responses per category."""
         responses: list[MetricsResponse] = []
-        for category, metrics in (
-            ("school", result.school),
-            ("hospital", result.hospital),
-            ("shop", result.shop),
-            ("transit_stop", result.transit_stop),
-        ):
-            if metrics is not None:
-                responses.append(InfrastructureInternal._response(category, metrics, extra=[]))
-
-        if result.water_body is not None:
-            water_body = result.water_body
+        for category, metrics in result.categories.items():
+            definitions = CATEGORY_METRICS.get(category)
+            if definitions is None:
+                continue
             responses.append(
-                InfrastructureInternal._response(
-                    "water_body",
-                    water_body,
-                    extra=[
-                        build_metric_value(
-                            key=COVERAGE_RATIO.key,
-                            label=COVERAGE_RATIO.label,
-                            unit=COVERAGE_RATIO.unit,
-                            value_type=COVERAGE_RATIO.kind,
-                            raw=water_body.coverage_ratio,
-                        ),
-                    ],
-                ),
+                MetricsResponse(
+                    module="infrastructure",
+                    category=category,
+                    id=metrics.id,
+                    metrics=InfrastructureInternal._category_values(metrics, definitions),
+                )
             )
         return responses
 
     @staticmethod
-    def _response(category: str, metrics: _CategoryMetrics, *, extra: list[MetricValue]) -> MetricsResponse:
-        """Build a neutral response for a single infrastructure category."""
-        values = InfrastructureInternal._category_values(metrics)
-        values.extend(extra)
-        return MetricsResponse(
-            module="infrastructure",
-            category=category,
-            id=metrics.id,
-            metrics=values,
-        )
-
-    @staticmethod
-    def _category_values(metrics: _CategoryMetrics) -> list[MetricValue]:
-        """Project the fields shared by every infrastructure category."""
+    def _category_values(
+        metrics: object,
+        definitions: tuple[MetricDefinition, ...],
+    ) -> list[MetricValue]:
+        """Build the neutral metric values declared by the category catalog."""
         values: list[MetricValue] = []
-        for definition in CATEGORY_CATALOG:
+        for definition in definitions:
             if not hasattr(metrics, definition.key):
                 continue
             values.append(
@@ -186,7 +217,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                     unit=definition.unit,
                     value_type=definition.kind,
                     raw=getattr(metrics, definition.key),
-                ),
+                )
             )
         return values
 
