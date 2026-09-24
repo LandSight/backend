@@ -58,26 +58,30 @@ _UTILITY_METRICS: Final[tuple[MetricDefinition, ...]] = (_BUFFER, _MIN_DISTANCE)
 
 CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingProxyType(
     {
-        "school": _FACILITY_METRICS,
         "hospital": _FACILITY_METRICS,
         "grocery": _FACILITY_METRICS,
         "bus_stop": _FACILITY_METRICS,
         "railway_station": _FACILITY_METRICS,
+        "police": _FACILITY_METRICS,
+        "fire_station": _FACILITY_METRICS,
+        "pharmacy": _FACILITY_METRICS,
+        "water_source": _FACILITY_METRICS,
         "water_body": _ECOLOGY_METRICS,
         "forest": _ECOLOGY_METRICS,
         "protected_area": _ECOLOGY_METRICS,
         "power_line": _UTILITY_METRICS,
-        "gas_pipeline": _UTILITY_METRICS,
-        "water_pipeline": _UTILITY_METRICS,
         "road_accessibility": (
             _BUFFER,
             MetricDefinition("distance_to_paved_road", "Distance to paved road", "m", MetricValueKind.NUMBER),
+            MetricDefinition("distance_to_main_road", "Distance to main road", "m", MetricValueKind.NUMBER),
+            MetricDefinition("distance_to_any_road", "Distance to any road", "m", MetricValueKind.NUMBER),
             MetricDefinition("road_density_1km", "Road density (1 km)", "km/km2", MetricValueKind.NUMBER),
         ),
         "geographic_position": (
             _BUFFER,
-            MetricDefinition("distance_to_major_city", "Distance to major city", "m", MetricValueKind.NUMBER),
-            MetricDefinition("city_tier", "City tier", "", MetricValueKind.TEXT),
+            MetricDefinition("distance_to_regional_center", "Distance to regional center", "m", MetricValueKind.NUMBER),
+            MetricDefinition("distance_to_district_center", "Distance to district center", "m", MetricValueKind.NUMBER),
+            MetricDefinition("distance_to_settlement", "Distance to settlement", "m", MetricValueKind.NUMBER),
         ),
     },
 )
@@ -85,19 +89,20 @@ CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingPro
 
 CATEGORY_LABELS: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "school": "Schools",
         "hospital": "Hospitals",
         "grocery": "Grocery shops",
         "bus_stop": "Bus stops",
         "railway_station": "Railway stations",
+        "police": "Police stations",
+        "fire_station": "Fire stations",
+        "pharmacy": "Pharmacies",
+        "water_source": "Water sources",
         "water_body": "Water bodies",
         "forest": "Forests",
         "protected_area": "Protected areas",
         "power_line": "Power lines",
-        "gas_pipeline": "Gas pipelines",
-        "water_pipeline": "Water pipelines",
         "road_accessibility": "Roads",
-        "geographic_position": "Major city",
+        "geographic_position": "Settlements",
     },
 )
 

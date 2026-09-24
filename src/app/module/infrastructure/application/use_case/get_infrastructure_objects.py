@@ -78,17 +78,18 @@ class GetInfrastructureObjectsUseCase(
         ecology = self._load_ecology
         utility = self._load_utility
         self._snapshot_handlers: dict[Category, _SnapshotLoader] = {
-            Category.SCHOOL: facility,
             Category.HOSPITAL: facility,
             Category.GROCERY: facility,
             Category.BUS_STOP: facility,
             Category.RAILWAY_STATION: facility,
+            Category.POLICE: facility,
+            Category.FIRE_STATION: facility,
+            Category.PHARMACY: facility,
+            Category.WATER_SOURCE: facility,
             Category.WATER_BODY: ecology,
             Category.FOREST: ecology,
             Category.PROTECTED_AREA: ecology,
             Category.POWER_LINE: utility,
-            Category.GAS_PIPELINE: utility,
-            Category.WATER_PIPELINE: utility,
             Category.ROAD_ACCESSIBILITY: self._load_road_accessibility,
             Category.GEOGRAPHIC_POSITION: self._load_geographic_position,
         }
@@ -98,18 +99,19 @@ class GetInfrastructureObjectsUseCase(
         line = self._line_objects
         polygon = self._polygon_objects
         self._object_handlers: dict[Category, _ObjectLoader] = {
-            Category.SCHOOL: facility,
             Category.HOSPITAL: facility,
             Category.GROCERY: facility,
             Category.BUS_STOP: facility,
             Category.RAILWAY_STATION: facility,
+            Category.POLICE: facility,
+            Category.FIRE_STATION: facility,
+            Category.PHARMACY: facility,
+            Category.WATER_SOURCE: facility,
             Category.GEOGRAPHIC_POSITION: point,
             Category.WATER_BODY: self._water_body_objects,
             Category.FOREST: polygon,
             Category.PROTECTED_AREA: polygon,
             Category.POWER_LINE: line,
-            Category.GAS_PIPELINE: line,
-            Category.WATER_PIPELINE: line,
             Category.ROAD_ACCESSIBILITY: line,
         }
 

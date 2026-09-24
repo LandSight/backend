@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, override
 from app.module.infrastructure.application.port import InfrastructureObjectClassifier
 from app.module.infrastructure.domain.value_object import CityTier
 from app.module.infrastructure.infrastructure.osm_tags import (
+    MAIN_ROAD_CLASSES,
+    PAVED_ROAD_CLASSES,
+    PAVED_SURFACES,
     PLACE_TIERS,
     SIGNIFICANT_PROTECT_CLASSES,
-    UNPAVED_SURFACES,
 )
 
 
@@ -36,9 +38,14 @@ class OsmInfrastructureObjectClassifier(InfrastructureObjectClassifier):
     def is_paved_road(self, obj: InfrastructureObject) -> bool:
         """See :class:`app.module.infrastructure.application.port.InfrastructureObjectClassifier.is_paved_road`."""
         surface = obj.tag("surface")
-        if surface is None:
-            return True
-        return surface not in UNPAVED_SURFACES
+        if surface is not None:
+            return surface in PAVED_SURFACES
+        return obj.tag("highway") in PAVED_ROAD_CLASSES
+
+    @override
+    def is_main_road(self, obj: InfrastructureObject) -> bool:
+        """See :class:`app.module.infrastructure.application.port.InfrastructureObjectClassifier.is_main_road`."""
+        return obj.tag("highway") in MAIN_ROAD_CLASSES
 
     @override
     def is_significant_protected_area(self, obj: InfrastructureObject) -> bool:

@@ -212,6 +212,12 @@ class GetInfrastructureMetricsByIdsUseCase(
                 distance_to_paved_road=(
                     entity.distance_to_paved_road.unwrap() if entity.distance_to_paved_road is not None else None
                 ),
+                distance_to_main_road=(
+                    entity.distance_to_main_road.unwrap() if entity.distance_to_main_road is not None else None
+                ),
+                distance_to_any_road=(
+                    entity.distance_to_any_road.unwrap() if entity.distance_to_any_road is not None else None
+                ),
                 road_density_1km=entity.road_density_1km.unwrap(),
             )
         return responses
@@ -234,10 +240,19 @@ class GetInfrastructureMetricsByIdsUseCase(
             responses[category] = GeographicPositionMetricsResponse(
                 id=entity.id.unwrap(),
                 buffer=entity.buffer.unwrap(),
-                distance_to_major_city=(
-                    entity.distance_to_major_city.unwrap() if entity.distance_to_major_city is not None else None
+                distance_to_regional_center=(
+                    entity.distance_to_regional_center.unwrap()
+                    if entity.distance_to_regional_center is not None
+                    else None
                 ),
-                city_tier=entity.city_tier.value,
+                distance_to_district_center=(
+                    entity.distance_to_district_center.unwrap()
+                    if entity.distance_to_district_center is not None
+                    else None
+                ),
+                distance_to_settlement=(
+                    entity.distance_to_settlement.unwrap() if entity.distance_to_settlement is not None else None
+                ),
             )
         return responses
 

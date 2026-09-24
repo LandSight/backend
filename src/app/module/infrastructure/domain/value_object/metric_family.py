@@ -32,17 +32,18 @@ class MetricFamily(StrEnum):
 
 CATEGORY_FAMILY: Final[Mapping[Category, MetricFamily]] = MappingProxyType(
     {
-        Category.SCHOOL: MetricFamily.FACILITY,
         Category.HOSPITAL: MetricFamily.FACILITY,
         Category.GROCERY: MetricFamily.FACILITY,
         Category.BUS_STOP: MetricFamily.FACILITY,
         Category.RAILWAY_STATION: MetricFamily.FACILITY,
+        Category.POLICE: MetricFamily.FACILITY,
+        Category.FIRE_STATION: MetricFamily.FACILITY,
+        Category.PHARMACY: MetricFamily.FACILITY,
+        Category.WATER_SOURCE: MetricFamily.FACILITY,
         Category.WATER_BODY: MetricFamily.ECOLOGY,
         Category.FOREST: MetricFamily.ECOLOGY,
         Category.PROTECTED_AREA: MetricFamily.ECOLOGY,
         Category.POWER_LINE: MetricFamily.UTILITY,
-        Category.GAS_PIPELINE: MetricFamily.UTILITY,
-        Category.WATER_PIPELINE: MetricFamily.UTILITY,
         Category.ROAD_ACCESSIBILITY: MetricFamily.ROAD_ACCESSIBILITY,
         Category.GEOGRAPHIC_POSITION: MetricFamily.GEOGRAPHIC_POSITION,
     },

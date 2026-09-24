@@ -28,39 +28,14 @@ GROCERY_SHOPS: Final[tuple[str, ...]] = (
     "deli",
 )
 
-# Values of ``highway=*`` that count as a paved road.
-PAVED_ROAD_CLASSES: Final[tuple[str, ...]] = (
-    "motorway",
-    "trunk",
-    "primary",
-    "secondary",
-    "tertiary",
-)
-
-# Values of ``place=*`` that count as a major settlement.
-MAJOR_SETTLEMENT_PLACES: Final[tuple[str, ...]] = ("city", "town")
-
 # Values of ``railway=*`` that count as a railway station.
 RAILWAY_STATION_KINDS: Final[tuple[str, ...]] = ("station", "halt")
 
 # Values of ``power=*`` that count as a power line.
 POWER_LINE_KINDS: Final[tuple[str, ...]] = ("line", "minor_line")
 
-# Values of ``surface=*`` that mean a road is not paved.
-UNPAVED_SURFACES: Final[tuple[str, ...]] = (
-    "unpaved",
-    "gravel",
-    "ground",
-    "dirt",
-    "sand",
-    "grass",
-    "earth",
-    "compacted",
-)
-
-# Values of ``protect_class=*`` that make a protected area significant
-# regardless of its measured area.
-SIGNIFICANT_PROTECT_CLASSES: Final[tuple[str, ...]] = ("1", "1a", "1b", "2", "3", "4")
+# Values of ``place=*`` that count as a settlement (all tiers).
+SETTLEMENT_PLACES: Final[tuple[str, ...]] = ("city", "town", "village", "hamlet")
 
 # Mapping of ``place=*`` values onto settlement tiers.
 PLACE_TIERS: Final[Mapping[str, CityTier]] = MappingProxyType(
@@ -72,14 +47,49 @@ PLACE_TIERS: Final[Mapping[str, CityTier]] = MappingProxyType(
     },
 )
 
+# Road classes with a paved surface by definition.
+PAVED_ROAD_CLASSES: Final[tuple[str, ...]] = (
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+)
+
+# Main road classes (trunk and primary national roads).
+MAIN_ROAD_CLASSES: Final[tuple[str, ...]] = ("motorway", "trunk", "primary")
+
+# All drivable road classes, from motorways down to driveways and tracks.
+DRIVABLE_ROAD_CLASSES: Final[tuple[str, ...]] = (
+    "motorway",
+    "trunk",
+    "primary",
+    "secondary",
+    "tertiary",
+    "unclassified",
+    "residential",
+    "living_street",
+    "service",
+    "track",
+)
+
+# Values of ``surface=*`` that mean a road is paved.
+PAVED_SURFACES: Final[tuple[str, ...]] = ("paved", "asphalt", "concrete")
+
+# Values of ``protect_class=*`` that make a protected area significant
+# regardless of its measured area.
+SIGNIFICANT_PROTECT_CLASSES: Final[tuple[str, ...]] = ("1", "1a", "1b", "2", "3", "4")
+
 
 __all__ = (
+    "DRIVABLE_ROAD_CLASSES",
     "GROCERY_SHOPS",
-    "MAJOR_SETTLEMENT_PLACES",
+    "MAIN_ROAD_CLASSES",
     "PAVED_ROAD_CLASSES",
+    "PAVED_SURFACES",
     "PLACE_TIERS",
     "POWER_LINE_KINDS",
     "RAILWAY_STATION_KINDS",
+    "SETTLEMENT_PLACES",
     "SIGNIFICANT_PROTECT_CLASSES",
-    "UNPAVED_SURFACES",
 )

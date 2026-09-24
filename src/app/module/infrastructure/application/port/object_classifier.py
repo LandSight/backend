@@ -34,6 +34,11 @@ class InfrastructureObjectClassifier(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def is_main_road(self, obj: InfrastructureObject) -> bool:
+        """Return whether a road object is a main (trunk or primary) road."""
+        raise NotImplementedError
+
+    @abstractmethod
     def is_significant_protected_area(self, obj: InfrastructureObject) -> bool:
         """Return whether a protected area is significant regardless of its area."""
         raise NotImplementedError

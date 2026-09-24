@@ -87,17 +87,18 @@ class CalculateInfrastructureMetricsUseCase(
         ecology = self._handle_ecology
         utility = self._handle_utility
         self._handlers: dict[Category, _Handler] = {
-            Category.SCHOOL: facility,
             Category.HOSPITAL: facility,
             Category.GROCERY: facility,
             Category.BUS_STOP: facility,
             Category.RAILWAY_STATION: facility,
+            Category.POLICE: facility,
+            Category.FIRE_STATION: facility,
+            Category.PHARMACY: facility,
+            Category.WATER_SOURCE: facility,
             Category.WATER_BODY: ecology,
             Category.FOREST: ecology,
             Category.PROTECTED_AREA: ecology,
             Category.POWER_LINE: utility,
-            Category.GAS_PIPELINE: utility,
-            Category.WATER_PIPELINE: utility,
             Category.ROAD_ACCESSIBILITY: self._handle_road_accessibility,
             Category.GEOGRAPHIC_POSITION: self._handle_geographic_position,
         }
@@ -264,9 +265,13 @@ class CalculateInfrastructureMetricsUseCase(
         category: Category,  # noqa: ARG002
     ) -> RoadAccessibilityMetricsResponse:
         roads = await self._local_infrastructure_repository.get_line_objects(buffer_zone, Category.ROAD_ACCESSIBILITY)
+
         paved_roads = [road for road in roads if self._object_classifier.is_paved_road(road)]
+        main_roads = [road for road in roads if self._object_classifier.is_main_road(road)]
 
         distance_to_paved_road = self._infrastructure_metrics_service.min_distance(paved_roads, buffer_zone.inner)
+        distance_to_main_road = self._infrastructure_metrics_service.min_distance(main_roads, buffer_zone.inner)
+        distance_to_any_road = self._infrastructure_metrics_service.min_distance(roads, buffer_zone.inner)
         road_density = self._infrastructure_metrics_service.line_density(roads, buffer_zone)
 
         metrics = RoadAccessibilityMetrics(
@@ -274,6 +279,8 @@ class CalculateInfrastructureMetricsUseCase(
             parcel_id=parcel_id,
             buffer=buffer,
             distance_to_paved_road=distance_to_paved_road,
+            distance_to_main_road=distance_to_main_road,
+            distance_to_any_road=distance_to_any_road,
             road_density_1km=road_density,
         )
         await self._metrics_repository.save_road_accessibility(metrics)
@@ -281,6 +288,8 @@ class CalculateInfrastructureMetricsUseCase(
             id=id.unwrap(),
             buffer=buffer.unwrap(),
             distance_to_paved_road=distance_to_paved_road.unwrap() if distance_to_paved_road is not None else None,
+            distance_to_main_road=distance_to_main_road.unwrap() if distance_to_main_road is not None else None,
+            distance_to_any_road=distance_to_any_road.unwrap() if distance_to_any_road is not None else None,
             road_density_1km=road_density.unwrap(),
         )
 
@@ -295,27 +304,34 @@ class CalculateInfrastructureMetricsUseCase(
         objects = await self._local_infrastructure_repository.get_point_objects(
             buffer_zone, Category.GEOGRAPHIC_POSITION
         )
-        nearest = self._infrastructure_metrics_service.nearest_object(objects, buffer_zone.inner)
-        if nearest is None:
-            distance = None
-            tier = CityTier.UNKNOWN
-        else:
-            distance = self._infrastructure_metrics_service.min_distance([nearest], buffer_zone.inner)
-            tier = self._object_classifier.city_tier(nearest)
+
+        regional = [obj for obj in objects if self._object_classifier.city_tier(obj) is CityTier.REGIONAL_CENTER]
+        district = [obj for obj in objects if self._object_classifier.city_tier(obj) is CityTier.DISTRICT_CENTER]
+        local = [obj for obj in objects if self._object_classifier.city_tier(obj) is CityTier.LOCAL_TOWN]
+
+        distance_to_regional_center = self._infrastructure_metrics_service.min_distance(regional, buffer_zone.inner)
+        distance_to_district_center = self._infrastructure_metrics_service.min_distance(district, buffer_zone.inner)
+        distance_to_settlement = self._infrastructure_metrics_service.min_distance(local, buffer_zone.inner)
 
         metrics = GeographicPositionMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
-            distance_to_major_city=distance,
-            city_tier=tier,
+            distance_to_regional_center=distance_to_regional_center,
+            distance_to_district_center=distance_to_district_center,
+            distance_to_settlement=distance_to_settlement,
         )
         await self._metrics_repository.save_geographic_position(metrics)
         return GeographicPositionMetricsResponse(
             id=id.unwrap(),
             buffer=buffer.unwrap(),
-            distance_to_major_city=distance.unwrap() if distance is not None else None,
-            city_tier=tier.value,
+            distance_to_regional_center=(
+                distance_to_regional_center.unwrap() if distance_to_regional_center is not None else None
+            ),
+            distance_to_district_center=(
+                distance_to_district_center.unwrap() if distance_to_district_center is not None else None
+            ),
+            distance_to_settlement=distance_to_settlement.unwrap() if distance_to_settlement is not None else None,
         )
 
 

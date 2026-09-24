@@ -2,7 +2,7 @@
 
 from uuid import UUID  # noqa: TC003
 
-from sqlalchemy import Float, ForeignKey, Integer, Text
+from sqlalchemy import Float, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.platform.database.base import TimestampedModel
@@ -27,15 +27,20 @@ class GeographicPositionMetricsModel(TimestampedModel):
         nullable=False,
         comment="Search radius in meters around the parcel boundary",
     )
-    distance_to_major_city: Mapped[float | None] = mapped_column(
+    distance_to_regional_center: Mapped[float | None] = mapped_column(
         Float,
         nullable=True,
-        comment="Distance to the nearest major city in meters, or NULL if none found",
+        comment="Distance to the nearest regional center in meters, or NULL if none found",
     )
-    city_tier: Mapped[str] = mapped_column(
-        Text,
-        nullable=False,
-        comment="Tier of the nearest major city (regional_center, district_center, local_town, unknown)",
+    distance_to_district_center: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Distance to the nearest district center in meters, or NULL if none found",
+    )
+    distance_to_settlement: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Distance to the nearest local settlement in meters, or NULL if none found",
     )
 
 

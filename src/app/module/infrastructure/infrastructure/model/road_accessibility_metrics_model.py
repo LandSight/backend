@@ -32,6 +32,16 @@ class RoadAccessibilityMetricsModel(TimestampedModel):
         nullable=True,
         comment="Distance to the nearest paved road in meters, or NULL if none found",
     )
+    distance_to_main_road: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Distance to the nearest main road in meters, or NULL if none found",
+    )
+    distance_to_any_road: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Distance to the nearest drivable road in meters, or NULL if none found",
+    )
     road_density_1km: Mapped[float] = mapped_column(
         Float,
         nullable=False,

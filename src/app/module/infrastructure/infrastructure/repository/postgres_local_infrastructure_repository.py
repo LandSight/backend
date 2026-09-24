@@ -12,7 +12,7 @@ from shapely.geometry import (
     Point as ShapelyPoint,
     Polygon as ShapelyPolygon,
 )
-from sqlalchemy import and_, false, func, or_, select
+from sqlalchemy import false, func, or_, select
 
 from app.module.infrastructure.application.port import LocalInfrastructureRepository
 from app.module.infrastructure.domain.entity import InfrastructureObject
@@ -27,11 +27,11 @@ from app.module.infrastructure.infrastructure.model import (
     PlanetOsmPolygonModel,
 )
 from app.module.infrastructure.infrastructure.osm_tags import (
+    DRIVABLE_ROAD_CLASSES,
     GROCERY_SHOPS,
-    MAJOR_SETTLEMENT_PLACES,
-    PAVED_ROAD_CLASSES,
     POWER_LINE_KINDS,
     RAILWAY_STATION_KINDS,
+    SETTLEMENT_PLACES,
 )
 from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
 from app.module.shared.infrastructure.geo import Srid
@@ -140,8 +140,6 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
         tags = model.tags
 
         if source == "point":
-            if category == Category.SCHOOL:
-                return tags["amenity"] == "school"
             if category == Category.HOSPITAL:
                 return tags["amenity"] == "hospital"
             if category == Category.GROCERY:
@@ -150,24 +148,29 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
                 return tags["highway"] == "bus_stop"
             if category == Category.RAILWAY_STATION:
                 return tags["railway"].in_(RAILWAY_STATION_KINDS)
+            if category == Category.POLICE:
+                return tags["amenity"] == "police"
+            if category == Category.FIRE_STATION:
+                return tags["amenity"] == "fire_station"
+            if category == Category.PHARMACY:
+                return tags["amenity"] == "pharmacy"
+            if category == Category.WATER_SOURCE:
+                return or_(
+                    tags["amenity"] == "drinking_water",
+                    tags["man_made"].in_(("water_well", "water_tap", "water_point")),
+                )
             if category == Category.GEOGRAPHIC_POSITION:
-                return tags["place"].in_(MAJOR_SETTLEMENT_PLACES)
+                return tags["place"].in_(SETTLEMENT_PLACES)
 
         if source == "line":
             if category == Category.ROAD_ACCESSIBILITY:
-                return tags["highway"].in_(PAVED_ROAD_CLASSES)
+                return tags["highway"].in_(DRIVABLE_ROAD_CLASSES)
             if category == Category.WATER_BODY:
                 return tags["waterway"] == "river"
             if category == Category.POWER_LINE:
                 return tags["power"].in_(POWER_LINE_KINDS)
-            if category == Category.GAS_PIPELINE:
-                return and_(tags["man_made"] == "pipeline", tags["substance"] == "gas")
-            if category == Category.WATER_PIPELINE:
-                return and_(tags["man_made"] == "pipeline", tags["substance"] == "water")
 
         if source == "polygon":
-            if category == Category.SCHOOL:
-                return tags["amenity"] == "school"
             if category == Category.HOSPITAL:
                 return tags["amenity"] == "hospital"
             if category == Category.GROCERY:
@@ -176,6 +179,12 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
                 return tags["highway"] == "bus_stop"
             if category == Category.RAILWAY_STATION:
                 return tags["railway"].in_(RAILWAY_STATION_KINDS)
+            if category == Category.POLICE:
+                return tags["amenity"] == "police"
+            if category == Category.FIRE_STATION:
+                return tags["amenity"] == "fire_station"
+            if category == Category.PHARMACY:
+                return tags["amenity"] == "pharmacy"
             if category == Category.WATER_BODY:
                 return or_(tags["natural"] == "water", tags["landuse"] == "reservoir")
             if category == Category.FOREST:

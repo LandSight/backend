@@ -50,17 +50,18 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
         ecology = self._handle_ecology
         utility = self._handle_utility
         self._handlers: dict[Category, _Handler] = {
-            Category.SCHOOL: facility,
             Category.HOSPITAL: facility,
             Category.GROCERY: facility,
             Category.BUS_STOP: facility,
             Category.RAILWAY_STATION: facility,
+            Category.POLICE: facility,
+            Category.FIRE_STATION: facility,
+            Category.PHARMACY: facility,
+            Category.WATER_SOURCE: facility,
             Category.WATER_BODY: ecology,
             Category.FOREST: ecology,
             Category.PROTECTED_AREA: ecology,
             Category.POWER_LINE: utility,
-            Category.GAS_PIPELINE: utility,
-            Category.WATER_PIPELINE: utility,
             Category.ROAD_ACCESSIBILITY: self._handle_road_accessibility,
             Category.GEOGRAPHIC_POSITION: self._handle_geographic_position,
         }
@@ -170,6 +171,12 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             distance_to_paved_road=(
                 entity.distance_to_paved_road.unwrap() if entity.distance_to_paved_road is not None else None
             ),
+            distance_to_main_road=(
+                entity.distance_to_main_road.unwrap() if entity.distance_to_main_road is not None else None
+            ),
+            distance_to_any_road=(
+                entity.distance_to_any_road.unwrap() if entity.distance_to_any_road is not None else None
+            ),
             road_density_1km=entity.road_density_1km.unwrap(),
         )
 
@@ -185,10 +192,15 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
         return GeographicPositionMetricsResponse(
             id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
-            distance_to_major_city=(
-                entity.distance_to_major_city.unwrap() if entity.distance_to_major_city is not None else None
+            distance_to_regional_center=(
+                entity.distance_to_regional_center.unwrap() if entity.distance_to_regional_center is not None else None
             ),
-            city_tier=entity.city_tier.value,
+            distance_to_district_center=(
+                entity.distance_to_district_center.unwrap() if entity.distance_to_district_center is not None else None
+            ),
+            distance_to_settlement=(
+                entity.distance_to_settlement.unwrap() if entity.distance_to_settlement is not None else None
+            ),
         )
 
 

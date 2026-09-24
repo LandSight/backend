@@ -17,7 +17,6 @@ from app.module.infrastructure.domain.entity import (
 from app.module.infrastructure.domain.value_object import (
     Buffer,
     Category,
-    CityTier,
     Count,
     CoverageRatio,
     Density,
@@ -234,6 +233,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             distance_to_paved_road=(
                 metrics.distance_to_paved_road.unwrap() if metrics.distance_to_paved_road is not None else None
             ),
+            distance_to_main_road=(
+                metrics.distance_to_main_road.unwrap() if metrics.distance_to_main_road is not None else None
+            ),
+            distance_to_any_road=(
+                metrics.distance_to_any_road.unwrap() if metrics.distance_to_any_road is not None else None
+            ),
             road_density_1km=metrics.road_density_1km.unwrap(),
         )
         await self._insert(model)
@@ -280,10 +285,19 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             id=metrics.id.unwrap(),
             parcel_id=metrics.parcel_id.unwrap(),
             buffer=metrics.buffer.unwrap(),
-            distance_to_major_city=(
-                metrics.distance_to_major_city.unwrap() if metrics.distance_to_major_city is not None else None
+            distance_to_regional_center=(
+                metrics.distance_to_regional_center.unwrap()
+                if metrics.distance_to_regional_center is not None
+                else None
             ),
-            city_tier=metrics.city_tier.value,
+            distance_to_district_center=(
+                metrics.distance_to_district_center.unwrap()
+                if metrics.distance_to_district_center is not None
+                else None
+            ),
+            distance_to_settlement=(
+                metrics.distance_to_settlement.unwrap() if metrics.distance_to_settlement is not None else None
+            ),
         )
         await self._insert(model)
 
@@ -444,6 +458,12 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             distance_to_paved_road=(
                 Distance(model.distance_to_paved_road) if model.distance_to_paved_road is not None else None
             ),
+            distance_to_main_road=(
+                Distance(model.distance_to_main_road) if model.distance_to_main_road is not None else None
+            ),
+            distance_to_any_road=(
+                Distance(model.distance_to_any_road) if model.distance_to_any_road is not None else None
+            ),
             road_density_1km=Density(model.road_density_1km),
         )
 
@@ -454,10 +474,15 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             id=InfrastructureMetricsId(model.id),
             parcel_id=ParcelId(model.parcel_id),
             buffer=Buffer(model.buffer),
-            distance_to_major_city=(
-                Distance(model.distance_to_major_city) if model.distance_to_major_city is not None else None
+            distance_to_regional_center=(
+                Distance(model.distance_to_regional_center) if model.distance_to_regional_center is not None else None
             ),
-            city_tier=CityTier(model.city_tier),
+            distance_to_district_center=(
+                Distance(model.distance_to_district_center) if model.distance_to_district_center is not None else None
+            ),
+            distance_to_settlement=(
+                Distance(model.distance_to_settlement) if model.distance_to_settlement is not None else None
+            ),
         )
 
 

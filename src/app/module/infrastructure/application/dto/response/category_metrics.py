@@ -48,6 +48,8 @@ class RoadAccessibilityMetricsResponse:
     id: UUID
     buffer: int
     distance_to_paved_road: float | None
+    distance_to_main_road: float | None
+    distance_to_any_road: float | None
     road_density_1km: float
 
 
@@ -57,8 +59,9 @@ class GeographicPositionMetricsResponse:
 
     id: UUID
     buffer: int
-    distance_to_major_city: float | None
-    city_tier: str
+    distance_to_regional_center: float | None
+    distance_to_district_center: float | None
+    distance_to_settlement: float | None
 
 
 # Union of all per-category metrics responses.
