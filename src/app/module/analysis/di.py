@@ -22,6 +22,7 @@ from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
     DeleteAnalysisUseCase,
     FailAnalysisUseCase,
+    GetAnalysisEvaluationUseCase,
     GetAnalysisMetricsUseCase,
     GetAnalysisUseCase,
     ListUserAnalysesUseCase,
@@ -29,14 +30,15 @@ from app.module.analysis.application.use_case import (
     StartAnalysisUseCase,
 )
 from app.module.analysis.domain.analysis_policy import INFRASTRUCTURE_BUFFERS
+from app.module.analysis.domain.value_object import AnalysisType
 from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
 from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
 from app.module.analysis.infrastructure.reader import MetricsReaderImpl
 from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
-from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository
-from app.module.analysis.infrastructure.scoring import RandomAnalysisScorer
+from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository, YamlEngineConfigRepository
+from app.module.analysis.infrastructure.scorer import HmcdaAnalysisScorer, build_hmcda_profile
 from app.module.analysis.infrastructure.uow import SqlAlchemyUnitOfWork
 from app.module.analysis.interface.internal.api import AnalysisInternal
 from app.module.climate.interface.internal.port import ClimateInternalAPI
@@ -69,9 +71,23 @@ def provide_owned_parcels_provider(
     return OwnedParcelsProviderImpl(parcel_api)
 
 
+# ----- Engine configuration -----
+def provide_yaml_engine_config_repository() -> YamlEngineConfigRepository:
+    return YamlEngineConfigRepository()
+
+
 # ----- Scoring -----
-def provide_random_analysis_scorer() -> RandomAnalysisScorer:
-    return RandomAnalysisScorer()
+def provide_analysis_scorer(
+    yaml_engine_config_repository: NamedDependency[YamlEngineConfigRepository],
+) -> HmcdaAnalysisScorer:
+    profiles = {
+        analysis_type: build_hmcda_profile(
+            yaml_engine_config_repository.get_hierarchy(analysis_type),
+            yaml_engine_config_repository.get_fuzzy_functions(analysis_type),
+        )
+        for analysis_type in AnalysisType
+    }
+    return HmcdaAnalysisScorer(profiles)
 
 
 # ----- Task queue -----
@@ -109,6 +125,13 @@ def provide_get_analysis_metrics_use_case(
     return GetAnalysisMetricsUseCase(analysis_repository, analysis_permission_service)
 
 
+def provide_get_analysis_evaluation_use_case(
+    analysis_repository: NamedDependency[PostgresAnalysisRepository],
+    analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+) -> GetAnalysisEvaluationUseCase:
+    return GetAnalysisEvaluationUseCase(analysis_repository, analysis_permission_service)
+
+
 def provide_list_user_analyses_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
@@ -129,6 +152,7 @@ def provide_analysis_internal(
     start_analysis_use_case: NamedDependency[StartAnalysisUseCase],
     get_analysis_use_case: NamedDependency[GetAnalysisUseCase],
     get_analysis_metrics_use_case: NamedDependency[GetAnalysisMetricsUseCase],
+    get_analysis_evaluation_use_case: NamedDependency[GetAnalysisEvaluationUseCase],
     list_user_analyses_use_case: NamedDependency[ListUserAnalysesUseCase],
     delete_analysis_use_case: NamedDependency[DeleteAnalysisUseCase],
 ) -> AnalysisInternal:
@@ -136,6 +160,7 @@ def provide_analysis_internal(
         start_analysis_use_case,
         get_analysis_use_case,
         get_analysis_metrics_use_case,
+        get_analysis_evaluation_use_case,
         list_user_analyses_use_case,
         delete_analysis_use_case,
     )
@@ -218,12 +243,18 @@ analysis_dependencies = {
     "analysis_repository": Provide(provide_postgres_analysis_repository, sync_to_thread=False),
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
     "owned_parcels_provider": Provide(provide_owned_parcels_provider, sync_to_thread=False),
-    "analysis_scorer": Provide(provide_random_analysis_scorer, sync_to_thread=False),
+    "yaml_engine_config_repository": Provide(
+        provide_yaml_engine_config_repository,
+        use_cache=True,
+        sync_to_thread=False,
+    ),
+    "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
     "metrics_remover": Provide(provide_metrics_remover, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),
     "start_analysis_use_case": Provide(provide_start_analysis_use_case, sync_to_thread=False),
     "get_analysis_use_case": Provide(provide_get_analysis_use_case, sync_to_thread=False),
     "get_analysis_metrics_use_case": Provide(provide_get_analysis_metrics_use_case, sync_to_thread=False),
+    "get_analysis_evaluation_use_case": Provide(provide_get_analysis_evaluation_use_case, sync_to_thread=False),
     "list_user_analyses_use_case": Provide(provide_list_user_analyses_use_case, sync_to_thread=False),
     "delete_analysis_use_case": Provide(provide_delete_analysis_use_case, sync_to_thread=False),
     "analysis_api": Provide(provide_analysis_internal, sync_to_thread=False),

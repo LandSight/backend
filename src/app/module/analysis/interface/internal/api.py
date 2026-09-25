@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, override
 from app.module.analysis.application.dto.command import (
     DeleteAnalysisCommand,
     GetAnalysisCommand,
+    GetAnalysisEvaluationCommand,
     GetAnalysisMetricsCommand,
     ListUserAnalysesCommand,
     StartAnalysisCommand,
@@ -19,6 +20,7 @@ from app.module.analysis.interface.internal.dto import (
     AnalysisMetricResult,
     AnalysisResult,
     DeleteAnalysisInput,
+    GetAnalysisEvaluationInput,
     GetAnalysisInput,
     GetAnalysisMetricsInput,
     ListUserAnalysesInput,
@@ -28,9 +30,14 @@ from app.module.analysis.interface.internal.port import AnalysisInternalAPI
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.application.dto.response import AnalysisMetricResponse, AnalysisResponse
+    from app.module.analysis.application.dto.response import (
+        AnalysisEvaluationResponse,
+        AnalysisMetricResponse,
+        AnalysisResponse,
+    )
     from app.module.analysis.application.use_case import (
         DeleteAnalysisUseCase,
+        GetAnalysisEvaluationUseCase,
         GetAnalysisMetricsUseCase,
         GetAnalysisUseCase,
         ListUserAnalysesUseCase,
@@ -46,12 +53,14 @@ class AnalysisInternal(AnalysisInternalAPI):
         start_analysis_use_case: StartAnalysisUseCase,
         get_analysis_use_case: GetAnalysisUseCase,
         get_analysis_metrics_use_case: GetAnalysisMetricsUseCase,
+        get_analysis_evaluation_use_case: GetAnalysisEvaluationUseCase,
         list_user_analyses_use_case: ListUserAnalysesUseCase,
         delete_analysis_use_case: DeleteAnalysisUseCase,
     ) -> None:
         self._start_analysis = start_analysis_use_case
         self._get_analysis = get_analysis_use_case
         self._get_analysis_metrics = get_analysis_metrics_use_case
+        self._get_analysis_evaluation = get_analysis_evaluation_use_case
         self._list_user_analyses = list_user_analyses_use_case
         self._delete_analysis = delete_analysis_use_case
 
@@ -90,6 +99,19 @@ class AnalysisInternal(AnalysisInternalAPI):
             )
         )
         return [self._to_metric_result(result) for result in results]
+
+    @override
+    async def get_analysis_evaluation(
+        self,
+        input_data: GetAnalysisEvaluationInput,
+    ) -> AnalysisEvaluationResponse:
+        """See :meth:`AnalysisInternalAPI.get_analysis_evaluation`."""
+        return await self._get_analysis_evaluation(
+            GetAnalysisEvaluationCommand(
+                analysis_id=input_data.analysis_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
 
     @override
     async def list_user_analyses(self, input_data: ListUserAnalysesInput) -> list[AnalysisResult]:

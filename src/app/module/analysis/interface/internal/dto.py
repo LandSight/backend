@@ -41,6 +41,14 @@ class GetAnalysisMetricsInput:
 
 
 @dataclass(frozen=True, slots=True)
+class GetAnalysisEvaluationInput:
+    """Input for retrieving the stored evaluation of an analysis."""
+
+    analysis_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
 class ListUserAnalysesInput:
     """Input for listing all analyses of a user."""
 
@@ -86,6 +94,7 @@ __all__ = (
     "AnalysisMetricResult",
     "AnalysisResult",
     "DeleteAnalysisInput",
+    "GetAnalysisEvaluationInput",
     "GetAnalysisInput",
     "GetAnalysisMetricsInput",
     "ListUserAnalysesInput",

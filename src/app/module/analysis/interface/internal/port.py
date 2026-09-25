@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from app.module.analysis.application.dto.response import AnalysisEvaluationResponse
     from app.module.analysis.interface.internal.dto import (
         AnalysisMetricResult,
         AnalysisResult,
         DeleteAnalysisInput,
+        GetAnalysisEvaluationInput,
         GetAnalysisInput,
         GetAnalysisMetricsInput,
         ListUserAnalysesInput,
@@ -38,6 +40,14 @@ class AnalysisInternalAPI(ABC):
     @abstractmethod
     async def get_analysis_metrics(self, input_data: GetAnalysisMetricsInput) -> list[AnalysisMetricResult]:
         """Retrieve the metric references recorded for an analysis."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_analysis_evaluation(
+        self,
+        input_data: GetAnalysisEvaluationInput,
+    ) -> AnalysisEvaluationResponse:
+        """Retrieve the stored evaluation tree of an analysis."""
         raise NotImplementedError
 
     @abstractmethod
