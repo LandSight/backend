@@ -1,4 +1,4 @@
-from .base import BaseValueObject
+from .base import BaseCompositeValueObject, BaseValueObject
 from .bounding_box import BoundingBox
 from .entity_id import EntityIdUUID6ValueObject
 from .geo_point import GeoPoint
@@ -11,6 +11,7 @@ from .raster_data_array import RasterDataArray
 
 
 __all__ = (
+    "BaseCompositeValueObject",
     "BaseValueObject",
     "BoundingBox",
     "EntityIdUUID6ValueObject",
