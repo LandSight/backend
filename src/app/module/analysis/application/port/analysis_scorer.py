@@ -7,30 +7,42 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from app.module.analysis.application.port.metrics_reader import MetricsResponse
-    from app.module.analysis.domain.value_object import AnalysisScore
+    from app.module.analysis.domain.entity import AnalysisEvaluation
+    from app.module.analysis.domain.value_object import AnalysisType
 
 
 class AnalysisScorer(ABC):
-    """Port for computing an analysis score from collected metrics responses.
+    """Port for evaluating collected metrics into a hierarchical MCDA result.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.scoring.random_analysis_scorer.RandomAnalysisScorer`
+    - :class:`app.module.analysis.infrastructure.scorer.hmcda_analysis_scorer.HmcdaAnalysisScorer`
     """
 
     @abstractmethod
-    def score(self, metrics: list[MetricsResponse]) -> AnalysisScore:
-        """Compute the analysis score.
+    def evaluate(
+        self,
+        analysis_id: UUID,
+        metrics: list[MetricsResponse],
+        analysis_type: AnalysisType,
+    ) -> AnalysisEvaluation:
+        """Evaluate the collected metrics.
 
         Parameters
         ----------
+        analysis_id : UUID
+            ID of the analysis being scored.
         metrics : list[MetricsResponse]
             Neutral metrics responses read for the analysis.
+        analysis_type : AnalysisType
+            Evaluation profile to score with.
 
         Returns
         -------
-        AnalysisScore
-            The computed score in [0, 10].
+        AnalysisEvaluation
+            The full evaluation aggregate, including the total score in ``[0, 10]``.
         """
         raise NotImplementedError
 

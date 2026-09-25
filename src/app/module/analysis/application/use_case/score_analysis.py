@@ -83,12 +83,18 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
         values = await self._metrics_reader.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)
-        score = self._scorer.score(values)
-        analysis.complete(score)
+        evaluation = self._scorer.evaluate(command.analysis_id, values, analysis.analysis_type)
+        analysis.complete(evaluation.total_score, evaluation.model_version)
         await self._analysis_repository.save(analysis)
+        await self._analysis_repository.save_evaluation(evaluation)
         await self._unit_of_work.commit()
 
-        self._logger.info("Analysis scored: analysis_id=%s score=%s", command.analysis_id, score.unwrap())
+        self._logger.info(
+            "Analysis scored: analysis_id=%s score=%s model_version=%s",
+            command.analysis_id,
+            evaluation.total_score.unwrap(),
+            evaluation.model_version,
+        )
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
         """Roll back and persist the failure in a fresh transaction."""

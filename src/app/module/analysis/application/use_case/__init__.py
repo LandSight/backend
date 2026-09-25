@@ -6,6 +6,7 @@ from .collect_metrics import CollectMetricsUseCase
 from .delete_analysis import DeleteAnalysisUseCase
 from .fail_analysis import FailAnalysisUseCase
 from .get_analysis import GetAnalysisUseCase
+from .get_analysis_evaluation import GetAnalysisEvaluationUseCase
 from .get_analysis_metrics import GetAnalysisMetricsUseCase
 from .list_user_analyses import ListUserAnalysesUseCase
 from .score_analysis import ScoreAnalysisUseCase
@@ -16,6 +17,7 @@ __all__ = (
     "CollectMetricsUseCase",
     "DeleteAnalysisUseCase",
     "FailAnalysisUseCase",
+    "GetAnalysisEvaluationUseCase",
     "GetAnalysisMetricsUseCase",
     "GetAnalysisUseCase",
     "ListUserAnalysesUseCase",
