@@ -12,11 +12,16 @@ class AnalysisScore(BaseValueObject[float]):
     """Final analysis score.
 
     Invariants:
-    - Must be in range [0, 10].
+    - Must be in range [0, 10]
     """
 
     _MIN_VALUE = 0.0
     _MAX_VALUE = 10.0
+
+    @property
+    def scale(self) -> str:
+        """Score scale derived from the valid value bounds."""
+        return f"{self._MIN_VALUE:g}-{self._MAX_VALUE:g}"
 
     @override
     def _normalize(self, value: float) -> float:
