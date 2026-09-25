@@ -1,0 +1,173 @@
+# Fuzzy membership functions for the IZHS evaluation profile.
+#
+# Every metric key referenced by hierarchy.yaml must be declared here. Metric
+# keys are canonical: topography and climate metrics use their own key, while
+# infrastructure metrics are namespaced as "<category>:<metric>".
+analysis_type: izhs
+
+functions:
+  # Relief - slope
+  mean_slope:
+    type: z_shaped
+    params: { optimal_max: 2, acceptable_max: 15 }
+    unit: deg
+  max_slope:
+    type: z_shaped
+    params: { optimal_max: 5, acceptable_max: 25 }
+    unit: deg
+  slope_p25:
+    type: z_shaped
+    params: { optimal_max: 1, acceptable_max: 10 }
+    unit: deg
+  slope_p50:
+    type: z_shaped
+    params: { optimal_max: 2, acceptable_max: 12 }
+    unit: deg
+  slope_p75:
+    type: z_shaped
+    params: { optimal_max: 3, acceptable_max: 15 }
+    unit: deg
+  slope_p90:
+    type: z_shaped
+    params: { optimal_max: 5, acceptable_max: 20 }
+    unit: deg
+  # Relief - elevation
+  elevation_range:
+    type: z_shaped
+    params: { optimal_max: 2, acceptable_max: 20 }
+    unit: m
+  elevation_std:
+    type: z_shaped
+    params: { optimal_max: 1, acceptable_max: 10 }
+    unit: m
+  # Relief - shape
+  area:
+    type: trapezoidal
+    params: { low: 200, optimal_min: 600, optimal_max: 2000, high: 5000 }
+    unit: m2
+  compactness_index:
+    type: s_shaped
+    params: { min: 0, max: 1 }
+  elongation_index:
+    type: z_shaped
+    params: { optimal_max: 2, acceptable_max: 5 }
+  # Climate - temperature
+  mean_annual_temperature:
+    type: trapezoidal
+    params: { low: -5, optimal_min: 3, optimal_max: 7, high: 15 }
+    unit: degC
+  min_temperature_coldest_month:
+    type: s_shaped
+    params: { min: -30, max: -10 }
+    unit: degC
+  max_temperature_warmest_month:
+    type: trapezoidal
+    params: { low: 10, optimal_min: 20, optimal_max: 25, high: 35 }
+    unit: degC
+  # Climate - precipitation
+  annual_precipitation:
+    type: trapezoidal
+    params: { low: 300, optimal_min: 500, optimal_max: 700, high: 1000 }
+    unit: mm
+  precipitation_driest_month:
+    type: s_shaped
+    params: { min: 5, max: 30 }
+    unit: mm
+  # Facility - healthcare
+  "hospital:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 1000, acceptable_max: 5000 }
+    unit: m
+  "pharmacy:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 500, acceptable_max: 2000 }
+    unit: m
+  # Facility - retail
+  "grocery:count":
+    type: s_shaped
+    params: { min: 0, max: 3 }
+  "grocery:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 300, acceptable_max: 1000 }
+    unit: m
+  # Facility - transport
+  "bus_stop:count":
+    type: s_shaped
+    params: { min: 0, max: 5 }
+  "bus_stop:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 300, acceptable_max: 1000 }
+    unit: m
+  "railway_station:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 2000, acceptable_max: 10000 }
+    unit: m
+  # Facility - safety
+  "police:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 2000, acceptable_max: 10000 }
+    unit: m
+  "fire_station:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 2000, acceptable_max: 10000 }
+    unit: m
+  # Ecology - water
+  "water_body:coverage_ratio":
+    type: s_shaped
+    params: { min: 0.01, max: 0.10 }
+  "water_body:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 500, acceptable_max: 2000 }
+    unit: m
+  "water_body:distance_to_large_object":
+    type: z_shaped
+    params: { optimal_max: 1000, acceptable_max: 5000 }
+    unit: m
+  # Ecology - forest
+  "forest:coverage_ratio":
+    type: s_shaped
+    params: { min: 0.05, max: 0.30 }
+  "forest:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 500, acceptable_max: 2000 }
+    unit: m
+  # Ecology - protected areas
+  "protected_area:min_distance_to":
+    type: s_shaped
+    params: { min: 0, max: 5000 }
+    unit: m
+  # Utility
+  "power_line:min_distance_to":
+    type: z_shaped
+    params: { optimal_max: 100, acceptable_max: 1000 }
+    unit: m
+  # Roads
+  "road_accessibility:distance_to_paved_road":
+    type: z_shaped
+    params: { optimal_max: 500, acceptable_max: 5000 }
+    unit: m
+  "road_accessibility:distance_to_main_road":
+    type: z_shaped
+    params: { optimal_max: 2000, acceptable_max: 20000 }
+    unit: m
+  "road_accessibility:distance_to_any_road":
+    type: z_shaped
+    params: { optimal_max: 200, acceptable_max: 2000 }
+    unit: m
+  "road_accessibility:road_density_1km":
+    type: trapezoidal
+    params: { low: 0.2, optimal_min: 1, optimal_max: 3, high: 6 }
+    unit: km/km2
+  # Geographic position
+  "geographic_position:distance_to_regional_center":
+    type: z_shaped
+    params: { optimal_max: 20000, acceptable_max: 150000 }
+    unit: m
+  "geographic_position:distance_to_district_center":
+    type: z_shaped
+    params: { optimal_max: 5000, acceptable_max: 50000 }
+    unit: m
+  "geographic_position:distance_to_settlement":
+    type: z_shaped
+    params: { optimal_max: 1000, acceptable_max: 10000 }
+    unit: m

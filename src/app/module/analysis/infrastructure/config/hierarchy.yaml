@@ -1,0 +1,101 @@
+# Hierarchical MCDA weights for the IZHS evaluation profile.
+#
+# Every node uses the same shape: a node with "components" is a group, a node
+# without components is a leaf metric. Metric keys are canonical: topography and
+# climate metrics use their own key, infrastructure metrics are namespaced as
+# "<category>:<metric>". Weights are relative within their group and are
+# renormalized at runtime over the nodes that actually have data.
+analysis_type: izhs
+model_version: v1.0-baseline
+
+clusters:
+  - key: relief
+    weight: 0.25
+    components:
+      - key: slope
+        weight: 0.40
+        components:
+          - { key: mean_slope, weight: 0.30 }
+          - { key: max_slope, weight: 0.20 }
+          # Higher percentiles describe the worst terrain of the parcel, so
+          # their weight grows towards the outlier.
+          - { key: slope_p25, weight: 0.05 }
+          - { key: slope_p50, weight: 0.10 }
+          - { key: slope_p75, weight: 0.15 }
+          - { key: slope_p90, weight: 0.20 }
+      - key: elevation
+        weight: 0.20
+        components:
+          - { key: elevation_range, weight: 0.60 }
+          - { key: elevation_std, weight: 0.40 }
+      - key: shape
+        weight: 0.40
+        components:
+          - { key: area, weight: 0.30 }
+          - { key: compactness_index, weight: 0.40 }
+          - { key: elongation_index, weight: 0.30 }
+
+  - key: climate
+    weight: 0.20
+    components:
+      - key: temperature
+        weight: 0.50
+        components:
+          - { key: mean_annual_temperature, weight: 0.40 }
+          - { key: min_temperature_coldest_month, weight: 0.30 }
+          - { key: max_temperature_warmest_month, weight: 0.30 }
+      - key: precipitation
+        weight: 0.50
+        components:
+          - { key: annual_precipitation, weight: 0.60 }
+          - { key: precipitation_driest_month, weight: 0.40 }
+
+  - key: infrastructure
+    weight: 0.30
+    components:
+      - key: facility
+        weight: 0.40
+        components:
+          - { key: "hospital:min_distance_to", weight: 0.15 }
+          - { key: "pharmacy:min_distance_to", weight: 0.10 }
+          - { key: "grocery:count", weight: 0.10 }
+          - { key: "grocery:min_distance_to", weight: 0.15 }
+          - { key: "bus_stop:count", weight: 0.10 }
+          - { key: "bus_stop:min_distance_to", weight: 0.15 }
+          - { key: "railway_station:min_distance_to", weight: 0.10 }
+          - { key: "police:min_distance_to", weight: 0.075 }
+          - { key: "fire_station:min_distance_to", weight: 0.075 }
+      - key: ecology
+        weight: 0.20
+        components:
+          - { key: "water_body:coverage_ratio", weight: 0.30 }
+          - { key: "water_body:min_distance_to", weight: 0.25 }
+          - { key: "water_body:distance_to_large_object", weight: 0.15 }
+          - { key: "forest:coverage_ratio", weight: 0.20 }
+          - { key: "protected_area:min_distance_to", weight: 0.10 }
+      - key: utility
+        weight: 0.10
+        components:
+          - { key: "power_line:min_distance_to", weight: 1.0 }
+      - key: road_accessibility
+        weight: 0.30
+        components:
+          - { key: "road_accessibility:distance_to_paved_road", weight: 0.40 }
+          - { key: "road_accessibility:distance_to_main_road", weight: 0.20 }
+          - { key: "road_accessibility:distance_to_any_road", weight: 0.20 }
+          - { key: "road_accessibility:road_density_1km", weight: 0.20 }
+
+  - key: ecology_recreation
+    weight: 0.15
+    components:
+      - { key: "water_body:coverage_ratio", weight: 0.35 }
+      - { key: "water_body:min_distance_to", weight: 0.25 }
+      - { key: "forest:coverage_ratio", weight: 0.25 }
+      - { key: "protected_area:min_distance_to", weight: 0.15 }
+
+  - key: geographic_position
+    weight: 0.10
+    components:
+      - { key: "geographic_position:distance_to_regional_center", weight: 0.50 }
+      - { key: "geographic_position:distance_to_district_center", weight: 0.30 }
+      - { key: "geographic_position:distance_to_settlement", weight: 0.20 }
