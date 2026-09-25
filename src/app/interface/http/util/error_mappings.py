@@ -12,6 +12,7 @@ from litestar.status_codes import (
 )
 
 from app.module.analysis.application.error import (
+    AnalysisEvaluationNotAvailableError,
     AnalysisNotDeletableError,
     AnalysisNotFoundError,
 )
@@ -131,6 +132,7 @@ def _get_analysis_application_error_mappings() -> dict[type[ApplicationError], i
     return {
         AnalysisNotFoundError: HTTP_404_NOT_FOUND,
         AnalysisNotDeletableError: HTTP_409_CONFLICT,
+        AnalysisEvaluationNotAvailableError: HTTP_404_NOT_FOUND,
     }
 
 

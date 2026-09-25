@@ -71,8 +71,53 @@ class AnalysisMetricSchema(BaseModel):
     metrics_id: UUID = Field(description="ID of the persisted metrics snapshot.")
 
 
+class MetricContributionSchema(BaseModel):
+    """Response body for one metric contribution in an evaluation."""
+
+    key: str = Field(description="Metric key.")
+    raw_value: float | None = Field(default=None, description="Raw reading; null when unavailable.")
+    normalized_value: float | None = Field(default=None, description="Normalized value in [0, 1].")
+    weight: float = Field(description="Configured weight among siblings.")
+    contribution: float | None = Field(default=None, description="Weighted contribution.")
+    unit: str = Field(description="Unit of the raw value.")
+    data_available: bool = Field(description="Whether a usable reading was available.")
+    membership_function: str | None = Field(default=None, description="Applied membership function.")
+    membership_params: dict[str, float] | None = Field(
+        default=None,
+        description="Parameters of the applied membership function.",
+    )
+
+
+class ClusterScoreSchema(BaseModel):
+    """Response body for a group score.
+
+    The same shape represents a top-level cluster and a nested subcluster.
+    """
+
+    key: str = Field(description="Group key.")
+    score: float = Field(description="Aggregated score in [0, 1].")
+    weight: float = Field(description="Configured weight within the parent.")
+    contribution: float = Field(description="score * weight.")
+    subclusters: list[ClusterScoreSchema] = Field(default_factory=list)
+    metrics: list[MetricContributionSchema] = Field(default_factory=list)
+
+
+class AnalysisEvaluationSchema(BaseModel):
+    """Response body for a full evaluation tree."""
+
+    analysis_id: str = Field(description="Analysis identifier.")
+    analysis_type: str = Field(description="Evaluation profile (e.g. izhs).")
+    model_version: str = Field(description="Version of the scoring model.")
+    total_score: float = Field(description="Final score on the 0-10 scale.")
+    scale: str = Field(description="Score scale.")
+    clusters: list[ClusterScoreSchema] = Field(default_factory=list)
+
+
 __all__ = (
+    "AnalysisEvaluationSchema",
     "AnalysisMetricSchema",
     "AnalysisResponse",
+    "ClusterScoreSchema",
+    "MetricContributionSchema",
     "StartAnalysisRequest",
 )

@@ -9,15 +9,24 @@ from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_204_NO_CONTENT
 
 from app.interface.http.schema.analysis import (
+    AnalysisEvaluationSchema,
     AnalysisMetricSchema,
     AnalysisResponse,
+    ClusterScoreSchema,
+    MetricContributionSchema,
     StartAnalysisRequest,
 )
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.util.guards import require_authorization
+from app.module.analysis.application.dto.response import (
+    AnalysisEvaluationResponse,
+    ClusterScoreResponse,
+    MetricContributionResponse,
+)
 from app.module.analysis.interface.internal.dto import (
     AnalysisResult,
     DeleteAnalysisInput,
+    GetAnalysisEvaluationInput,
     GetAnalysisInput,
     GetAnalysisMetricsInput,
     ListUserAnalysesInput,
@@ -117,6 +126,23 @@ class AnalysisController(Controller):
             for result in results
         ]
 
+    @get(
+        "/{analysis_id:uuid}/evaluation",
+        status_code=HTTP_200_OK,
+        description="Get the stored evaluation tree of a completed analysis.",
+    )
+    async def get_analysis_evaluation(
+        self,
+        analysis_id: UUID,
+        analysis_api: AnalysisInternalAPI,
+        current_user: CurrentUser,
+    ) -> AnalysisEvaluationSchema:
+        """Get the stored evaluation tree of a completed analysis."""
+        result = await analysis_api.get_analysis_evaluation(
+            GetAnalysisEvaluationInput(analysis_id=analysis_id, current_user_id=current_user.id),
+        )
+        return self._to_evaluation_schema(result)
+
     @delete(
         "/{analysis_id:uuid}",
         status_code=HTTP_204_NO_CONTENT,
@@ -149,6 +175,45 @@ class AnalysisController(Controller):
             status_reason=result.status_reason,
             created_at=result.created_at,
             completed_at=result.completed_at,
+        )
+
+    @classmethod
+    def _to_evaluation_schema(cls, result: AnalysisEvaluationResponse) -> AnalysisEvaluationSchema:
+        """Map an application evaluation DTO to the HTTP response schema."""
+        return AnalysisEvaluationSchema(
+            analysis_id=result.analysis_id,
+            analysis_type=result.analysis_type,
+            model_version=result.model_version,
+            total_score=result.total_score,
+            scale=result.scale,
+            clusters=[cls._to_cluster_schema(cluster) for cluster in result.clusters],
+        )
+
+    @classmethod
+    def _to_cluster_schema(cls, cluster: ClusterScoreResponse) -> ClusterScoreSchema:
+        """Map a group score DTO to a schema, recursing into subclusters."""
+        return ClusterScoreSchema(
+            key=cluster.key,
+            score=cluster.score,
+            weight=cluster.weight,
+            contribution=cluster.contribution,
+            subclusters=[cls._to_cluster_schema(subcluster) for subcluster in cluster.subclusters],
+            metrics=[cls._to_metric_schema(metric) for metric in cluster.metrics],
+        )
+
+    @classmethod
+    def _to_metric_schema(cls, metric: MetricContributionResponse) -> MetricContributionSchema:
+        """Map a metric contribution DTO to a schema."""
+        return MetricContributionSchema(
+            key=metric.key,
+            raw_value=metric.raw_value,
+            normalized_value=metric.normalized_value,
+            weight=metric.weight,
+            contribution=metric.contribution,
+            unit=metric.unit,
+            data_available=metric.data_available,
+            membership_function=metric.membership_function,
+            membership_params=dict(metric.membership_params) if metric.membership_params else None,
         )
 
 
