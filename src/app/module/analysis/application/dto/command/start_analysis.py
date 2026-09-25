@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from app.module.analysis.domain.value_object import AnalysisType
+
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -22,11 +24,14 @@ class StartAnalysisCommand:
         ID of the user performing the request.
     name : str
         Human-readable name of the analysis.
+    analysis_type : AnalysisType
+        Evaluation profile to run.
     """
 
     parcel_id: UUID
     current_user_id: UUID
     name: str
+    analysis_type: AnalysisType = AnalysisType.IZHS
 
 
 __all__ = ("StartAnalysisCommand",)

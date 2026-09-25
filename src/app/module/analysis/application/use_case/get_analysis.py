@@ -76,11 +76,14 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
             parcel_id=analysis.parcel_id.unwrap(),
             parcel_name=parcel_name,
             name=analysis.name.unwrap(),
+            analysis_type=analysis.analysis_type.value,
             status=analysis.status.value,
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
+            model_version=analysis.model_version,
             status_reason=analysis.status_reason,
             created_at=analysis.created_at,
+            completed_at=analysis.completed_at,
         )
 
 

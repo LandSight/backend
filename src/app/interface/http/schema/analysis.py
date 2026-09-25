@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.module.analysis.domain.value_object import AnalysisType
+
 
 class StartAnalysisRequest(BaseModel):
     """Request body for starting an analysis."""
@@ -16,6 +18,10 @@ class StartAnalysisRequest(BaseModel):
         min_length=3,
         max_length=64,
         description="Human-readable name of the analysis.",
+    )
+    analysis_type: AnalysisType = Field(
+        default=AnalysisType.IZHS,
+        description="Evaluation profile. Only 'izhs' (individual housing construction) is available today.",
     )
 
 
@@ -29,11 +35,16 @@ class AnalysisResponse(BaseModel):
         description="Human-readable name of the parcel; null if it could not be resolved.",
     )
     name: str = Field(description="Human-readable name of the analysis.")
+    analysis_type: str = Field(description="Evaluation profile (e.g. izhs).")
     status: str = Field(description="Lifecycle status (pending/running/completed/failed).")
     stage: str = Field(description="Pipeline stage (metrics/scoring).")
     score: float | None = Field(
         default=None,
         description="Final score in [0, 10]; null until the analysis is completed.",
+    )
+    model_version: str | None = Field(
+        default=None,
+        description="Version of the scoring model; null until the analysis is completed.",
     )
     status_reason: str | None = Field(
         default=None,
@@ -42,6 +53,10 @@ class AnalysisResponse(BaseModel):
     created_at: datetime.datetime | None = Field(
         default=None,
         description="When the analysis was created (UTC).",
+    )
+    completed_at: datetime.datetime | None = Field(
+        default=None,
+        description="When the analysis was completed (UTC); null until completed.",
     )
 
 

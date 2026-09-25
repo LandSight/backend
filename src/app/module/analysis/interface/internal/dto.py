@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from app.module.analysis.domain.value_object import AnalysisType
+
 
 if TYPE_CHECKING:
     import datetime
@@ -18,6 +20,7 @@ class StartAnalysisInput:
     parcel_id: UUID
     current_user_id: UUID
     name: str
+    analysis_type: AnalysisType = AnalysisType.IZHS
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,11 +63,14 @@ class AnalysisResult:
     parcel_id: UUID
     parcel_name: str | None
     name: str
+    analysis_type: str
     status: str
     stage: str
     score: float | None
+    model_version: str | None
     status_reason: str | None
     created_at: datetime.datetime | None
+    completed_at: datetime.datetime | None
 
 
 @dataclass(frozen=True, slots=True)

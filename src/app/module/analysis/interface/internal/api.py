@@ -63,6 +63,7 @@ class AnalysisInternal(AnalysisInternalAPI):
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
                 name=input_data.name,
+                analysis_type=input_data.analysis_type,
             )
         )
         return self._to_result(result)
@@ -123,11 +124,14 @@ class AnalysisInternal(AnalysisInternalAPI):
             parcel_id=result.parcel_id,
             parcel_name=result.parcel_name,
             name=result.name,
+            analysis_type=result.analysis_type,
             status=result.status,
             stage=result.stage,
             score=result.score,
+            model_version=result.model_version,
             status_reason=result.status_reason,
             created_at=result.created_at,
+            completed_at=result.completed_at,
         )
 
 

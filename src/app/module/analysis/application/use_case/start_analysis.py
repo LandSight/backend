@@ -58,6 +58,7 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             id=AnalysisId(uuid6()),
             parcel_id=ParcelId(command.parcel_id),
             name=AnalysisName(command.name),
+            analysis_type=command.analysis_type,
         )
         saved = await self._analysis_repository.save(analysis)
         await self._task_queue.enqueue(saved.id, command.current_user_id)
@@ -74,11 +75,14 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             parcel_id=analysis.parcel_id.unwrap(),
             parcel_name=parcel_name,
             name=analysis.name.unwrap(),
+            analysis_type=analysis.analysis_type.value,
             status=analysis.status.value,
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
+            model_version=analysis.model_version,
             status_reason=analysis.status_reason,
             created_at=analysis.created_at,
+            completed_at=analysis.completed_at,
         )
 
 

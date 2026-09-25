@@ -50,6 +50,7 @@ class AnalysisController(Controller):
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 name=data.name,
+                analysis_type=data.analysis_type,
             ),
         )
         return self._to_schema(result)
@@ -140,11 +141,14 @@ class AnalysisController(Controller):
             parcel_id=result.parcel_id,
             parcel_name=result.parcel_name,
             name=result.name,
+            analysis_type=result.analysis_type,
             status=result.status,
             stage=result.stage,
             score=result.score,
+            model_version=result.model_version,
             status_reason=result.status_reason,
             created_at=result.created_at,
+            completed_at=result.completed_at,
         )
 
 

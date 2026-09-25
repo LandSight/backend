@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NoReturn, override
+import datetime
+from typing import NoReturn, override
 
 from app.module.analysis.domain.value_object import (
     AnalysisId,
@@ -10,14 +11,11 @@ from app.module.analysis.domain.value_object import (
     AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
+    AnalysisType,
     ParcelId,
 )
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
-
-
-if TYPE_CHECKING:
-    import datetime
 
 
 class Analysis(BaseEntity[AnalysisId]):
@@ -31,16 +29,22 @@ class Analysis(BaseEntity[AnalysisId]):
         ID of the parcel being analysed.
     name : AnalysisName
         Human-readable name of the analysis.
+    analysis_type : AnalysisType
+        Evaluation profile the analysis is run with.
     status : AnalysisStatus
         Current lifecycle status.
     stage : AnalysisStage
         Pipeline stage (metrics calculation or scoring).
     score : AnalysisScore | None
         Final score, set only when the analysis is completed.
+    model_version : str | None
+        Version of the scoring model, set when the analysis completes.
     status_reason : str | None
         Human-readable explanation (e.g. failure reason).
     created_at : datetime | None
         When the analysis was created (UTC); ``None`` if not yet persisted.
+    completed_at : datetime | None
+        When the analysis was completed (UTC); ``None`` until completed.
     """
 
     def __init__(
@@ -49,19 +53,25 @@ class Analysis(BaseEntity[AnalysisId]):
         parcel_id: ParcelId,
         *,
         name: AnalysisName,
+        analysis_type: AnalysisType = AnalysisType.IZHS,
         status: AnalysisStatus = AnalysisStatus.PENDING,
         stage: AnalysisStage = AnalysisStage.METRICS,
         score: AnalysisScore | None = None,
+        model_version: str | None = None,
         status_reason: str | None = None,
         created_at: datetime.datetime | None = None,
+        completed_at: datetime.datetime | None = None,
     ) -> None:
         self._parcel_id: ParcelId = parcel_id
         self._name: AnalysisName = name
+        self._analysis_type: AnalysisType = analysis_type
         self._status: AnalysisStatus = status
         self._stage: AnalysisStage = stage
         self._score: AnalysisScore | None = score
+        self._model_version: str | None = model_version
         self._status_reason: str | None = status_reason
         self._created_at: datetime.datetime | None = created_at
+        self._completed_at: datetime.datetime | None = completed_at
 
         super().__init__(id)
 
@@ -75,6 +85,12 @@ class Analysis(BaseEntity[AnalysisId]):
             raise InvariantViolationError(message)
         if self._status is AnalysisStatus.COMPLETED and self._stage is not AnalysisStage.SCORING:
             message = "A completed analysis must have finished the scoring stage."
+            raise InvariantViolationError(message)
+        if self._status is AnalysisStatus.COMPLETED and self._model_version is None:
+            message = "A completed analysis must carry a model version."
+            raise InvariantViolationError(message)
+        if self._status is not AnalysisStatus.COMPLETED and self._model_version is not None:
+            message = "Only a completed analysis may carry a model version."
             raise InvariantViolationError(message)
         if self._status is AnalysisStatus.FAILED and not self._status_reason:
             message = "A failed analysis must carry a status reason."
@@ -96,7 +112,7 @@ class Analysis(BaseEntity[AnalysisId]):
             raise InvariantViolationError(message)
         self._stage = AnalysisStage.SCORING
 
-    def complete(self, score: AnalysisScore, reason: str | None = None) -> None:
+    def complete(self, score: AnalysisScore, model_version: str, reason: str | None = None) -> None:
         """Transition the analysis to ``COMPLETED`` with its final score."""
         if self._status is not AnalysisStatus.RUNNING:
             self._raise_invalid_transition(AnalysisStatus.RUNNING)
@@ -104,7 +120,9 @@ class Analysis(BaseEntity[AnalysisId]):
             message = "Cannot complete an analysis before its metrics are calculated."
             raise InvariantViolationError(message)
         self._score = score
+        self._model_version = model_version
         self._status_reason = reason
+        self._completed_at = datetime.datetime.now(tz=datetime.UTC)
         self._status = AnalysisStatus.COMPLETED
 
     def fail(self, reason: str) -> None:
@@ -129,6 +147,11 @@ class Analysis(BaseEntity[AnalysisId]):
         return self._name
 
     @property
+    def analysis_type(self) -> AnalysisType:
+        """Evaluation profile the analysis is run with."""
+        return self._analysis_type
+
+    @property
     def status(self) -> AnalysisStatus:
         """Current lifecycle status."""
         return self._status
@@ -144,6 +167,11 @@ class Analysis(BaseEntity[AnalysisId]):
         return self._score
 
     @property
+    def model_version(self) -> str | None:
+        """Version of the scoring model, set only when completed."""
+        return self._model_version
+
+    @property
     def status_reason(self) -> str | None:
         """Human-readable status explanation."""
         return self._status_reason
@@ -152,6 +180,11 @@ class Analysis(BaseEntity[AnalysisId]):
     def created_at(self) -> datetime.datetime | None:
         """When the analysis was created (UTC)."""
         return self._created_at
+
+    @property
+    def completed_at(self) -> datetime.datetime | None:
+        """When the analysis was completed (UTC)."""
+        return self._completed_at
 
 
 __all__ = ("Analysis",)
