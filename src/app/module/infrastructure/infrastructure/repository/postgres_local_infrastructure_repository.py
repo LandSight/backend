@@ -34,7 +34,7 @@ from app.module.infrastructure.infrastructure.osm_tags import (
     SETTLEMENT_PLACES,
 )
 from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
-from app.module.shared.infrastructure.geo import Srid
+from app.module.shared.infrastructure.geo import Srid, dedupe_consecutive
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -212,22 +212,7 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
 
         wkb_element = cast("WKBElement", way_wgs84)
         shapely_geom = to_shape(wkb_element)
-
-        geometry: GeoPoint | LineString | Polygon
-        match shapely_geom:
-            case ShapelyPoint():
-                geometry = GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
-            case ShapelyLineString() | ShapelyMultiLineString():
-                line = cls._largest_line(shapely_geom)
-                points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in line.coords]
-                geometry = LineString(tuple(points))
-            case ShapelyPolygon() | ShapelyMultiPolygon():
-                polygon = cls._largest_polygon(shapely_geom)
-                points = [GeoPoint.create(float(lat), float(lon)) for lon, lat in polygon.exterior.coords]
-                geometry = Polygon(tuple(points))
-            case _:
-                message = f"Unsupported geometry type: {type(shapely_geom).__name__}."
-                raise TypeError(message)
+        geometry = cls._to_domain_geometry(shapely_geom)
 
         return InfrastructureObject(
             id=InfrastructureObjectId(str(osm_id)),
@@ -236,6 +221,26 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
             name=name,
             tags=dict(tags) if tags is not None else None,
         )
+
+    @classmethod
+    def _to_domain_geometry(cls, shapely_geom: object) -> GeoPoint | LineString | Polygon:
+        """Map a raw Shapely geometry to a normalized domain geometry."""
+        match shapely_geom:
+            case ShapelyPoint():
+                return GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
+            case ShapelyLineString() | ShapelyMultiLineString():
+                line = cls._largest_line(shapely_geom)
+                points = dedupe_consecutive(GeoPoint.create(float(lat), float(lon)) for lon, lat in line.coords)
+                return LineString(tuple(points))
+            case ShapelyPolygon() | ShapelyMultiPolygon():
+                polygon = cls._largest_polygon(shapely_geom)
+                points = dedupe_consecutive(
+                    GeoPoint.create(float(lat), float(lon)) for lon, lat in polygon.exterior.coords
+                )
+                return Polygon(tuple(points))
+            case _:
+                message = f"Unsupported geometry type: {type(shapely_geom).__name__}."
+                raise TypeError(message)
 
     @staticmethod
     def _largest_line(
