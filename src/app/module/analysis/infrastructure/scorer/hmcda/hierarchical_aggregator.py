@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from app.module.analysis.domain.value_object import (
+    AnalysisKey,
     ClusterScore,
     Contribution,
     MetricContribution,
     NormalizedMetric,
     NormalizedScore,
+    Weight,
 )
 from app.module.shared.domain.error import InvariantViolationError
 
@@ -17,7 +19,7 @@ from app.module.shared.domain.error import InvariantViolationError
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import Hierarchy, HierarchyNode
+    from app.module.analysis.infrastructure.scorer.hmcda.config.models import Hierarchy, HierarchyNode
 
 
 class HierarchicalAggregator:
@@ -34,7 +36,7 @@ class HierarchicalAggregator:
     def aggregate(self, metrics: Mapping[str, NormalizedMetric]) -> tuple[ClusterScore, ...]:
         """Aggregate normalized metrics into cluster scores."""
         clusters = tuple(
-            cluster for root in self._hierarchy.roots if (cluster := self._cluster(root, metrics)) is not None
+            cluster for root in self._hierarchy.clusters if (cluster := self._cluster(root, metrics)) is not None
         )
         if not clusters:
             message = "No cluster could be evaluated from the supplied metrics."
@@ -69,37 +71,37 @@ class HierarchicalAggregator:
     @staticmethod
     def _score(
         node: HierarchyNode,
-        score: float,
-        groups: tuple[ClusterScore, ...] | None = None,
+        score: NormalizedScore,
+        groups: tuple[ClusterScore, ...] = (),
         contributions: tuple[MetricContribution, ...] = (),
     ) -> ClusterScore:
         """Build a cluster score from either nested groups or metric contributions."""
         return ClusterScore(
-            key=node.key,
-            score=NormalizedScore(score),
-            weight=node.weight,
-            contribution=Contribution(score * node.weight.unwrap()),
-            subclusters=groups or (),
+            key=AnalysisKey(node.key),
+            score=score,
+            weight=Weight(node.weight),
+            contribution=Contribution(score.unwrap() * node.weight),
+            subclusters=groups,
             metrics=contributions,
         )
 
     @staticmethod
     def _metric(node: HierarchyNode, metrics: Mapping[str, NormalizedMetric]) -> MetricContribution:
         """Build one metric contribution from its normalized reading."""
-        normalized = metrics.get(node.key.unwrap()) or NormalizedMetric(
-            key=node.key,
+        normalized = metrics.get(node.key) or NormalizedMetric(
+            key=AnalysisKey(node.key),
             raw_value=None,
             normalized_value=None,
         )
         return MetricContribution(
-            key=node.key,
+            key=AnalysisKey(node.key),
             raw_value=normalized.raw_value,
             normalized_value=normalized.normalized_value,
-            weight=node.weight,
+            weight=Weight(node.weight),
             contribution=(
                 None
                 if normalized.normalized_value is None
-                else Contribution(normalized.normalized_value.unwrap() * node.weight.unwrap())
+                else Contribution(normalized.normalized_value.unwrap() * node.weight)
             ),
             unit=normalized.unit,
             membership_function=normalized.function_name,
@@ -107,12 +109,12 @@ class HierarchicalAggregator:
         )
 
     @staticmethod
-    def _weighted_average(pairs: list[tuple[float, float]]) -> float | None:
+    def _weighted_average(pairs: list[tuple[float, float]]) -> NormalizedScore | None:
         """Return the weight-renormalized average of ``pairs``, or ``None``."""
         total_weight = sum(weight for _, weight in pairs)
         if total_weight <= 0:
             return None
-        return sum(value * weight for value, weight in pairs) / total_weight
+        return NormalizedScore(sum(value * weight for value, weight in pairs) / total_weight)
 
 
 __all__ = ("HierarchicalAggregator",)

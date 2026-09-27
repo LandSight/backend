@@ -30,15 +30,15 @@ from app.module.analysis.application.use_case import (
     StartAnalysisUseCase,
 )
 from app.module.analysis.domain.analysis_policy import INFRASTRUCTURE_BUFFERS
-from app.module.analysis.domain.value_object import AnalysisType
 from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
 from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
 from app.module.analysis.infrastructure.reader import MetricsReaderImpl
 from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
-from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository, YamlEngineConfigRepository
-from app.module.analysis.infrastructure.scorer import HmcdaAnalysisScorer, build_hmcda_profile
+from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository
+from app.module.analysis.infrastructure.scorer import HmcdaAnalysisScorer
+from app.module.analysis.infrastructure.scorer.hmcda.config import load_engine_config
 from app.module.analysis.infrastructure.uow import SqlAlchemyUnitOfWork
 from app.module.analysis.interface.internal.api import AnalysisInternal
 from app.module.climate.interface.internal.port import ClimateInternalAPI
@@ -71,23 +71,9 @@ def provide_owned_parcels_provider(
     return OwnedParcelsProviderImpl(parcel_api)
 
 
-# ----- Engine configuration -----
-def provide_yaml_engine_config_repository() -> YamlEngineConfigRepository:
-    return YamlEngineConfigRepository()
-
-
 # ----- Scoring -----
-def provide_analysis_scorer(
-    yaml_engine_config_repository: NamedDependency[YamlEngineConfigRepository],
-) -> HmcdaAnalysisScorer:
-    profiles = {
-        analysis_type: build_hmcda_profile(
-            yaml_engine_config_repository.get_hierarchy(analysis_type),
-            yaml_engine_config_repository.get_fuzzy_functions(analysis_type),
-        )
-        for analysis_type in AnalysisType
-    }
-    return HmcdaAnalysisScorer(profiles)
+def provide_analysis_scorer() -> HmcdaAnalysisScorer:
+    return HmcdaAnalysisScorer(load_engine_config())
 
 
 # ----- Task queue -----
@@ -243,11 +229,6 @@ analysis_dependencies = {
     "analysis_repository": Provide(provide_postgres_analysis_repository, sync_to_thread=False),
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
     "owned_parcels_provider": Provide(provide_owned_parcels_provider, sync_to_thread=False),
-    "yaml_engine_config_repository": Provide(
-        provide_yaml_engine_config_repository,
-        use_cache=True,
-        sync_to_thread=False,
-    ),
     "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
     "metrics_remover": Provide(provide_metrics_remover, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),

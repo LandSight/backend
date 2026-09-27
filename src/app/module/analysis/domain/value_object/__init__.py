@@ -13,7 +13,6 @@ from .analysis_status import AnalysisStatus
 from .analysis_type import AnalysisType
 from .cluster_score import ClusterScore
 from .contribution import Contribution
-from .hierarchy import Hierarchy, HierarchyNode
 from .metric_contribution import MetricContribution
 from .metric_type import MetricType
 from .normalized_metric import NormalizedMetric
@@ -34,8 +33,6 @@ __all__ = (
     "AnalysisType",
     "ClusterScore",
     "Contribution",
-    "Hierarchy",
-    "HierarchyNode",
     "MetricContribution",
     "MetricType",
     "NormalizedMetric",

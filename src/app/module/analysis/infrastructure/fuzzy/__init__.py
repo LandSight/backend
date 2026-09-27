@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from .build import build_fuzzy_function
 from .fuzzy_normalizer import FuzzyNormalizer
 from .s_shaped import SShaped
 from .trapezoidal import Trapezoidal
@@ -14,5 +13,4 @@ __all__ = (
     "SShaped",
     "Trapezoidal",
     "ZShaped",
-    "build_fuzzy_function",
 )
