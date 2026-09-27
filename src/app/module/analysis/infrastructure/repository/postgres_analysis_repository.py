@@ -166,6 +166,9 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 total_score=evaluation.total_score.unwrap(),
             )
         )
+        # Flush the root first: the child rows reference it by FK, and a single
+        # flush does not guarantee that the parent insert is emitted first.
+        await self._session.flush()
 
         group_rows: list[AnalysisClusterScoreModel] = []
         contribution_rows: list[AnalysisMetricContributionModel] = []
@@ -210,7 +213,10 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         for position, cluster in enumerate(evaluation.clusters):
             collect(cluster, None, 0, position)
 
+        # Groups are collected parent-before-child, so a dedicated flush keeps
+        # the self-referential parent_id ordering valid before the metrics land.
         self._session.add_all(group_rows)
+        await self._session.flush()
         self._session.add_all(contribution_rows)
         await self._session.flush()
 

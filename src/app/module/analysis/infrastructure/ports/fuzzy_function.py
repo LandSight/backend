@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar
 
 
@@ -35,9 +34,10 @@ class FuzzyFunction(ABC):
         """Return the membership of ``value`` in ``[0, 1]``."""
         raise NotImplementedError
 
+    @abstractmethod
     def params(self) -> Mapping[str, float]:
         """Return the parameters that define this function."""
-        return MappingProxyType({})
+        raise NotImplementedError
 
     @staticmethod
     def clamp(value: float) -> float:
