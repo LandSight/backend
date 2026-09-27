@@ -11,6 +11,7 @@ from litestar.di import NamedDependency, Provide
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.module.analysis.application.port import (
+    AnalysisProfileProvider,
     AnalysisScorer,
     AnalysisTaskQueue,
     MetricsCollector,
@@ -29,8 +30,8 @@ from app.module.analysis.application.use_case import (
     ScoreAnalysisUseCase,
     StartAnalysisUseCase,
 )
-from app.module.analysis.domain.analysis_policy import INFRASTRUCTURE_BUFFERS
 from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
+from app.module.analysis.infrastructure.config import AnalysisProfileProviderImpl, load_analysis_profiles
 from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
@@ -183,8 +184,8 @@ def provide_metrics_remover(
     return MetricsRemoverImpl(topography_api, climate_api, infrastructure_api)
 
 
-def provide_analysis_infrastructure_buffers() -> dict[str, int]:
-    return dict(INFRASTRUCTURE_BUFFERS)
+def provide_analysis_profiles() -> AnalysisProfileProviderImpl:
+    return AnalysisProfileProviderImpl(load_analysis_profiles())
 
 
 def provide_fail_analysis_use_case(
@@ -198,14 +199,14 @@ def provide_collect_metrics_use_case(
     metrics_collector: NamedDependency[MetricsCollector],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     analysis_unit_of_work: NamedDependency[UnitOfWork],
-    analysis_infrastructure_buffers: NamedDependency[dict[str, int]],
+    analysis_profiles: NamedDependency[AnalysisProfileProvider],
 ) -> CollectMetricsUseCase:
     return CollectMetricsUseCase(
         analysis_repository,
         metrics_collector,
         fail_analysis_use_case,
         analysis_unit_of_work,
-        analysis_infrastructure_buffers,
+        analysis_profiles,
     )
 
 
@@ -245,8 +246,8 @@ analysis_worker_dependencies = {
     "analysis_unit_of_work": Provide(provide_analysis_unit_of_work, sync_to_thread=False),
     "metrics_collector": Provide(provide_metrics_collector, sync_to_thread=False),
     "metrics_reader": Provide(provide_metrics_reader, sync_to_thread=False),
-    "analysis_infrastructure_buffers": Provide(
-        provide_analysis_infrastructure_buffers,
+    "analysis_profiles": Provide(
+        provide_analysis_profiles,
         use_cache=True,
         sync_to_thread=False,
     ),

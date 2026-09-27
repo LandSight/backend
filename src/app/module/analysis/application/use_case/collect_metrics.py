@@ -19,12 +19,13 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.analysis.application.port import (
+        AnalysisProfileProvider,
         AnalysisRepository,
         MetricsCollector,
         UnitOfWork,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
-    from app.module.analysis.domain.value_object import AnalysisMetricRef
+    from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
 
 
 class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
@@ -42,13 +43,13 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         metrics_collector: MetricsCollector,
         fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
-        infrastructure_buffers: dict[str, int],
+        analysis_profiles: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._metrics_collector = metrics_collector
         self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
-        self._infrastructure_buffers = infrastructure_buffers
+        self._analysis_profiles = analysis_profiles
         self._logger = get_logger("app.analysis.use_case.collect_metrics")
 
     @override
@@ -87,7 +88,12 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
             command.analysis_id,
         )
 
-        refs = await self._collect(command.metric_type, analysis.parcel_id.unwrap(), command.current_user_id)
+        refs = await self._collect(
+            command.metric_type,
+            analysis.analysis_type,
+            analysis.parcel_id.unwrap(),
+            command.current_user_id,
+        )
         await self._analysis_repository.save_metrics(analysis.id, refs)
         await self._unit_of_work.commit()
 
@@ -102,6 +108,7 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
     async def _collect(
         self,
         metric_type: MetricType,
+        analysis_type: AnalysisType,
         parcel_id: UUID,
         user_id: UUID,
     ) -> list[AnalysisMetricRef]:
@@ -115,7 +122,7 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
                 return await self._metrics_collector.collect_infrastructure(
                     parcel_id,
                     user_id,
-                    self._infrastructure_buffers,
+                    self._analysis_profiles.infrastructure_buffers(analysis_type),
                 )
 
 

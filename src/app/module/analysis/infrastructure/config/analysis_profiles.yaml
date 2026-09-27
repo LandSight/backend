@@ -1,0 +1,26 @@
+# Analysis profiles configuration.
+#
+# A profile is keyed by analysis type and owns the metric-collection parameters
+# that are independent of the scoring engine. Infrastructure search buffers are
+# the radius, in meters, around a parcel boundary used by the infrastructure
+# module to look for objects. They are profile-scoped because a profile decides
+# which metrics are relevant and how far they must reach.
+profiles:
+  izhs:
+    infrastructure:
+      buffers:
+        hospital: 10000
+        grocery: 2000
+        bus_stop: 2000
+        railway_station: 3000
+        police: 2000
+        fire_station: 5000
+        pharmacy: 2000
+        water_source: 1500
+        water_body: 2000
+        forest: 1500
+        protected_area: 2000
+        power_line: 1000
+        road_accessibility: 2000
+        # Must reach regional centers (see distance_to_regional_center).
+        geographic_position: 150000
