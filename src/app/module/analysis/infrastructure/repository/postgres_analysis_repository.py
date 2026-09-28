@@ -11,6 +11,7 @@ from sqlalchemy import delete, select
 from app.module.analysis.application.port import AnalysisRepository
 from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
 from app.module.analysis.domain.value_object import (
+    AnalysisEngine,
     AnalysisEvaluationId,
     AnalysisId,
     AnalysisKey,
@@ -60,6 +61,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 parcel_id=analysis.parcel_id.unwrap(),
                 name=analysis.name.unwrap(),
                 analysis_type=analysis.analysis_type.value,
+                engine=analysis.engine.value,
                 status=analysis.status.value,
                 stage=analysis.stage.value,
                 score=analysis.score.unwrap() if analysis.score is not None else None,
@@ -71,6 +73,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         else:
             model.name = analysis.name.unwrap()
             model.analysis_type = analysis.analysis_type.value
+            model.engine = analysis.engine.value
             model.status = analysis.status.value
             model.stage = analysis.stage.value
             model.score = analysis.score.unwrap() if analysis.score is not None else None
@@ -162,6 +165,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 id=evaluation_id,
                 analysis_id=analysis_id,
                 analysis_type=evaluation.analysis_type.value,
+                engine=evaluation.engine.value,
                 model_version=evaluation.model_version,
                 total_score=evaluation.total_score.unwrap(),
             )
@@ -273,6 +277,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             id=AnalysisEvaluationId(evaluation_model.id),
             analysis_id=AnalysisId(evaluation_model.analysis_id),
             analysis_type=AnalysisType(evaluation_model.analysis_type),
+            engine=AnalysisEngine(evaluation_model.engine),
             model_version=evaluation_model.model_version,
             total_score=AnalysisScore(evaluation_model.total_score),
             clusters=clusters,
@@ -301,6 +306,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             parcel_id=ParcelId(model.parcel_id),
             name=AnalysisName(model.name),
             analysis_type=AnalysisType(model.analysis_type),
+            engine=AnalysisEngine(model.engine),
             status=AnalysisStatus(model.status),
             stage=AnalysisStage(model.stage),
             score=AnalysisScore(model.score) if model.score is not None else None,

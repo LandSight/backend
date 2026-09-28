@@ -31,9 +31,10 @@ from app.module.analysis.application.use_case import (
     StartAnalysisUseCase,
 )
 from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
-from app.module.analysis.infrastructure.config import AnalysisProfileProviderImpl, load_analysis_profiles
+from app.module.analysis.infrastructure.config import load_analysis_profiles
 from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
+from app.module.analysis.infrastructure.provider import AnalysisProfileProviderImpl, EngineProviderImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
 from app.module.analysis.infrastructure.reader import MetricsReaderImpl
 from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
@@ -75,6 +76,10 @@ def provide_owned_parcels_provider(
 # ----- Scoring -----
 def provide_analysis_scorer() -> HmcdaAnalysisScorer:
     return HmcdaAnalysisScorer(load_engine_config())
+
+
+def provide_engine_provider() -> EngineProviderImpl:
+    return EngineProviderImpl(load_engine_config())
 
 
 # ----- Task queue -----
@@ -231,6 +236,8 @@ analysis_dependencies = {
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
     "owned_parcels_provider": Provide(provide_owned_parcels_provider, sync_to_thread=False),
     "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
+    "engine_provider": Provide(provide_engine_provider, use_cache=True, sync_to_thread=False),
+    "analysis_profiles": Provide(provide_analysis_profiles, use_cache=True, sync_to_thread=False),
     "metrics_remover": Provide(provide_metrics_remover, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),
     "start_analysis_use_case": Provide(provide_start_analysis_use_case, sync_to_thread=False),
