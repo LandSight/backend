@@ -73,6 +73,7 @@ class AnalysisInternal(AnalysisInternalAPI):
                 current_user_id=input_data.current_user_id,
                 name=input_data.name,
                 analysis_type=input_data.analysis_type,
+                engine=input_data.engine,
             )
         )
         return self._to_result(result)
@@ -147,6 +148,7 @@ class AnalysisInternal(AnalysisInternalAPI):
             parcel_name=result.parcel_name,
             name=result.name,
             analysis_type=result.analysis_type,
+            engine=result.engine,
             status=result.status,
             stage=result.stage,
             score=result.score,

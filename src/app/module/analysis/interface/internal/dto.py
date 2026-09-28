@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from app.module.analysis.domain.value_object import AnalysisType
+from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
 
 
 if TYPE_CHECKING:
@@ -21,6 +21,7 @@ class StartAnalysisInput:
     current_user_id: UUID
     name: str
     analysis_type: AnalysisType = AnalysisType.IZHS
+    engine: AnalysisEngine = AnalysisEngine.BASELINE
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +73,7 @@ class AnalysisResult:
     parcel_name: str | None
     name: str
     analysis_type: str
+    engine: str
     status: str
     stage: str
     score: float | None
