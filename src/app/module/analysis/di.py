@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.analysis.application.port import (
     AnalysisProfileProvider,
     AnalysisScorer,
-    AnalysisTaskQueue,
     MetricsCollector,
     MetricsReader,
     UnitOfWork,
@@ -92,13 +91,13 @@ def provide_start_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
     owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
-    analysis_task_queue: NamedDependency[AnalysisTaskQueue],
+    event_publisher: NamedDependency[EventPublisher],
 ) -> StartAnalysisUseCase:
     return StartAnalysisUseCase(
         analysis_repository,
         analysis_permission_service,
         owned_parcels_provider,
-        analysis_task_queue,
+        event_publisher,
     )
 
 

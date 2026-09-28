@@ -15,7 +15,12 @@ from celery.signals import worker_process_init
 
 from app.module.analysis.application.dto.command import CollectMetricsCommand, ScoreAnalysisCommand
 from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
-from app.module.analysis.domain.event import ANALYSIS_DELETED_EVENT, metric_refs_from_payload
+from app.module.analysis.domain.event import (
+    ANALYSIS_DELETED_EVENT,
+    ANALYSIS_QUEUED_EVENT,
+    analysis_queued_from_payload,
+    metric_refs_from_payload,
+)
 from app.module.analysis.domain.value_object import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
     PROCESS_ANALYSIS_TASK_NAME,
@@ -31,7 +36,7 @@ from app.worker.container import WorkerContainer, get_session_factory, run_in_wo
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.application.port import MetricsRemover
+    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsRemover
     from app.platform.outbox.repository import OutboxRepository
 
 
@@ -93,11 +98,22 @@ async def _drain_outbox() -> None:
         container = WorkerContainer(session)
         repository: OutboxRepository = container.resolve("outbox_repository")
         metrics_remover: MetricsRemover = container.resolve("metrics_remover")
+        task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
+
+        async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
+            analysis_id, current_user_id = analysis_queued_from_payload(payload)
+            await task_queue.enqueue(analysis_id, current_user_id)
 
         async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
             await metrics_remover.delete(list(metric_refs_from_payload(payload)))
 
-        drainer = OutboxDrainer(repository, {ANALYSIS_DELETED_EVENT: handle_analysis_deleted})
+        drainer = OutboxDrainer(
+            repository,
+            {
+                ANALYSIS_QUEUED_EVENT: handle_analysis_queued,
+                ANALYSIS_DELETED_EVENT: handle_analysis_deleted,
+            },
+        )
         processed = await drainer.drain()
         await session.commit()
 
