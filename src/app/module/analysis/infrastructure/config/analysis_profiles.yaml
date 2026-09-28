@@ -7,8 +7,8 @@
 # which metrics are relevant and how far they must reach.
 profiles:
   izhs:
-    name: ИЖС
-    description: Оценка пригодности участка для индивидуального жилищного строительства
+    name: IZHS
+    description: Assessment of a plot's suitability for individual housing construction
     infrastructure:
       buffers:
         hospital: 10000

@@ -5,9 +5,9 @@
 # their own key, infrastructure metrics are namespaced as "<category>:<metric>".
 engine: hmcda
 key: baseline
-name: Baseline (Fuzzy Hierarchical MCDA)
-description: Базовый движок на основе нечёткого иерархического многокритериального анализа
-model_version: v1.0-baseline
+name: Fuzzy Hierarchical MCDA
+description: Baseline engine based on fuzzy hierarchical multi-criteria analysis
+model_version: v1.0
 
 profiles:
   izhs:
