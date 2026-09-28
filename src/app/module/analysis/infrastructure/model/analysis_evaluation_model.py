@@ -30,6 +30,11 @@ class AnalysisEvaluationModel(TimestampedModel):
         nullable=False,
         comment="Evaluation profile (e.g. izhs)",
     )
+    engine: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        comment="Scoring engine (e.g. baseline)",
+    )
     model_version: Mapped[str] = mapped_column(
         String(32),
         nullable=False,
