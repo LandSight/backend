@@ -9,6 +9,7 @@ from uuid import uuid6
 from app.module.analysis.application.port import AnalysisScorer
 from app.module.analysis.domain.entity import AnalysisEvaluation
 from app.module.analysis.domain.value_object import (
+    AnalysisEngine,
     AnalysisEvaluationId,
     AnalysisId,
     AnalysisScore,
@@ -60,8 +61,12 @@ class HmcdaAnalysisScorer(AnalysisScorer):
         analysis_id: UUID,
         metrics: list[MetricsResponse],
         analysis_type: AnalysisType,
+        engine: AnalysisEngine,
     ) -> AnalysisEvaluation:
         """See :class:`app.module.analysis.application.port.AnalysisScorer.evaluate`."""
+        if engine is not AnalysisEngine.BASELINE:
+            message = f"Engine '{engine}' is not supported by the HMCDA scorer."
+            raise ValidationError(message)
         profile = self._profiles.get(analysis_type)
         if profile is None:
             message = f"No engine profile configured for analysis type '{analysis_type}'."
@@ -72,6 +77,7 @@ class HmcdaAnalysisScorer(AnalysisScorer):
             id=AnalysisEvaluationId(uuid6()),
             analysis_id=AnalysisId(analysis_id),
             analysis_type=analysis_type,
+            engine=engine,
             model_version=self._model_version,
             total_score=self._total_score(clusters),
             clusters=clusters,
