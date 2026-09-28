@@ -38,10 +38,22 @@ class InfrastructureCollectionConfig(BaseModel):
 
 
 class AnalysisProfileConfig(BaseModel):
-    """Collection configuration of a single analysis profile."""
+    """Collection and catalog configuration of a single analysis profile.
+
+    Attributes
+    ----------
+    name : str
+        Display name of the profile, shown in the profile catalogue.
+    description : str
+        Human-readable description of what the profile evaluates.
+    infrastructure : InfrastructureCollectionConfig
+        Infrastructure metric-collection parameters.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
+    name: str = Field(min_length=1, max_length=64)
+    description: str = Field(min_length=1, max_length=256)
     infrastructure: InfrastructureCollectionConfig = Field(default_factory=InfrastructureCollectionConfig)
 
 
