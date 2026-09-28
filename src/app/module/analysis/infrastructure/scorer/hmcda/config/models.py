@@ -213,11 +213,30 @@ class ProfileConfig(BaseModel):
 
 
 class EngineConfig(BaseModel):
-    """Root configuration of the HMCDA engine, keyed by analysis type."""
+    """Root configuration of the HMCDA engine, keyed by analysis type.
+
+    Attributes
+    ----------
+    engine : str
+        Engine implementation kind; always ``hmcda`` for this configuration.
+    key : str
+        Catalog key exposed through the engines endpoint (e.g. ``baseline``).
+    name : str
+        Display name of the engine.
+    description : str
+        Human-readable description of the engine.
+    model_version : str
+        Version of the hierarchy and normalization configuration used.
+    profiles : dict[AnalysisType, ProfileConfig]
+        Per-profile hierarchies and fuzzy functions.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     engine: Literal["hmcda"]
+    key: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=64)
+    description: str = Field(min_length=1, max_length=256)
     model_version: str = Field(min_length=1)
     profiles: dict[AnalysisType, ProfileConfig] = Field(min_length=1)
 

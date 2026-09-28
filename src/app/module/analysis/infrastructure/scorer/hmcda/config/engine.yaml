@@ -4,6 +4,9 @@
 # fuzzy functions. Metric keys are canonical: topography and climate metrics use
 # their own key, infrastructure metrics are namespaced as "<category>:<metric>".
 engine: hmcda
+key: baseline
+name: Baseline (Fuzzy Hierarchical MCDA)
+description: Базовый движок на основе нечёткого иерархического многокритериального анализа
 model_version: v1.0-baseline
 
 profiles:
