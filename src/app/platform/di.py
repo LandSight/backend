@@ -26,6 +26,7 @@ from app.platform.config.loaders import (
 )
 from app.platform.config.models import AuthConfig, DatabaseConfig, RedisConfig, S3Config
 from app.platform.database.session import create_async_session_factory
+from app.platform.outbox import OutboxEventPublisher, PostgresOutboxRepository
 from app.platform.storage.session import create_aws_session
 
 
@@ -82,6 +83,21 @@ async def provide_async_session(
             await session.close()
 
 
+# ----- Outbox -----
+def provide_outbox_repository(
+    session: NamedDependency[AsyncSession],
+) -> PostgresOutboxRepository:
+    """Provide the session-scoped outbox repository."""
+    return PostgresOutboxRepository(session)
+
+
+def provide_event_publisher(
+    outbox_repository: NamedDependency[PostgresOutboxRepository],
+) -> OutboxEventPublisher:
+    """Provide the transactional outbox event publisher."""
+    return OutboxEventPublisher(outbox_repository)
+
+
 # ----- Storage -----
 def provide_boto_session(state: State) -> BotoSession:
     """Provide the boto session from application state."""
@@ -106,6 +122,8 @@ platform_dependencies = {
     "s3_config": Provide(provide_s3_config, use_cache=True, sync_to_thread=False),
     "session_factory": Provide(provide_async_session_factory, use_cache=True, sync_to_thread=False),
     "session": Provide(provide_async_session),
+    "outbox_repository": Provide(provide_outbox_repository, sync_to_thread=False),
+    "event_publisher": Provide(provide_event_publisher, sync_to_thread=False),
     "boto_session": Provide(provide_boto_session, use_cache=True, sync_to_thread=False),
     "s3_boto_client": Provide(provide_s3_boto_client, use_cache=True, sync_to_thread=False),
     "aws_session": Provide(provide_aws_session, use_cache=True, sync_to_thread=False),

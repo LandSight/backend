@@ -9,6 +9,7 @@ from app.module.analysis.application.error import (
     AnalysisNotDeletableError,
     AnalysisNotFoundError,
 )
+from app.module.analysis.domain.event import ANALYSIS_DELETED_EVENT, AnalysisDeletedEvent
 from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
@@ -18,26 +19,28 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
-        MetricsRemover,
     )
+    from app.module.shared.application.port import EventPublisher
 
 
 class DeleteAnalysisUseCase(BaseUseCase[DeleteAnalysisCommand, None]):
-    """Delete an analysis together with its metric references.
+    """Delete an analysis and schedule cleanup of its metric snapshots.
 
     Access is granted only when the current user owns the underlying parcel.
-    Metric snapshots owned by other modules are left untouched.
+    Metric snapshots are parcel-owned, so they are not removed inline: an
+    ``AnalysisDeleted`` event is written to the transactional outbox in the same
+    transaction, and a relay removes the snapshots through the metric modules.
     """
 
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
-        metrics_remover: MetricsRemover,
+        event_publisher: EventPublisher,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
-        self._metrics_remover = metrics_remover
+        self._event_publisher = event_publisher
         self._logger = get_logger("app.analysis.use_case.delete_analysis")
 
     @override
@@ -62,7 +65,10 @@ class DeleteAnalysisUseCase(BaseUseCase[DeleteAnalysisCommand, None]):
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
         if refs:
-            await self._metrics_remover.delete(refs)
+            await self._event_publisher.publish(
+                ANALYSIS_DELETED_EVENT,
+                AnalysisDeletedEvent(analysis_id=analysis.id, metrics=tuple(refs)).to_payload(),
+            )
 
         await self._analysis_repository.delete(analysis.id)
         self._logger.info("Analysis deleted: analysis_id=%s", command.analysis_id)

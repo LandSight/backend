@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 from celery import Celery
 
+from app.platform.outbox.constants import DRAIN_OUTBOX_TASK_NAME
+
 
 if TYPE_CHECKING:
     from app.platform.config.models import RedisConfig
@@ -43,6 +45,15 @@ def create_celery_app(redis_config: RedisConfig) -> Celery:
     app.conf.result_serializer = "json"
     app.conf.timezone = "UTC"
     app.conf.enable_utc = True
+    # Relay the transactional outbox. Runs on the Celery beat process alongside
+    # the worker, so pending events are dispatched even if the producer crashed
+    # after committing the state change.
+    app.conf.beat_schedule = {
+        "drain-outbox": {
+            "task": DRAIN_OUTBOX_TASK_NAME,
+            "schedule": 5.0,
+        },
+    }
     return app
 
 

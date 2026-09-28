@@ -43,6 +43,7 @@ service: str = config.config_ini_section
 # Upstream modules must be imported so that Alembic can resolve FK chains.
 if service == "platform":
     from app.platform.database.base import BaseModel
+    from app.platform.outbox.models import OutboxEventModel  # noqa: F401
 
     target_metadata = BaseModel.metadata
     version_table_schema: str | None = None

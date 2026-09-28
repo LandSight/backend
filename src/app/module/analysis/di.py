@@ -16,7 +16,6 @@ from app.module.analysis.application.port import (
     AnalysisTaskQueue,
     MetricsCollector,
     MetricsReader,
-    MetricsRemover,
     UnitOfWork,
 )
 from app.module.analysis.application.use_case import (
@@ -46,6 +45,7 @@ from app.module.analysis.interface.internal.api import AnalysisInternal
 from app.module.climate.interface.internal.port import ClimateInternalAPI
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
+from app.module.shared.application.port import EventPublisher
 from app.module.topography.interface.internal.port import TopographyInternalAPI
 
 
@@ -134,9 +134,9 @@ def provide_list_user_analyses_use_case(
 def provide_delete_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
-    metrics_remover: NamedDependency[MetricsRemover],
+    event_publisher: NamedDependency[EventPublisher],
 ) -> DeleteAnalysisUseCase:
-    return DeleteAnalysisUseCase(analysis_repository, analysis_permission_service, metrics_remover)
+    return DeleteAnalysisUseCase(analysis_repository, analysis_permission_service, event_publisher)
 
 
 # ----- Internal API -----
