@@ -9,18 +9,29 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import AnalysisType
+    from app.module.analysis.domain.value_object import AnalysisProfile, AnalysisType
 
 
 class AnalysisProfileProvider(ABC):
-    """Port for resolving profile-scoped metric-collection parameters.
+    """Port for resolving profile catalog entries and collection parameters.
 
     A profile is selected by analysis type and owns the parameters that define
     how metrics are collected, independently of the scoring engine.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.config.analysis_profile_provider.AnalysisProfileProviderImpl`
+    - :class:`app.module.analysis.infrastructure.provider.analysis_profile_provider.AnalysisProfileProviderImpl`
     """
+
+    @abstractmethod
+    def list_profiles(self) -> tuple[AnalysisProfile, ...]:
+        """Return every configured analysis profile as a catalog descriptor.
+
+        Returns
+        -------
+        tuple[AnalysisProfile, ...]
+            Profiles in configuration order.
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def infrastructure_buffers(self, analysis_type: AnalysisType) -> Mapping[str, int]:

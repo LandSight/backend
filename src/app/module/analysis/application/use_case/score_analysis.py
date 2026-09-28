@@ -83,7 +83,12 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
         values = await self._metrics_reader.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)
-        evaluation = self._scorer.evaluate(command.analysis_id, values, analysis.analysis_type)
+        evaluation = self._scorer.evaluate(
+            command.analysis_id,
+            values,
+            analysis.analysis_type,
+            analysis.engine,
+        )
         analysis.complete(evaluation.total_score, evaluation.model_version)
         await self._analysis_repository.save(analysis)
         await self._analysis_repository.save_evaluation(evaluation)

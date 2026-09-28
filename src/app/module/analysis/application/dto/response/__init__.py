@@ -6,7 +6,12 @@ from .analysis import AnalysisResponse
 from .analysis_evaluation import (
     AnalysisEvaluationResponse,
     ClusterScoreResponse,
+    ConstraintExtensionResponse,
+    EvaluationExtensionResponse,
+    EvaluationMetadataResponse,
+    HierarchicalExtensionResponse,
     MetricContributionResponse,
+    RuleBasedExtensionResponse,
 )
 from .analysis_metric import AnalysisMetricResponse
 
@@ -16,5 +21,10 @@ __all__ = (
     "AnalysisMetricResponse",
     "AnalysisResponse",
     "ClusterScoreResponse",
+    "ConstraintExtensionResponse",
+    "EvaluationExtensionResponse",
+    "EvaluationMetadataResponse",
+    "HierarchicalExtensionResponse",
     "MetricContributionResponse",
+    "RuleBasedExtensionResponse",
 )

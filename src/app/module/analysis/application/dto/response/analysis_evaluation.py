@@ -1,4 +1,10 @@
-"""Evaluation tree response DTOs."""
+"""Evaluation tree response DTOs.
+
+The evaluation response has a universal core shared by every scoring engine and
+an ``extensions`` mapping whose keys depend on the engine. The baseline engine
+populates the ``hierarchical`` extension; the planned hybrid engine adds the
+``rule_based`` and ``constraint_based`` extensions.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +13,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    import datetime
     from collections.abc import Mapping
 
 
@@ -63,19 +70,106 @@ class ClusterScoreResponse:
 
 
 @dataclass(frozen=True, slots=True)
-class AnalysisEvaluationResponse:
-    """Response DTO for a full analysis evaluation tree."""
+class HierarchicalExtensionResponse:
+    """Hierarchical MCDA extension of an evaluation.
 
-    analysis_id: str
-    analysis_type: str
+    Attributes
+    ----------
+    clusters : tuple[ClusterScoreResponse, ...]
+        Per-cluster breakdown produced by the hierarchical engine.
+    """
+
+    clusters: tuple[ClusterScoreResponse, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True, slots=True)
+class RuleBasedExtensionResponse:
+    """Rule-based extension of an evaluation.
+
+    Attributes
+    ----------
+    base_score : float
+        Score before rules were applied.
+    applied_rules : tuple[Mapping[str, object], ...]
+        Rules that fired, in application order.
+    """
+
+    base_score: float
+    applied_rules: tuple[Mapping[str, object], ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True, slots=True)
+class ConstraintExtensionResponse:
+    """Constraint-based extension of an evaluation.
+
+    Attributes
+    ----------
+    applied_constraints : tuple[Mapping[str, object], ...]
+        Constraints that were applied, in application order.
+    """
+
+    applied_constraints: tuple[Mapping[str, object], ...] = field(default_factory=tuple)
+
+
+type EvaluationExtensionResponse = (
+    HierarchicalExtensionResponse | RuleBasedExtensionResponse | ConstraintExtensionResponse
+)
+
+
+@dataclass(frozen=True, slots=True)
+class EvaluationMetadataResponse:
+    """Metadata of an evaluation.
+
+    Attributes
+    ----------
+    evaluated_at : datetime.datetime | None
+        When the evaluation was created (UTC).
+    parcel_id : str
+        ID of the parcel the evaluation belongs to.
+    """
+
+    evaluated_at: datetime.datetime | None
+    parcel_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class AnalysisEvaluationResponse:
+    """Response DTO for a full analysis evaluation.
+
+    Attributes
+    ----------
+    scenario : str
+        Evaluation profile (e.g. izhs).
+    engine : str
+        Scoring engine that produced the evaluation (e.g. baseline).
+    model_version : str
+        Version of the scoring model.
+    total_score : float
+        Final score on the 0-10 scale.
+    scale : str
+        Score scale.
+    metadata : EvaluationMetadataResponse
+        Evaluation metadata.
+    extensions : Mapping[str, EvaluationExtensionResponse]
+        Engine-specific extensions keyed by extension name.
+    """
+
+    scenario: str
+    engine: str
     model_version: str
     total_score: float
     scale: str
-    clusters: tuple[ClusterScoreResponse, ...] = field(default_factory=tuple)
+    metadata: EvaluationMetadataResponse
+    extensions: Mapping[str, EvaluationExtensionResponse] = field(default_factory=dict)
 
 
 __all__ = (
     "AnalysisEvaluationResponse",
     "ClusterScoreResponse",
+    "ConstraintExtensionResponse",
+    "EvaluationExtensionResponse",
+    "EvaluationMetadataResponse",
+    "HierarchicalExtensionResponse",
     "MetricContributionResponse",
+    "RuleBasedExtensionResponse",
 )

@@ -8,6 +8,8 @@ from app.module.analysis.application.dto.command import GetAnalysisEvaluationCom
 from app.module.analysis.application.dto.response import (
     AnalysisEvaluationResponse,
     ClusterScoreResponse,
+    EvaluationMetadataResponse,
+    HierarchicalExtensionResponse,
     MetricContributionResponse,
 )
 from app.module.analysis.application.error import (
@@ -80,14 +82,22 @@ class GetAnalysisEvaluationUseCase(
 
     @classmethod
     def _to_response(cls, analysis: Analysis, evaluation: AnalysisEvaluation) -> AnalysisEvaluationResponse:
-        """Map a domain evaluation to a response DTO."""
+        """Map a domain evaluation to the universal response DTO."""
         return AnalysisEvaluationResponse(
-            analysis_id=str(analysis.id.unwrap()),
-            analysis_type=evaluation.analysis_type.value,
+            scenario=evaluation.analysis_type.value,
+            engine=evaluation.engine.value,
             model_version=evaluation.model_version,
             total_score=evaluation.total_score.unwrap(),
             scale=evaluation.total_score.scale,
-            clusters=tuple(cls._to_cluster(cluster) for cluster in evaluation.clusters),
+            metadata=EvaluationMetadataResponse(
+                evaluated_at=evaluation.created_at,
+                parcel_id=str(analysis.parcel_id.unwrap()),
+            ),
+            extensions={
+                "hierarchical": HierarchicalExtensionResponse(
+                    clusters=tuple(cls._to_cluster(cluster) for cluster in evaluation.clusters),
+                ),
+            },
         )
 
     @classmethod

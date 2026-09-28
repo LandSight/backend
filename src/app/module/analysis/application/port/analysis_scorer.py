@@ -11,14 +11,14 @@ if TYPE_CHECKING:
 
     from app.module.analysis.application.port.metrics_reader import MetricsResponse
     from app.module.analysis.domain.entity import AnalysisEvaluation
-    from app.module.analysis.domain.value_object import AnalysisType
+    from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
 
 
 class AnalysisScorer(ABC):
-    """Port for evaluating collected metrics into a hierarchical MCDA result.
+    """Port for evaluating collected metrics into a universal result.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.scorer.hmcda_analysis_scorer.HmcdaAnalysisScorer`
+    - :class:`app.module.analysis.infrastructure.scorer.hmcda.hmcda_analysis_scorer.HmcdaAnalysisScorer`
     """
 
     @abstractmethod
@@ -27,6 +27,7 @@ class AnalysisScorer(ABC):
         analysis_id: UUID,
         metrics: list[MetricsResponse],
         analysis_type: AnalysisType,
+        engine: AnalysisEngine,
     ) -> AnalysisEvaluation:
         """Evaluate the collected metrics.
 
@@ -38,6 +39,9 @@ class AnalysisScorer(ABC):
             Neutral metrics responses read for the analysis.
         analysis_type : AnalysisType
             Evaluation profile to score with.
+        engine : AnalysisEngine
+            Scoring engine to evaluate with. Implementations must reject engines
+            they do not support.
 
         Returns
         -------

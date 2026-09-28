@@ -77,6 +77,7 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
             parcel_name=parcel_name,
             name=analysis.name.unwrap(),
             analysis_type=analysis.analysis_type.value,
+            engine=analysis.engine.value,
             status=analysis.status.value,
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
