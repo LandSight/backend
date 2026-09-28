@@ -13,7 +13,11 @@ from app.interface.http.schema.analysis import (
     AnalysisMetricSchema,
     AnalysisResponse,
     ClusterScoreSchema,
+    ConstraintExtensionSchema,
+    EvaluationMetadataSchema,
+    HierarchicalExtensionSchema,
     MetricContributionSchema,
+    RuleBasedExtensionSchema,
     StartAnalysisRequest,
 )
 from app.interface.http.schema.current_user import CurrentUser
@@ -21,7 +25,10 @@ from app.interface.http.util.guards import require_authorization
 from app.module.analysis.application.dto.response import (
     AnalysisEvaluationResponse,
     ClusterScoreResponse,
+    EvaluationExtensionResponse,
+    HierarchicalExtensionResponse,
     MetricContributionResponse,
+    RuleBasedExtensionResponse,
 )
 from app.module.analysis.interface.internal.dto import (
     AnalysisResult,
@@ -59,7 +66,8 @@ class AnalysisController(Controller):
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 name=data.name,
-                analysis_type=data.analysis_type,
+                analysis_type=data.scenario,
+                engine=data.engine,
             ),
         )
         return self._to_schema(result)
@@ -167,7 +175,8 @@ class AnalysisController(Controller):
             parcel_id=result.parcel_id,
             parcel_name=result.parcel_name,
             name=result.name,
-            analysis_type=result.analysis_type,
+            scenario=result.analysis_type,
+            engine=result.engine,
             status=result.status,
             stage=result.stage,
             score=result.score,
@@ -179,14 +188,37 @@ class AnalysisController(Controller):
 
     @classmethod
     def _to_evaluation_schema(cls, result: AnalysisEvaluationResponse) -> AnalysisEvaluationSchema:
-        """Map an application evaluation DTO to the HTTP response schema."""
+        """Map an application evaluation DTO to the universal HTTP schema."""
         return AnalysisEvaluationSchema(
-            analysis_id=result.analysis_id,
-            analysis_type=result.analysis_type,
+            scenario=result.scenario,
+            engine=result.engine,
             model_version=result.model_version,
             total_score=result.total_score,
             scale=result.scale,
-            clusters=[cls._to_cluster_schema(cluster) for cluster in result.clusters],
+            metadata=EvaluationMetadataSchema(
+                evaluated_at=result.metadata.evaluated_at,
+                parcel_id=UUID(result.metadata.parcel_id),
+            ),
+            extensions={key: cls._to_extension_schema(extension) for key, extension in result.extensions.items()},
+        )
+
+    @classmethod
+    def _to_extension_schema(
+        cls,
+        extension: EvaluationExtensionResponse,
+    ) -> HierarchicalExtensionSchema | RuleBasedExtensionSchema | ConstraintExtensionSchema:
+        """Map an engine-specific evaluation extension to its HTTP schema."""
+        if isinstance(extension, HierarchicalExtensionResponse):
+            return HierarchicalExtensionSchema(
+                clusters=[cls._to_cluster_schema(cluster) for cluster in extension.clusters],
+            )
+        if isinstance(extension, RuleBasedExtensionResponse):
+            return RuleBasedExtensionSchema(
+                base_score=extension.base_score,
+                applied_rules=[dict(rule) for rule in extension.applied_rules],
+            )
+        return ConstraintExtensionSchema(
+            applied_constraints=[dict(constraint) for constraint in extension.applied_constraints],
         )
 
     @classmethod
