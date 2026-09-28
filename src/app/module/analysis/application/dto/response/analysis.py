@@ -27,6 +27,8 @@ class AnalysisResponse:
         Human-readable name of the analysis.
     analysis_type : str
         Evaluation profile the analysis was run with.
+    engine : str
+        Scoring engine the analysis was evaluated with.
     status : str
         Lifecycle status (pending/running/completed/failed).
     stage : str
@@ -48,6 +50,7 @@ class AnalysisResponse:
     parcel_name: str | None
     name: str
     analysis_type: str
+    engine: str
     status: str
     stage: str
     score: float | None

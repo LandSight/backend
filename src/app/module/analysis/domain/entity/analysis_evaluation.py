@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.domain.value_object import (
+    AnalysisEngine,
     AnalysisEvaluationId,
     AnalysisId,
     AnalysisScore,
@@ -34,6 +35,8 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
         Analysis the evaluation belongs to.
     analysis_type : AnalysisType
         Evaluation profile.
+    engine : AnalysisEngine
+        Scoring engine that produced the evaluation.
     model_version : str
         Version of the hierarchy and normalization configuration used.
     total_score : AnalysisScore
@@ -50,6 +53,7 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
         analysis_id: AnalysisId,
         *,
         analysis_type: AnalysisType,
+        engine: AnalysisEngine = AnalysisEngine.BASELINE,
         model_version: str,
         total_score: AnalysisScore,
         clusters: tuple[ClusterScore, ...],
@@ -57,6 +61,7 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
     ) -> None:
         self._analysis_id: AnalysisId = analysis_id
         self._analysis_type: AnalysisType = analysis_type
+        self._engine: AnalysisEngine = engine
         self._model_version: str = model_version
         self._total_score: AnalysisScore = total_score
         self._clusters: tuple[ClusterScore, ...] = clusters
@@ -82,6 +87,11 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
     def analysis_type(self) -> AnalysisType:
         """Evaluation profile."""
         return self._analysis_type
+
+    @property
+    def engine(self) -> AnalysisEngine:
+        """Scoring engine that produced the evaluation."""
+        return self._engine
 
     @property
     def model_version(self) -> str:

@@ -6,6 +6,7 @@ import datetime
 from typing import NoReturn, override
 
 from app.module.analysis.domain.value_object import (
+    AnalysisEngine,
     AnalysisId,
     AnalysisName,
     AnalysisScore,
@@ -31,6 +32,8 @@ class Analysis(BaseEntity[AnalysisId]):
         Human-readable name of the analysis.
     analysis_type : AnalysisType
         Evaluation profile the analysis is run with.
+    engine : AnalysisEngine
+        Scoring engine the analysis is evaluated with.
     status : AnalysisStatus
         Current lifecycle status.
     stage : AnalysisStage
@@ -54,6 +57,7 @@ class Analysis(BaseEntity[AnalysisId]):
         *,
         name: AnalysisName,
         analysis_type: AnalysisType = AnalysisType.IZHS,
+        engine: AnalysisEngine = AnalysisEngine.BASELINE,
         status: AnalysisStatus = AnalysisStatus.PENDING,
         stage: AnalysisStage = AnalysisStage.METRICS,
         score: AnalysisScore | None = None,
@@ -65,6 +69,7 @@ class Analysis(BaseEntity[AnalysisId]):
         self._parcel_id: ParcelId = parcel_id
         self._name: AnalysisName = name
         self._analysis_type: AnalysisType = analysis_type
+        self._engine: AnalysisEngine = engine
         self._status: AnalysisStatus = status
         self._stage: AnalysisStage = stage
         self._score: AnalysisScore | None = score
@@ -150,6 +155,11 @@ class Analysis(BaseEntity[AnalysisId]):
     def analysis_type(self) -> AnalysisType:
         """Evaluation profile the analysis is run with."""
         return self._analysis_type
+
+    @property
+    def engine(self) -> AnalysisEngine:
+        """Scoring engine the analysis is evaluated with."""
+        return self._engine
 
     @property
     def status(self) -> AnalysisStatus:
