@@ -11,6 +11,7 @@ from app.module.analysis.domain.value_object import AnalysisId
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from typing import Self
 
 
 ANALYSIS_QUEUED_EVENT = "analysis.analysis_queued"
@@ -41,31 +42,34 @@ class AnalysisQueuedEvent:
             "current_user_id": str(self.current_user_id),
         }
 
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> Self:
+        """Deserialize an ``AnalysisQueued`` payload back into the event.
 
-def analysis_queued_from_payload(payload: Mapping[str, object]) -> tuple[AnalysisId, UUID]:
-    """Deserialize an ``AnalysisQueued`` payload.
+        Parameters
+        ----------
+        payload : Mapping[str, object]
+            Event payload produced by :meth:`to_payload`.
 
-    Parameters
-    ----------
-    payload : Mapping[str, object]
-        Event payload produced by :meth:`AnalysisQueuedEvent.to_payload`.
+        Returns
+        -------
+        AnalysisQueuedEvent
+            The rehydrated event.
 
-    Returns
-    -------
-    tuple[AnalysisId, UUID]
-        The analysis ID and the user ID that started it.
-
-    Raises
-    ------
-    TypeError
-        If the payload is malformed.
-    """
-    analysis_id = payload.get("analysis_id")
-    current_user_id = payload.get("current_user_id")
-    if analysis_id is None or current_user_id is None:
-        message = "AnalysisQueued payload must contain 'analysis_id' and 'current_user_id'."
-        raise TypeError(message)
-    return AnalysisId(UUID(str(analysis_id))), UUID(str(current_user_id))
+        Raises
+        ------
+        TypeError
+            If the payload is malformed.
+        """
+        analysis_id = payload.get("analysis_id")
+        current_user_id = payload.get("current_user_id")
+        if analysis_id is None or current_user_id is None:
+            message = "AnalysisQueued payload must contain 'analysis_id' and 'current_user_id'."
+            raise TypeError(message)
+        return cls(
+            analysis_id=AnalysisId(UUID(str(analysis_id))),
+            current_user_id=UUID(str(current_user_id)),
+        )
 
 
-__all__ = ("ANALYSIS_QUEUED_EVENT", "AnalysisQueuedEvent", "analysis_queued_from_payload")
+__all__ = ("ANALYSIS_QUEUED_EVENT", "AnalysisQueuedEvent")

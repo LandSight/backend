@@ -6,13 +6,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from app.module.analysis.domain.value_object import AnalysisMetricRef, MetricType
+from app.module.analysis.domain.value_object import AnalysisId, AnalysisMetricRef, MetricType
 
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-
-    from app.module.analysis.domain.value_object import AnalysisId
+    from typing import Self
 
 
 ANALYSIS_DELETED_EVENT = "analysis.analysis_deleted"
@@ -51,49 +50,55 @@ class AnalysisDeletedEvent:
             ],
         }
 
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> Self:
+        """Deserialize an ``AnalysisDeleted`` payload back into the event.
 
-def metric_refs_from_payload(payload: Mapping[str, object]) -> tuple[AnalysisMetricRef, ...]:
-    """Deserialize metric references from an ``AnalysisDeleted`` payload.
+        Parameters
+        ----------
+        payload : Mapping[str, object]
+            Event payload produced by :meth:`to_payload`.
 
-    Parameters
-    ----------
-    payload : Mapping[str, object]
-        Event payload produced by :meth:`AnalysisDeletedEvent.to_payload`.
+        Returns
+        -------
+        AnalysisDeletedEvent
+            The rehydrated event with its metric references.
 
-    Returns
-    -------
-    tuple[AnalysisMetricRef, ...]
-        Metric references to clean up.
-
-    Raises
-    ------
-    TypeError
-        If the payload is malformed.
-    """
-    metrics = payload.get("metrics")
-    if not isinstance(metrics, list):
-        message = "AnalysisDeleted payload must contain a 'metrics' list."
-        raise TypeError(message)
-
-    refs: list[AnalysisMetricRef] = []
-    for item in metrics:
-        if not isinstance(item, dict):
-            message = "Each metric reference in the payload must be an object."
+        Raises
+        ------
+        TypeError
+            If the payload is malformed.
+        """
+        analysis_id = payload.get("analysis_id")
+        if analysis_id is None:
+            message = "AnalysisDeleted payload must contain 'analysis_id'."
             raise TypeError(message)
-        metric_type = item.get("metric_type")
-        metrics_id = item.get("metrics_id")
-        if metric_type is None or metrics_id is None:
-            message = "Each metric reference must contain 'metric_type' and 'metrics_id'."
+
+        metrics = payload.get("metrics")
+        if not isinstance(metrics, list):
+            message = "AnalysisDeleted payload must contain a 'metrics' list."
             raise TypeError(message)
-        category = item.get("category")
-        refs.append(
-            AnalysisMetricRef(
-                metric_type=MetricType(str(metric_type)),
-                metric_id=UUID(str(metrics_id)),
-                category=str(category) if category is not None else None,
+
+        refs: list[AnalysisMetricRef] = []
+        for item in metrics:
+            if not isinstance(item, dict):
+                message = "Each metric reference in the payload must be an object."
+                raise TypeError(message)
+            metric_type = item.get("metric_type")
+            metrics_id = item.get("metrics_id")
+            if metric_type is None or metrics_id is None:
+                message = "Each metric reference must contain 'metric_type' and 'metrics_id'."
+                raise TypeError(message)
+            category = item.get("category")
+            refs.append(
+                AnalysisMetricRef(
+                    metric_type=MetricType(str(metric_type)),
+                    metric_id=UUID(str(metrics_id)),
+                    category=str(category) if category is not None else None,
+                )
             )
-        )
-    return tuple(refs)
+
+        return cls(analysis_id=AnalysisId(UUID(str(analysis_id))), metrics=tuple(refs))
 
 
-__all__ = ("ANALYSIS_DELETED_EVENT", "AnalysisDeletedEvent", "metric_refs_from_payload")
+__all__ = ("ANALYSIS_DELETED_EVENT", "AnalysisDeletedEvent")

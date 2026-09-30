@@ -18,8 +18,8 @@ from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_
 from app.module.analysis.domain.event import (
     ANALYSIS_DELETED_EVENT,
     ANALYSIS_QUEUED_EVENT,
-    analysis_queued_from_payload,
-    metric_refs_from_payload,
+    AnalysisDeletedEvent,
+    AnalysisQueuedEvent,
 )
 from app.module.analysis.domain.value_object import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
@@ -101,11 +101,12 @@ async def _drain_outbox() -> None:
         task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
 
         async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
-            analysis_id, current_user_id = analysis_queued_from_payload(payload)
-            await task_queue.enqueue(analysis_id, current_user_id)
+            event = AnalysisQueuedEvent.from_payload(payload)
+            await task_queue.enqueue(event.analysis_id, event.current_user_id)
 
         async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
-            await metrics_remover.delete(list(metric_refs_from_payload(payload)))
+            event = AnalysisDeletedEvent.from_payload(payload)
+            await metrics_remover.delete(list(event.metrics))
 
         drainer = OutboxDrainer(
             repository,
