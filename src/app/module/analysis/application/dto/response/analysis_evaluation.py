@@ -35,6 +35,8 @@ class MetricContributionResponse:
         Weighted contribution; ``None`` when unavailable.
     unit : str
         Unit of the raw value.
+    label : str
+        Human-readable metric name; empty when not available.
     data_available : bool
         Whether a usable reading was available.
     membership_function : str | None
@@ -52,6 +54,7 @@ class MetricContributionResponse:
     data_available: bool
     membership_function: str | None
     membership_params: Mapping[str, float] | None
+    label: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +70,7 @@ class ClusterScoreResponse:
     contribution: float
     subclusters: tuple[ClusterScoreResponse, ...] = field(default_factory=tuple)
     metrics: tuple[MetricContributionResponse, ...] = field(default_factory=tuple)
+    name: str = ""
 
 
 @dataclass(frozen=True, slots=True)

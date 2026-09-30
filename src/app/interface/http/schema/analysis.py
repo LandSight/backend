@@ -121,6 +121,7 @@ class MetricContributionSchema(BaseModel):
         default=None,
         description="Parameters of the applied membership function.",
     )
+    label: str = Field(default="", description="Human-readable metric name; empty when not available.")
 
 
 class ClusterScoreSchema(BaseModel):
@@ -135,6 +136,7 @@ class ClusterScoreSchema(BaseModel):
     contribution: float = Field(description="score * weight.")
     subclusters: list[ClusterScoreSchema] = Field(default_factory=list)
     metrics: list[MetricContributionSchema] = Field(default_factory=list)
+    name: str = Field(default="", description="Human-readable group name; empty when not configured.")
 
 
 class HierarchicalExtensionSchema(BaseModel):

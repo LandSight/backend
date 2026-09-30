@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.command import FailAnalysisCommand, ScoreAnalysisCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
+from app.module.analysis.domain.event import ANALYSIS_EVALUATED_EVENT, AnalysisEvaluatedEvent
 from app.module.analysis.domain.value_object import AnalysisId, AnalysisStage, AnalysisStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
         UnitOfWork,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
+    from app.module.shared.application.port import EventPublisher
 
 
 class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
@@ -40,12 +42,14 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         scorer: AnalysisScorer,
         fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
+        event_publisher: EventPublisher,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._metrics_reader = metrics_reader
         self._scorer = scorer
         self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
+        self._event_publisher = event_publisher
         self._logger = get_logger("app.analysis.use_case.score_analysis")
 
     @override
@@ -92,6 +96,13 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         analysis.complete(evaluation.total_score, evaluation.model_version)
         await self._analysis_repository.save(analysis)
         await self._analysis_repository.save_evaluation(evaluation)
+        await self._event_publisher.publish(
+            ANALYSIS_EVALUATED_EVENT,
+            AnalysisEvaluatedEvent(
+                analysis_id=analysis.id,
+                current_user_id=command.current_user_id,
+            ).to_payload(),
+        )
         await self._unit_of_work.commit()
 
         self._logger.info(

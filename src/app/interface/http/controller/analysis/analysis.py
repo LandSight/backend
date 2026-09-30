@@ -231,6 +231,7 @@ class AnalysisController(Controller):
             contribution=cluster.contribution,
             subclusters=[cls._to_cluster_schema(subcluster) for subcluster in cluster.subclusters],
             metrics=[cls._to_metric_schema(metric) for metric in cluster.metrics],
+            name=cluster.name,
         )
 
     @classmethod
@@ -246,6 +247,7 @@ class AnalysisController(Controller):
             data_available=metric.data_available,
             membership_function=metric.membership_function,
             membership_params=dict(metric.membership_params) if metric.membership_params else None,
+            label=metric.label,
         )
 
 

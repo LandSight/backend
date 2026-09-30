@@ -110,6 +110,7 @@ class GetAnalysisEvaluationUseCase(
             contribution=cluster.contribution.unwrap(),
             subclusters=tuple(cls._to_cluster(subcluster) for subcluster in cluster.subclusters),
             metrics=tuple(cls._to_metric(metric) for metric in cluster.metrics),
+            name=cluster.name,
         )
 
     @classmethod
@@ -125,6 +126,7 @@ class GetAnalysisEvaluationUseCase(
             data_available=metric.data_available,
             membership_function=metric.membership_function,
             membership_params=metric.membership_params,
+            label=metric.label,
         )
 
 

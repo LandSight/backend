@@ -100,10 +100,14 @@ class HmcdaAnalysisScorer(AnalysisScorer):
     @staticmethod
     def _normalize(
         profile: HmcdaProfile,
-        raw_values: Mapping[str, float | None],
+        raw_values: Mapping[str, tuple[float | None, str]],
     ) -> dict[str, NormalizedMetric]:
         """Normalize every hierarchy leaf, marking missing readings as unavailable."""
-        return {key: profile.normalizer.normalize(key, raw_values.get(key)) for key in profile.hierarchy.leaf_keys()}
+        normalized: dict[str, NormalizedMetric] = {}
+        for key in profile.hierarchy.leaf_keys():
+            value, label = raw_values.get(key, (None, ""))
+            normalized[key] = profile.normalizer.normalize(key, value, label)
+        return normalized
 
     @staticmethod
     def _total_score(clusters: tuple[ClusterScore, ...]) -> AnalysisScore:
@@ -113,14 +117,17 @@ class HmcdaAnalysisScorer(AnalysisScorer):
         return AnalysisScore(weighted * 10)
 
     @staticmethod
-    def _flatten(metrics_response: list[MetricsResponse]) -> dict[str, float | None]:
-        """Flatten neutral metrics_response into a canonical key space."""
-        values: dict[str, float | None] = {}
+    def _flatten(metrics_response: list[MetricsResponse]) -> dict[str, tuple[float | None, str]]:
+        """Flatten neutral metrics_response into a canonical key space with labels."""
+        values: dict[str, tuple[float | None, str]] = {}
         for metric_response in metrics_response:
             prefix = f"{metric_response.category}:" if metric_response.category else ""
             for metric in metric_response.metrics:
                 if isinstance(metric, (NumberMetricValue, IntegerMetricValue)):
-                    values[f"{prefix}{metric.key}"] = None if metric.value is None else float(metric.value)
+                    values[f"{prefix}{metric.key}"] = (
+                        None if metric.value is None else float(metric.value),
+                        metric.label,
+                    )
         return values
 
 

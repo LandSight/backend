@@ -20,7 +20,7 @@ class FuzzyNormalizer:
     def __init__(self, functions: Mapping[str, FuzzyFunction]) -> None:
         self._functions: dict[str, FuzzyFunction] = dict(functions)
 
-    def normalize(self, key: str, value: float | None) -> NormalizedMetric:
+    def normalize(self, key: str, value: float | None, label: str = "") -> NormalizedMetric:
         """Normalize one metric reading.
 
         Parameters
@@ -29,6 +29,8 @@ class FuzzyNormalizer:
             Canonical metric key.
         value : float | None
             Raw reading; ``None`` when the metric is unavailable.
+        label : str
+            Human-readable metric name; empty when not available.
 
         Returns
         -------
@@ -51,6 +53,7 @@ class FuzzyNormalizer:
                 raw_value=None,
                 normalized_value=None,
                 unit=function.unit,
+                label=label,
                 function_name=function.name,
                 function_params=function.params(),
             )
@@ -60,6 +63,7 @@ class FuzzyNormalizer:
             raw_value=raw_value,
             normalized_value=NormalizedScore(function(raw_value)),
             unit=function.unit,
+            label=label,
             function_name=function.name,
             function_params=function.params(),
         )

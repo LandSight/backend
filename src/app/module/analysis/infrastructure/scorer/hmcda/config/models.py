@@ -36,6 +36,8 @@ class HierarchyNode(BaseModel):
         Relative weight among siblings; must be positive.
     components : list[HierarchyNode]
         Child nodes; empty for a leaf metric.
+    name : str
+        Human-readable group name; empty for a leaf metric.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -43,6 +45,11 @@ class HierarchyNode(BaseModel):
     key: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_:.-]+$")
     weight: float = Field(gt=0)
     components: list[HierarchyNode] = Field(default_factory=list)
+    name: str = Field(
+        default="",
+        max_length=128,
+        description="Human-readable group name; empty for a leaf metric.",
+    )
 
     @model_validator(mode="after")
     def _validate_children(self) -> Self:

@@ -39,6 +39,8 @@ class ClusterScore(BaseCompositeValueObject):
         Nested groups; empty for a group of metrics.
     metrics : tuple[MetricContribution, ...]
         Metric contributions; empty for a group of subclusters.
+    name : str
+        Human-readable group name; empty when not configured.
     """
 
     key: AnalysisKey
@@ -47,6 +49,7 @@ class ClusterScore(BaseCompositeValueObject):
     contribution: Contribution
     subclusters: tuple[ClusterScore, ...] = field(default_factory=tuple)
     metrics: tuple[MetricContribution, ...] = field(default_factory=tuple)
+    name: str = ""
 
     def _validate(self) -> None:
         if bool(self.subclusters) == bool(self.metrics):

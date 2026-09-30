@@ -186,6 +186,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                     evaluation_id=evaluation_id,
                     parent_id=parent_id,
                     key=node.key.unwrap(),
+                    name=node.name,
                     depth=depth,
                     score=node.score.unwrap(),
                     weight=node.weight.unwrap(),
@@ -201,6 +202,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                         evaluation_id=evaluation_id,
                         cluster_score_id=group_id,
                         metric_key=metric.key.unwrap(),
+                        label=metric.label,
                         position=metric_position,
                         raw_value=metric.raw_value,
                         normalized_value=(
@@ -270,6 +272,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 contribution=Contribution(group.contribution),
                 subclusters=tuple(build_group(child) for child in children_by_parent[group.id]),
                 metrics=tuple(self._to_metric(row) for row in metrics_by_group[group.id]),
+                name=group.name,
             )
 
         clusters = tuple(build_group(root) for root in roots)
@@ -294,6 +297,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             weight=Weight(row.weight),
             contribution=None if row.contribution is None else Contribution(row.contribution),
             unit=row.unit,
+            label=row.label,
             membership_function=row.membership_function,
             membership_params=row.membership_params,
         )

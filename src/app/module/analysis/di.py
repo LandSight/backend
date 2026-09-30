@@ -220,6 +220,7 @@ def provide_score_analysis_use_case(
     analysis_scorer: NamedDependency[AnalysisScorer],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     analysis_unit_of_work: NamedDependency[UnitOfWork],
+    event_publisher: NamedDependency[EventPublisher],
 ) -> ScoreAnalysisUseCase:
     return ScoreAnalysisUseCase(
         analysis_repository,
@@ -227,6 +228,7 @@ def provide_score_analysis_use_case(
         analysis_scorer,
         fail_analysis_use_case,
         analysis_unit_of_work,
+        event_publisher,
     )
 
 

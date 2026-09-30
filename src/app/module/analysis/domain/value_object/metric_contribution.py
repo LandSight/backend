@@ -36,6 +36,8 @@ class MetricContribution(BaseCompositeValueObject):
         ``normalized_value * weight``; ``None`` when unavailable.
     unit : str
         Unit of the raw value.
+    label : str
+        Human-readable metric name; empty when not available.
     membership_function : str | None
         Name of the normalization function applied.
     membership_params : Mapping[str, float] | None
@@ -48,6 +50,7 @@ class MetricContribution(BaseCompositeValueObject):
     weight: Weight
     contribution: Contribution | None
     unit: str
+    label: str = ""
     membership_function: str | None = None
     membership_params: Mapping[str, float] | None = None
 

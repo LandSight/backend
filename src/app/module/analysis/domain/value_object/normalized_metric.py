@@ -30,6 +30,8 @@ class NormalizedMetric(BaseCompositeValueObject):
         Normalized value in ``[0, 1]``; ``None`` when unavailable.
     unit : str
         Unit of the raw value.
+    label : str
+        Human-readable metric name; empty when not available.
     function_name : str | None
         Name of the normalization function applied, for provenance.
     function_params : Mapping[str, float] | None
@@ -40,6 +42,7 @@ class NormalizedMetric(BaseCompositeValueObject):
     raw_value: float | None
     normalized_value: NormalizedScore | None
     unit: str = ""
+    label: str = ""
     function_name: str | None = None
     function_params: Mapping[str, float] | None = None
 
