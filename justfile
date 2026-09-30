@@ -82,7 +82,7 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker, beat)
 up:
     @{{ COMPOSE_CMD }} up --detach --wait --build
 
