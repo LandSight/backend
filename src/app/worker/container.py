@@ -23,6 +23,7 @@ from app.module.topography.di import topography_dependencies
 from app.platform.config.loaders import load_app_config
 from app.platform.database.engine import create_async_engine_from_config
 from app.platform.database.session import create_async_session_factory
+from app.platform.di import platform_dependencies
 from app.platform.storage.client import create_s3_boto_client
 from app.platform.storage.session import create_aws_session, create_boto_session
 
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 
 
 _ALL_DEPENDENCIES = {
+    **platform_dependencies,
     **parcel_dependencies,
     **topography_dependencies,
     **infrastructure_dependencies,

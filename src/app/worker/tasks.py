@@ -8,23 +8,41 @@ the next one starts.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from celery.signals import worker_process_init
 
 from app.module.analysis.application.dto.command import CollectMetricsCommand, ScoreAnalysisCommand
 from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
+from app.module.analysis.domain.event import (
+    ANALYSIS_DELETED_EVENT,
+    ANALYSIS_QUEUED_EVENT,
+    AnalysisDeletedEvent,
+    AnalysisQueuedEvent,
+)
 from app.module.analysis.domain.value_object import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
     PROCESS_ANALYSIS_TASK_NAME,
 )
 from app.platform.config.loaders import load_logging_config
-from app.platform.logging import configure_logging
+from app.platform.logging import configure_logging, get_logger
+from app.platform.outbox import OutboxDrainer
+from app.platform.outbox.constants import DRAIN_OUTBOX_TASK_NAME
 from app.worker.celery_app import celery_app
 from app.worker.container import WorkerContainer, get_session_factory, run_in_worker_loop
 
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsRemover
+    from app.platform.outbox.repository import OutboxRepository
+
+
 _METRIC_MODULES = (MetricType.TOPOGRAPHY, MetricType.CLIMATE, MetricType.INFRASTRUCTURE)
+
+logger = get_logger("app.worker.tasks")
 
 
 @worker_process_init.connect
@@ -67,4 +85,41 @@ async def _process(analysis_id: str, current_user_id: str) -> None:
         )
 
 
-__all__ = ("process_analysis",)
+@celery_app.task(name=DRAIN_OUTBOX_TASK_NAME)
+def drain_outbox() -> None:
+    """Relay pending transactional-outbox events to their handlers."""
+    run_in_worker_loop(_drain_outbox())
+
+
+async def _drain_outbox() -> None:
+    """Dispatch pending outbox events within a single transaction."""
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        container = WorkerContainer(session)
+        repository: OutboxRepository = container.resolve("outbox_repository")
+        metrics_remover: MetricsRemover = container.resolve("metrics_remover")
+        task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
+
+        async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
+            event = AnalysisQueuedEvent.from_payload(payload)
+            await task_queue.enqueue(event.analysis_id, event.current_user_id)
+
+        async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
+            event = AnalysisDeletedEvent.from_payload(payload)
+            await metrics_remover.delete(list(event.metrics))
+
+        drainer = OutboxDrainer(
+            repository,
+            {
+                ANALYSIS_QUEUED_EVENT: handle_analysis_queued,
+                ANALYSIS_DELETED_EVENT: handle_analysis_deleted,
+            },
+        )
+        processed = await drainer.drain()
+        await session.commit()
+
+        if processed:
+            logger.info("Outbox drained: processed=%s", processed)
+
+
+__all__ = ("drain_outbox", "process_analysis")

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.analysis.domain.entity import Analysis
+    from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
     from app.module.analysis.domain.value_object import AnalysisId, AnalysisMetricRef
 
 
@@ -113,6 +113,36 @@ class AnalysisRepository(ABC):
         -------
         list[AnalysisMetricRef]
             Metric references, empty if none were recorded.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save_evaluation(self, evaluation: AnalysisEvaluation) -> None:
+        """Replace the stored evaluation aggregate for an analysis.
+
+        Persists the evaluation root plus its cluster, subcluster and metric
+        contribution levels in normalized tables.
+
+        Parameters
+        ----------
+        evaluation : AnalysisEvaluation
+            Evaluation aggregate to store.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_evaluation(self, analysis_id: AnalysisId) -> AnalysisEvaluation | None:
+        """Retrieve the stored evaluation tree for an analysis.
+
+        Parameters
+        ----------
+        analysis_id : AnalysisId
+            Owning analysis identifier.
+
+        Returns
+        -------
+        AnalysisEvaluation | None
+            The evaluation if it was stored, ``None`` otherwise.
         """
         raise NotImplementedError
 

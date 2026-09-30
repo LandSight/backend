@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from . import collector, model, parcel, permission, queue, reader, remover, repository, scoring, uow
+from . import collector, fuzzy, model, parcel, permission, ports, queue, reader, remover, repository, scorer, uow
 
 
 __all__ = (
     "collector",
+    "fuzzy",
     "model",
     "parcel",
     "permission",
+    "ports",
     "queue",
     "reader",
     "remover",
     "repository",
-    "scoring",
+    "scorer",
     "uow",
 )

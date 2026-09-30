@@ -9,15 +9,31 @@ from litestar.controller import Controller
 from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED, HTTP_204_NO_CONTENT
 
 from app.interface.http.schema.analysis import (
+    AnalysisEvaluationSchema,
     AnalysisMetricSchema,
     AnalysisResponse,
+    ClusterScoreSchema,
+    ConstraintExtensionSchema,
+    EvaluationMetadataSchema,
+    HierarchicalExtensionSchema,
+    MetricContributionSchema,
+    RuleBasedExtensionSchema,
     StartAnalysisRequest,
 )
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.util.guards import require_authorization
+from app.module.analysis.application.dto.response import (
+    AnalysisEvaluationResponse,
+    ClusterScoreResponse,
+    EvaluationExtensionResponse,
+    HierarchicalExtensionResponse,
+    MetricContributionResponse,
+    RuleBasedExtensionResponse,
+)
 from app.module.analysis.interface.internal.dto import (
     AnalysisResult,
     DeleteAnalysisInput,
+    GetAnalysisEvaluationInput,
     GetAnalysisInput,
     GetAnalysisMetricsInput,
     ListUserAnalysesInput,
@@ -50,6 +66,8 @@ class AnalysisController(Controller):
                 parcel_id=data.parcel_id,
                 current_user_id=current_user.id,
                 name=data.name,
+                analysis_type=data.scenario,
+                engine=data.engine,
             ),
         )
         return self._to_schema(result)
@@ -116,6 +134,23 @@ class AnalysisController(Controller):
             for result in results
         ]
 
+    @get(
+        "/{analysis_id:uuid}/evaluation",
+        status_code=HTTP_200_OK,
+        description="Get the stored evaluation tree of a completed analysis.",
+    )
+    async def get_analysis_evaluation(
+        self,
+        analysis_id: UUID,
+        analysis_api: AnalysisInternalAPI,
+        current_user: CurrentUser,
+    ) -> AnalysisEvaluationSchema:
+        """Get the stored evaluation tree of a completed analysis."""
+        result = await analysis_api.get_analysis_evaluation(
+            GetAnalysisEvaluationInput(analysis_id=analysis_id, current_user_id=current_user.id),
+        )
+        return self._to_evaluation_schema(result)
+
     @delete(
         "/{analysis_id:uuid}",
         status_code=HTTP_204_NO_CONTENT,
@@ -140,11 +175,77 @@ class AnalysisController(Controller):
             parcel_id=result.parcel_id,
             parcel_name=result.parcel_name,
             name=result.name,
+            scenario=result.analysis_type,
+            engine=result.engine,
             status=result.status,
             stage=result.stage,
             score=result.score,
+            model_version=result.model_version,
             status_reason=result.status_reason,
             created_at=result.created_at,
+            completed_at=result.completed_at,
+        )
+
+    @classmethod
+    def _to_evaluation_schema(cls, result: AnalysisEvaluationResponse) -> AnalysisEvaluationSchema:
+        """Map an application evaluation DTO to the universal HTTP schema."""
+        return AnalysisEvaluationSchema(
+            scenario=result.scenario,
+            engine=result.engine,
+            model_version=result.model_version,
+            total_score=result.total_score,
+            scale=result.scale,
+            metadata=EvaluationMetadataSchema(
+                evaluated_at=result.metadata.evaluated_at,
+                parcel_id=UUID(result.metadata.parcel_id),
+            ),
+            extensions={key: cls._to_extension_schema(extension) for key, extension in result.extensions.items()},
+        )
+
+    @classmethod
+    def _to_extension_schema(
+        cls,
+        extension: EvaluationExtensionResponse,
+    ) -> HierarchicalExtensionSchema | RuleBasedExtensionSchema | ConstraintExtensionSchema:
+        """Map an engine-specific evaluation extension to its HTTP schema."""
+        if isinstance(extension, HierarchicalExtensionResponse):
+            return HierarchicalExtensionSchema(
+                clusters=[cls._to_cluster_schema(cluster) for cluster in extension.clusters],
+            )
+        if isinstance(extension, RuleBasedExtensionResponse):
+            return RuleBasedExtensionSchema(
+                base_score=extension.base_score,
+                applied_rules=[dict(rule) for rule in extension.applied_rules],
+            )
+        return ConstraintExtensionSchema(
+            applied_constraints=[dict(constraint) for constraint in extension.applied_constraints],
+        )
+
+    @classmethod
+    def _to_cluster_schema(cls, cluster: ClusterScoreResponse) -> ClusterScoreSchema:
+        """Map a group score DTO to a schema, recursing into subclusters."""
+        return ClusterScoreSchema(
+            key=cluster.key,
+            score=cluster.score,
+            weight=cluster.weight,
+            contribution=cluster.contribution,
+            subclusters=[cls._to_cluster_schema(subcluster) for subcluster in cluster.subclusters],
+            metrics=[cls._to_metric_schema(metric) for metric in cluster.metrics],
+        )
+
+    @classmethod
+    def _to_metric_schema(cls, metric: MetricContributionResponse) -> MetricContributionSchema:
+        """Map a metric contribution DTO to a schema."""
+        return MetricContributionSchema(
+            key=metric.key,
+            raw_value=metric.raw_value,
+            normalized_value=metric.normalized_value,
+            weight=metric.weight,
+            contribution=metric.contribution,
+            unit=metric.unit,
+            data_available=metric.data_available,
+            membership_function=metric.membership_function,
+            membership_params=dict(metric.membership_params) if metric.membership_params else None,
         )
 
 

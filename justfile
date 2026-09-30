@@ -82,7 +82,7 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker, beat)
 up:
     @{{ COMPOSE_CMD }} up --detach --wait --build
 
@@ -141,3 +141,8 @@ worker:
     @uv run celery -A app.worker.celery_app:celery_app worker \
         --loglevel="INFO" \
         --concurrency="{{ CELERY_CONCURRENCY }}"
+
+# Run the Celery beat scheduler that relays the transactional outbox
+beat:
+    @uv run celery -A app.worker.celery_app:celery_app beat \
+        --loglevel="INFO"

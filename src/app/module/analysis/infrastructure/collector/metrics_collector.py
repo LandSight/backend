@@ -20,6 +20,7 @@ from app.platform.logging import get_logger
 
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from uuid import UUID
 
     from app.module.climate.interface.internal.port import ClimateInternalAPI
@@ -63,7 +64,7 @@ class MetricsCollectorImpl(MetricsCollector):
         self,
         parcel_id: UUID,
         user_id: UUID,
-        buffers: dict[str, int],
+        buffers: Mapping[str, int],
     ) -> list[AnalysisMetricRef]:
         """See :class:`app.module.analysis.application.port.MetricsCollector.collect_infrastructure`."""
         available = await self._infrastructure_api.get_available_categories()

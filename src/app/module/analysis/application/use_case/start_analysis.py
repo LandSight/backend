@@ -8,6 +8,7 @@ from uuid import uuid6
 from app.module.analysis.application.dto.command import StartAnalysisCommand
 from app.module.analysis.application.dto.response import AnalysisResponse
 from app.module.analysis.domain.entity import Analysis
+from app.module.analysis.domain.event import ANALYSIS_QUEUED_EVENT, AnalysisQueuedEvent
 from app.module.analysis.domain.value_object import AnalysisId, AnalysisName, ParcelId
 from app.module.shared.application.error import ForbiddenError
 from app.module.shared.application.use_case import BaseUseCase
@@ -18,17 +19,18 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
-        AnalysisTaskQueue,
         OwnedParcelsProvider,
     )
+    from app.module.shared.application.port import EventPublisher
 
 
 class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
     """Start an analysis for a parcel.
 
-    Creates a ``PENDING`` analysis, persists it and enqueues it for processing.
-    The actual metric aggregation and scoring run in a worker (see the queue
-    port).
+    Creates a ``PENDING`` analysis and persists it. Processing is requested by
+    writing an ``AnalysisQueued`` event to the transactional outbox in the same
+    transaction, so the worker is only enqueued after the analysis has
+    committed. The actual metric aggregation and scoring run in a worker.
     """
 
     def __init__(
@@ -36,12 +38,12 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
         owned_parcels_provider: OwnedParcelsProvider,
-        task_queue: AnalysisTaskQueue,
+        event_publisher: EventPublisher,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
         self._owned_parcels_provider = owned_parcels_provider
-        self._task_queue = task_queue
+        self._event_publisher = event_publisher
         self._logger = get_logger("app.analysis.use_case.start_analysis")
 
     @override
@@ -58,9 +60,17 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             id=AnalysisId(uuid6()),
             parcel_id=ParcelId(command.parcel_id),
             name=AnalysisName(command.name),
+            analysis_type=command.analysis_type,
+            engine=command.engine,
         )
         saved = await self._analysis_repository.save(analysis)
-        await self._task_queue.enqueue(saved.id, command.current_user_id)
+        await self._event_publisher.publish(
+            ANALYSIS_QUEUED_EVENT,
+            AnalysisQueuedEvent(
+                analysis_id=saved.id,
+                current_user_id=command.current_user_id,
+            ).to_payload(),
+        )
 
         self._logger.info("Analysis started: analysis_id=%s parcel_id=%s", saved.id, saved.parcel_id)
 
@@ -74,11 +84,15 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             parcel_id=analysis.parcel_id.unwrap(),
             parcel_name=parcel_name,
             name=analysis.name.unwrap(),
+            analysis_type=analysis.analysis_type.value,
+            engine=analysis.engine.value,
             status=analysis.status.value,
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
+            model_version=analysis.model_version,
             status_reason=analysis.status_reason,
             created_at=analysis.created_at,
+            completed_at=analysis.completed_at,
         )
 
 

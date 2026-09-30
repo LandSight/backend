@@ -33,6 +33,7 @@ dependencies = [
   "pydantic-settings>=2.12",
   "pyjwt>=2.13",
   "pyproj>=3.7.2",
+  "pyyaml>=6",
   "rasterio>=1.5",
   "redis>=6",
   "shapely>=2.1.2",

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from uuid import UUID
 
     from app.module.analysis.domain.value_object import AnalysisMetricRef
@@ -37,7 +38,7 @@ class MetricsCollector(ABC):
         self,
         parcel_id: UUID,
         user_id: UUID,
-        buffers: dict[str, int],
+        buffers: Mapping[str, int],
     ) -> list[AnalysisMetricRef]:
         """Calculate and persist infrastructure metrics for the configured categories."""
         raise NotImplementedError

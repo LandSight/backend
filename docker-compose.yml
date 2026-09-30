@@ -143,6 +143,23 @@ services:
       minio:
         condition: service_healthy
 
+  beat:
+    <<: *backend
+    container_name: landsight-beat
+    command:
+      - uv
+      - run
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - beat
+      - --loglevel=INFO
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   minio_data:

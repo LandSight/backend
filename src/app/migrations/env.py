@@ -43,6 +43,7 @@ service: str = config.config_ini_section
 # Upstream modules must be imported so that Alembic can resolve FK chains.
 if service == "platform":
     from app.platform.database.base import BaseModel
+    from app.platform.outbox.models import OutboxEventModel  # noqa: F401
 
     target_metadata = BaseModel.metadata
     version_table_schema: str | None = None
@@ -112,6 +113,15 @@ elif service == "climate":
 elif service == "analysis":
     # Analysis FK: analyses.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.analysis.infrastructure.model.analysis_cluster_score_model import (  # noqa: F401
+        AnalysisClusterScoreModel,
+    )
+    from app.module.analysis.infrastructure.model.analysis_evaluation_model import (  # noqa: F401
+        AnalysisEvaluationModel,
+    )
+    from app.module.analysis.infrastructure.model.analysis_metric_contribution_model import (  # noqa: F401
+        AnalysisMetricContributionModel,
+    )
     from app.module.analysis.infrastructure.model.analysis_metric_model import AnalysisMetricModel  # noqa: F401
     from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel  # noqa: F401
     from app.module.identity.infrastructure.model.user_model import UserModel  # noqa: F401

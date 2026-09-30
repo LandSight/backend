@@ -17,4 +17,15 @@ class AnalysisNotDeletableError(ApplicationError):
         super().__init__(f"Analysis cannot be deleted while it is '{status}'.")
 
 
-__all__ = ("AnalysisNotDeletableError", "AnalysisNotFoundError")
+class AnalysisEvaluationNotAvailableError(ApplicationError):
+    """Raised when an analysis has no stored evaluation yet."""
+
+    def __init__(self, analysis_id: str) -> None:
+        super().__init__(f"Evaluation for analysis '{analysis_id}' is not available.")
+
+
+__all__ = (
+    "AnalysisEvaluationNotAvailableError",
+    "AnalysisNotDeletableError",
+    "AnalysisNotFoundError",
+)
