@@ -1,0 +1,108 @@
+"""Concrete implementation of the Interpretation module's internal API.
+
+See :class:`app.module.interpretation.interface.internal.port.InterpretationInternalAPI`
+for the abstract interface.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
+
+from app.module.interpretation.application.dto.command import (
+    GenerateInterpretationCommand,
+    GetInterpretationCommand,
+)
+from app.module.interpretation.interface.internal.dto import (
+    AspectInterpretationResult,
+    GenerateInterpretationInput,
+    GetInterpretationInput,
+    InterpretationResult,
+    MetricInfoResult,
+)
+from app.module.interpretation.interface.internal.port import InterpretationInternalAPI
+
+
+if TYPE_CHECKING:
+    from app.module.interpretation.application.dto.response import (
+        AspectInterpretationResponse,
+        InterpretationResultResponse,
+    )
+    from app.module.interpretation.application.use_case import (
+        GenerateInterpretationUseCase,
+        GetInterpretationUseCase,
+    )
+    from app.module.interpretation.domain.value_object import AspectMetric
+
+
+class InterpretationInternal(InterpretationInternalAPI):
+    """Concrete implementation of the Interpretation internal API."""
+
+    def __init__(
+        self,
+        get_interpretation_use_case: GetInterpretationUseCase,
+        generate_interpretation_use_case: GenerateInterpretationUseCase,
+    ) -> None:
+        self._get_interpretation = get_interpretation_use_case
+        self._generate_interpretation = generate_interpretation_use_case
+
+    @override
+    async def get_interpretation(self, input_data: GetInterpretationInput) -> InterpretationResult:
+        """See :meth:`InterpretationInternalAPI.get_interpretation`."""
+        result = await self._get_interpretation(
+            GetInterpretationCommand(
+                analysis_id=input_data.analysis_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
+        return self._to_result(result)
+
+    @override
+    async def generate_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
+        """See :meth:`InterpretationInternalAPI.generate_interpretation`."""
+        result = await self._generate_interpretation(
+            GenerateInterpretationCommand(
+                analysis_id=input_data.analysis_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
+        return self._to_result(result)
+
+    @classmethod
+    def _to_result(cls, result: InterpretationResultResponse) -> InterpretationResult:
+        """Map an application response DTO to an internal result DTO."""
+        return InterpretationResult(
+            total_score=result.total_score,
+            scale=result.scale,
+            scenario=result.scenario,
+            aspects=tuple(cls._to_aspect(aspect) for aspect in result.aspects),
+            top_aspects_summary=result.top_aspects_summary,
+        )
+
+    @classmethod
+    def _to_aspect(cls, aspect: AspectInterpretationResponse) -> AspectInterpretationResult:
+        """Map one aspect explanation."""
+        return AspectInterpretationResult(
+            key=aspect.key,
+            name=aspect.name,
+            score=aspect.score,
+            weight=aspect.weight,
+            contribution=aspect.contribution,
+            explanation=aspect.explanation,
+            top_metrics=tuple(cls._to_metric(metric) for metric in aspect.top_metrics),
+        )
+
+    @staticmethod
+    def _to_metric(metric: AspectMetric) -> MetricInfoResult:
+        """Map one selected metric."""
+        return MetricInfoResult(
+            key=metric.key,
+            label=metric.label,
+            raw_value=metric.raw_value,
+            normalized_value=metric.normalized_value,
+            contribution=metric.contribution,
+            unit=metric.unit,
+            role=metric.role,
+        )
+
+
+__all__ = ("InterpretationInternal",)

@@ -28,6 +28,7 @@ from app.module.interpretation.infrastructure.llm import (
 )
 from app.module.interpretation.infrastructure.queue import CeleryInterpretationTaskQueue
 from app.module.interpretation.infrastructure.repository import PostgresInterpretationRepository
+from app.module.interpretation.interface.internal.api import InterpretationInternal
 from app.platform.config.loaders import load_llm_config
 
 
@@ -147,6 +148,14 @@ def provide_get_interpretation_use_case(
     )
 
 
+# ----- Internal API -----
+def provide_interpretation_internal(
+    get_interpretation_use_case: NamedDependency[GetInterpretationUseCase],
+    generate_interpretation_use_case: NamedDependency[GenerateInterpretationUseCase],
+) -> InterpretationInternal:
+    return InterpretationInternal(get_interpretation_use_case, generate_interpretation_use_case)
+
+
 interpretation_dependencies = {
     "interpretation_policy": Provide(provide_interpretation_policy, use_cache=True, sync_to_thread=False),
     "metric_classifier": Provide(provide_metric_classifier, use_cache=True, sync_to_thread=False),
@@ -169,6 +178,7 @@ interpretation_dependencies = {
         sync_to_thread=False,
     ),
     GET_INTERPRETATION_USE_CASE_KEY: Provide(provide_get_interpretation_use_case, sync_to_thread=False),
+    "interpretation_api": Provide(provide_interpretation_internal, sync_to_thread=False),
 }
 
 
