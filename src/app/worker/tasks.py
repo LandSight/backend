@@ -110,6 +110,10 @@ async def _process_interpretation(analysis_id: str, current_user_id: str) -> Non
                 current_user_id=UUID(current_user_id),
             )
         )
+        # The worker owns the transaction: unlike the HTTP request scope there is
+        # no middleware to commit, so the store call from the use case would be
+        # rolled back on session close otherwise.
+        await session.commit()
 
 
 @celery_app.task(name=DRAIN_OUTBOX_TASK_NAME)

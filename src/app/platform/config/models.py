@@ -319,7 +319,7 @@ class LLMConfig(BaseConfig):
         min_length=1,
     )
     model: str = Field(
-        default="qwen2.5-7b-instruct",
+        default="gemma-4-e4b-it",
         description="LLM model name",
         min_length=1,
     )

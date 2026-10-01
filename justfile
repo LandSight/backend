@@ -95,6 +95,17 @@ infra-up:
 infra-up-lite:
     @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis
 
+# Download the default llama.cpp GGUF model into ./models (about 5.0 GB)
+model-download:
+    @mkdir -p models
+    @curl -L --fail --progress-bar \
+        -o models/gemma-4-E4B-it-Q4_K_M.gguf \
+        https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q4_K_M.gguf
+
+# Start only the llama.cpp LLM server (run `just model-download` first)
+llm-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build llama-server
+
 # Stop all services
 down:
     @{{ COMPOSE_CMD }} down

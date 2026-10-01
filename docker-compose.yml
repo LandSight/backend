@@ -116,7 +116,8 @@ services:
     command: >
       --host 0.0.0.0
       --port 8081
-      --model /models/qwen2.5-7b-instruct-q4_k_m.gguf
+      --model /models/gemma-4-E4B-it-Q4_K_M.gguf
+      --alias gemma-4-e4b-it
       --ctx-size 4096
       --n-gpu-layers 99
     deploy:
