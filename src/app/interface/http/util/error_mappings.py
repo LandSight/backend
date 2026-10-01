@@ -30,6 +30,7 @@ from app.module.infrastructure.application.error import (
     InfrastructureMetricsNotFoundError,
     UnknownCategoryError,
 )
+from app.module.interpretation.application.error import InterpretationNotAvailableError
 from app.module.parcel.application.error import (
     InvalidGeoJsonError,
     InvalidPolygonError,
@@ -136,6 +137,16 @@ def _get_analysis_application_error_mappings() -> dict[type[ApplicationError], i
     }
 
 
+# Interpretation module
+
+
+def _get_interpretation_application_error_mappings() -> dict[type[ApplicationError], int]:
+    """Return application error to HTTP status mappings for Interpretation module."""
+    return {
+        InterpretationNotAvailableError: HTTP_404_NOT_FOUND,
+    }
+
+
 #  Public API
 
 
@@ -168,6 +179,7 @@ def get_all_application_error_mappings() -> dict[type[ApplicationError], int]:
     mappings.update(_get_climate_application_error_mappings())
     mappings.update(_get_infrastructure_application_error_mappings())
     mappings.update(_get_analysis_application_error_mappings())
+    mappings.update(_get_interpretation_application_error_mappings())
     return mappings
 
 
