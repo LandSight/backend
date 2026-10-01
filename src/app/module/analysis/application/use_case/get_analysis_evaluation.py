@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
+        AnalysisProfileProvider,
         AnalysisRepository,
     )
     from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
@@ -45,9 +46,11 @@ class GetAnalysisEvaluationUseCase(
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
+        profile_provider: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
+        self._profile_provider = profile_provider
         self._logger = get_logger("app.analysis.use_case.get_analysis_evaluation")
 
     @override
@@ -80,8 +83,7 @@ class GetAnalysisEvaluationUseCase(
         """Raise a not-found error for the given analysis ID."""
         raise AnalysisNotFoundError(str(analysis_id))
 
-    @classmethod
-    def _to_response(cls, analysis: Analysis, evaluation: AnalysisEvaluation) -> AnalysisEvaluationResponse:
+    def _to_response(self, analysis: Analysis, evaluation: AnalysisEvaluation) -> AnalysisEvaluationResponse:
         """Map a domain evaluation to the universal response DTO."""
         return AnalysisEvaluationResponse(
             scenario=evaluation.analysis_type.value,
@@ -95,9 +97,10 @@ class GetAnalysisEvaluationUseCase(
             ),
             extensions={
                 "hierarchical": HierarchicalExtensionResponse(
-                    clusters=tuple(cls._to_cluster(cluster) for cluster in evaluation.clusters),
+                    clusters=tuple(self._to_cluster(cluster) for cluster in evaluation.clusters),
                 ),
             },
+            scenario_description=self._profile_provider.description(evaluation.analysis_type),
         )
 
     @classmethod

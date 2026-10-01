@@ -156,6 +156,8 @@ class AnalysisEvaluationResponse:
         Evaluation metadata.
     extensions : Mapping[str, EvaluationExtensionResponse]
         Engine-specific extensions keyed by extension name.
+    scenario_description : str
+        Human-readable description of the evaluation profile.
     """
 
     scenario: str
@@ -165,6 +167,7 @@ class AnalysisEvaluationResponse:
     scale: str
     metadata: EvaluationMetadataResponse
     extensions: Mapping[str, EvaluationExtensionResponse] = field(default_factory=dict)
+    scenario_description: str = ""
 
 
 __all__ = (

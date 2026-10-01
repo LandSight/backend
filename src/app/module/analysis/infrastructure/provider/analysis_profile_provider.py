@@ -39,6 +39,15 @@ class AnalysisProfileProviderImpl(AnalysisProfileProvider):
         )
 
     @override
+    def description(self, analysis_type: AnalysisType) -> str:
+        """See :class:`app.module.analysis.application.port.AnalysisProfileProvider.description`."""
+        profile = self._profiles.get(analysis_type)
+        if profile is None:
+            message = f"No analysis profile configured for analysis type '{analysis_type}'."
+            raise ValidationError(message)
+        return AnalysisProfileDescription(profile.description).unwrap()
+
+    @override
     def infrastructure_buffers(self, analysis_type: AnalysisType) -> Mapping[str, int]:
         """See :class:`app.module.analysis.application.port.AnalysisProfileProvider.infrastructure_buffers`."""
         profile = self._profiles.get(analysis_type)

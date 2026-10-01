@@ -34,6 +34,22 @@ class AnalysisProfileProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def description(self, analysis_type: AnalysisType) -> str:
+        """Return the human-readable description of the profile.
+
+        Parameters
+        ----------
+        analysis_type : AnalysisType
+            Evaluation profile whose description is requested.
+
+        Returns
+        -------
+        str
+            Description of what the profile evaluates.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def infrastructure_buffers(self, analysis_type: AnalysisType) -> Mapping[str, int]:
         """Return infrastructure search buffers in meters for the profile.
 

@@ -119,8 +119,9 @@ def provide_get_analysis_metrics_use_case(
 def provide_get_analysis_evaluation_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
+    analysis_profiles: NamedDependency[AnalysisProfileProvider],
 ) -> GetAnalysisEvaluationUseCase:
-    return GetAnalysisEvaluationUseCase(analysis_repository, analysis_permission_service)
+    return GetAnalysisEvaluationUseCase(analysis_repository, analysis_permission_service, analysis_profiles)
 
 
 def provide_list_user_analyses_use_case(
