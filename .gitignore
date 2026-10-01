@@ -120,3 +120,7 @@ Thumbs.db
 data/
 *.osm
 *.osm.pbf
+
+# Local LLM weights (llama.cpp GGUF models)
+models/
+*.gguf
