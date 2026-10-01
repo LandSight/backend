@@ -308,10 +308,6 @@ class LLMConfig(BaseConfig):
         Sampling temperature.
     max_tokens : int
         Maximum tokens per answer.
-    concurrency : int
-        Maximum number of concurrent LLM requests.
-    grader_enabled : bool
-        Whether generated explanations are verified by a second LLM pass.
     """
 
     model_config = SettingsConfigDict(
@@ -346,15 +342,6 @@ class LLMConfig(BaseConfig):
         default=512,
         description="Maximum tokens per answer",
         gt=0,
-    )
-    concurrency: int = Field(
-        default=2,
-        description="Maximum number of concurrent LLM requests",
-        gt=0,
-    )
-    grader_enabled: bool = Field(
-        default=True,
-        description="Whether explanations are verified by the grader",
     )
 
 
