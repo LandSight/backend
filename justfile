@@ -86,8 +86,13 @@ changelog-fragment:
 up:
     @{{ COMPOSE_CMD }} up --detach --wait --build
 
-# Start only infrastructure services (PostgreSQL, Redis, MinIO)
+# Note: llama-server needs an NVIDIA GPU and a GGUF model in ./models.
+# Start only infrastructure services (PostgreSQL, Redis, MinIO, llama.cpp LLM)
 infra-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis llama-server
+
+# Start only the CPU-safe infrastructure services (PostgreSQL, Redis, MinIO)
+infra-up-lite:
     @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis
 
 # Stop all services
