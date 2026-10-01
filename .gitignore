@@ -98,6 +98,7 @@ poetry.lock
 
 # celery
 celerybeat-schedule
+celerybeat-schedule-*
 celerybeat.pid
 
 # Environments
