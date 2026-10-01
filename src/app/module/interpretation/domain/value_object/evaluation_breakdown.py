@@ -10,8 +10,6 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
-    import datetime
-
     from app.module.interpretation.domain.value_object.aspect import Aspect
 
 
@@ -32,12 +30,8 @@ class EvaluationBreakdown(BaseCompositeValueObject):
         Score scale (e.g. ``0-10``).
     scenario : str
         Evaluation profile (e.g. ``izhs``).
-    model_version : str
-        Version of the scoring model that produced the evaluation.
-    parcel_id : str
-        ID of the evaluated parcel.
-    evaluated_at : datetime.datetime | None
-        When the evaluation was created.
+    scenario_description : str
+        Human-readable description of the profile, fed to the prompt.
     aspects : tuple[Aspect, ...]
         Top-level aspects with their flattened metrics.
     """
@@ -45,10 +39,8 @@ class EvaluationBreakdown(BaseCompositeValueObject):
     total_score: float
     scale: str
     scenario: str
-    model_version: str
-    parcel_id: str
-    evaluated_at: datetime.datetime | None
     aspects: tuple[Aspect, ...] = field(default_factory=tuple)
+    scenario_description: str = ""
 
     def _validate(self) -> None:
         if self.total_score < 0:

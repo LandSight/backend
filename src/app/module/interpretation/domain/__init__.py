@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import service, value_object
+from . import entity, service, value_object
 
 
-__all__ = ("service", "value_object")
+__all__ = ("entity", "service", "value_object")

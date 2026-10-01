@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from app.module.interpretation.application.dto.response import MetricInfoResponse
 from app.module.interpretation.domain.value_object import InterpretationPolicy, MetricRole
 
 
@@ -29,7 +28,7 @@ class AspectExtractor:
         """Maximum number of metrics returned per aspect."""
         return self._policy.metric_limit
 
-    def top_metrics(self, aspect: Aspect) -> tuple[MetricInfoResponse, ...]:
+    def top_metrics(self, aspect: Aspect) -> tuple[AspectMetric, ...]:
         """Return up to the policy limit metrics describing the aspect."""
         available = [metric for metric in aspect.metrics if metric.data_available]
         strong = sorted(
@@ -49,20 +48,7 @@ class AspectExtractor:
                 reverse=True,
             )
             selected += neutral
-        return tuple(self._to_info(metric) for metric in selected[: self.limit])
-
-    @staticmethod
-    def _to_info(metric: AspectMetric) -> MetricInfoResponse:
-        """Map a metric view to its response DTO."""
-        return MetricInfoResponse(
-            key=metric.key,
-            label=metric.label,
-            raw_value=metric.raw_value,
-            normalized_value=metric.normalized_value,
-            contribution=metric.contribution,
-            unit=metric.unit,
-            role=metric.role,
-        )
+        return tuple(selected[: self.limit])
 
 
 __all__ = ("AspectExtractor",)
