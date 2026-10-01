@@ -4,6 +4,7 @@ from app.platform.config.models import (
     AppConfig,
     AuthConfig,
     DatabaseConfig,
+    LLMConfig,
     LoggingConfig,
     RedisConfig,
     S3Config,
@@ -78,10 +79,22 @@ def load_s3_config() -> S3Config:
     return load_app_config().s3
 
 
+def load_llm_config() -> LLMConfig:
+    """Load LLM settings from environment variables.
+
+    Returns
+    -------
+    LLMConfig
+        LLM configuration populated from the environment.
+    """
+    return load_app_config().llm
+
+
 __all__ = (
     "load_app_config",
     "load_auth_config",
     "load_database_config",
+    "load_llm_config",
     "load_logging_config",
     "load_redis_config",
     "load_s3_config",

@@ -291,6 +291,73 @@ class S3Config(BaseConfig):
         return self.endpoint.replace("http://", "").replace("https://", "")
 
 
+class LLMConfig(BaseConfig):
+    """LLM server configuration for the interpretation module.
+
+    Attributes
+    ----------
+    base_url : str
+        OpenAI-compatible base URL, without the trailing ``/chat/completions``.
+    model : str
+        Model name passed to the server.
+    device : str
+        Device the model runs on; reported in the interpretation metadata.
+    timeout_seconds : float
+        Per-request timeout.
+    temperature : float
+        Sampling temperature.
+    max_tokens : int
+        Maximum tokens per answer.
+    concurrency : int
+        Maximum number of concurrent LLM requests.
+    grader_enabled : bool
+        Whether generated explanations are verified by a second LLM pass.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="LLM_",
+    )
+    base_url: str = Field(
+        default="http://llama-server:8081/v1",
+        description="OpenAI-compatible LLM base URL",
+        min_length=1,
+    )
+    model: str = Field(
+        default="qwen2.5-7b-instruct",
+        description="LLM model name",
+        min_length=1,
+    )
+    device: str = Field(
+        default="gpu",
+        description="Device the LLM runs on",
+        min_length=1,
+    )
+    timeout_seconds: float = Field(
+        default=60.0,
+        description="Per-request timeout in seconds",
+        gt=0,
+    )
+    temperature: float = Field(
+        default=0.2,
+        description="Sampling temperature",
+        ge=0,
+    )
+    max_tokens: int = Field(
+        default=512,
+        description="Maximum tokens per answer",
+        gt=0,
+    )
+    concurrency: int = Field(
+        default=2,
+        description="Maximum number of concurrent LLM requests",
+        gt=0,
+    )
+    grader_enabled: bool = Field(
+        default=True,
+        description="Whether explanations are verified by the grader",
+    )
+
+
 class AppConfig(BaseConfig):
     """Application configuration — root config."""
 
@@ -299,3 +366,4 @@ class AppConfig(BaseConfig):
     redis: RedisConfig = Field(default_factory=RedisConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     s3: S3Config = Field(default_factory=S3Config)
+    llm: LLMConfig = Field(default_factory=LLMConfig)
