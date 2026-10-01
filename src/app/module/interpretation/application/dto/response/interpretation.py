@@ -1,7 +1,7 @@
 """Interpretation response DTOs.
 
-These DTOs are the public output of the interpretation module: the result of
-turning an evaluation into a human-readable report.
+These DTOs are the output of the interpretation module: the generated report
+assembled from the evaluation and the stored explanations.
 """
 
 from __future__ import annotations
@@ -11,22 +11,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    import datetime
-
-    from app.module.interpretation.domain.value_object import MetricRole
-
-
-@dataclass(frozen=True, slots=True)
-class MetricInfoResponse:
-    """One metric selected for an aspect explanation."""
-
-    key: str
-    label: str
-    raw_value: float | None
-    normalized_value: float | None
-    contribution: float | None
-    unit: str
-    role: MetricRole
+    from app.module.interpretation.domain.value_object import AspectMetric
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,18 +24,7 @@ class AspectInterpretationResponse:
     weight: float
     contribution: float
     explanation: str
-    top_metrics: tuple[MetricInfoResponse, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True, slots=True)
-class InterpretationMetadataResponse:
-    """Metadata of a generated interpretation."""
-
-    evaluated_at: datetime.datetime | None
-    parcel_id: str
-    llm_model: str
-    llm_device: str
-    grader_enabled: bool
+    top_metrics: tuple[AspectMetric, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,14 +34,11 @@ class InterpretationResultResponse:
     total_score: float
     scale: str
     scenario: str
-    metadata: InterpretationMetadataResponse
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
 
 
 __all__ = (
     "AspectInterpretationResponse",
-    "InterpretationMetadataResponse",
     "InterpretationResultResponse",
-    "MetricInfoResponse",
 )

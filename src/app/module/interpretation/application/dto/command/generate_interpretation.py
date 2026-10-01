@@ -12,11 +12,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class GenerateInterpretationCommand:
-    """Command for generating (or regenerating) an interpretation report."""
+    """Command for generating an interpretation report.
+
+    Generation always produces a fresh report: an existing report is replaced,
+    so no ``force`` flag is needed.
+    """
 
     analysis_id: UUID
     current_user_id: UUID
-    force: bool = False
 
 
 __all__ = ("GenerateInterpretationCommand",)

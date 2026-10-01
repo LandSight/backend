@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-from .interpretation import (
-    AspectInterpretationResponse,
-    InterpretationMetadataResponse,
-    InterpretationResultResponse,
-    MetricInfoResponse,
-)
+from .interpretation import AspectInterpretationResponse, InterpretationResultResponse
 
 
 __all__ = (
     "AspectInterpretationResponse",
-    "InterpretationMetadataResponse",
     "InterpretationResultResponse",
-    "MetricInfoResponse",
 )

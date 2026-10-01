@@ -9,20 +9,20 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.interpretation.application.dto.response import InterpretationResultResponse
+    from app.module.interpretation.domain.entity import Interpretation
 
 
 class InterpretationRepository(ABC):
     """Stores generated interpretation reports, one per analysis."""
 
     @abstractmethod
-    async def get(self, analysis_id: UUID) -> InterpretationResultResponse | None:
+    async def get(self, analysis_id: UUID) -> Interpretation | None:
         """Return the stored report of an analysis, or ``None``."""
         raise NotImplementedError
 
     @abstractmethod
-    async def save(self, analysis_id: UUID, result: InterpretationResultResponse) -> None:
-        """Persist (insert or replace) the report of an analysis."""
+    async def save(self, interpretation: Interpretation) -> Interpretation:
+        """Persist the report and return the flushed entity."""
         raise NotImplementedError
 
     @abstractmethod
