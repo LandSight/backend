@@ -14,11 +14,11 @@ profiles:
     hierarchy:
       clusters:
         - key: relief
-          name: Рельеф
+          name: Relief
           weight: 0.20
           components:
             - key: slope
-              name: Уклон
+              name: Slope
               weight: 0.45
               components:
                 - { key: mean_slope, weight: 0.25 }
@@ -30,7 +30,7 @@ profiles:
                 - { key: slope_p75, weight: 0.15 }
                 - { key: slope_p90, weight: 0.30 }
             - key: elevation
-              name: Высоты
+              name: Heights
               weight: 0.15
               components:
                 - { key: elevation_range, weight: 0.60 }
@@ -44,29 +44,29 @@ profiles:
                 - { key: elongation_index, weight: 0.30 }
 
         - key: climate
-          name: Климат
+          name: Climate
           weight: 0.10
           components:
             - key: temperature
-              name: Температура
+              name: Temperature
               weight: 0.50
               components:
                 - { key: mean_annual_temperature, weight: 0.30 }
                 - { key: min_temperature_coldest_month, weight: 0.40 }
                 - { key: max_temperature_warmest_month, weight: 0.30 }
             - key: precipitation
-              name: Осадки
+              name: Precipitation
               weight: 0.50
               components:
                 - { key: annual_precipitation, weight: 0.50 }
                 - { key: precipitation_driest_month, weight: 0.50 }
 
         - key: infrastructure
-          name: Инфраструктура
+          name: Infrastructure
           weight: 0.40
           components:
             - key: facility
-              name: Объекты и услуги
+              name: Facilities and services
               weight: 0.45
               components:
                 - { key: "hospital:min_distance_to", weight: 0.15 }
@@ -79,12 +79,12 @@ profiles:
                 - { key: "police:min_distance_to", weight: 0.05 }
                 - { key: "fire_station:min_distance_to", weight: 0.05 }
             - key: utility
-              name: Коммунальные сети
+              name: Utility networks
               weight: 0.10
               components:
                 - { key: "power_line:min_distance_to", weight: 1.0 }
             - key: road_accessibility
-              name: Дорожная доступность
+              name: Road accessibility
               weight: 0.45
               components:
                 - { key: "road_accessibility:distance_to_paved_road", weight: 0.40 }
@@ -93,7 +93,7 @@ profiles:
                 - { key: "road_accessibility:road_density_1km", weight: 0.20 }
 
         - key: ecology_recreation
-          name: Экология и рекреация
+          name: Ecology and Recreation
           weight: 0.15
           components:
             - { key: "water_body:coverage_ratio", weight: 0.35 }
@@ -102,7 +102,7 @@ profiles:
             - { key: "protected_area:min_distance_to", weight: 0.15 }
 
         - key: geographic_position
-          name: Географическое положение
+          name: Geographical location
           weight: 0.15
           components:
             - { key: "geographic_position:distance_to_settlement", weight: 0.50 }
