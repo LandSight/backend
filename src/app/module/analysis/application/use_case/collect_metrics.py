@@ -22,10 +22,10 @@ if TYPE_CHECKING:
         AnalysisProfileProvider,
         AnalysisRepository,
         MetricsCollector,
-        UnitOfWork,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
     from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
+    from app.module.shared.application.port import UnitOfWork
 
 
 class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):

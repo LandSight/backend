@@ -15,7 +15,6 @@ from app.module.analysis.application.port import (
     AnalysisScorer,
     MetricsCollector,
     MetricsReader,
-    UnitOfWork,
 )
 from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
@@ -39,12 +38,11 @@ from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
 from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository
 from app.module.analysis.infrastructure.scorer import HmcdaAnalysisScorer
 from app.module.analysis.infrastructure.scorer.hmcda.config import load_engine_config
-from app.module.analysis.infrastructure.uow import SqlAlchemyUnitOfWork
 from app.module.analysis.interface.internal.api import AnalysisInternal
 from app.module.climate.interface.internal.port import ClimateInternalAPI
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
-from app.module.shared.application.port import EventPublisher
+from app.module.shared.application.port import EventPublisher, UnitOfWork
 from app.module.topography.interface.internal.port import TopographyInternalAPI
 
 
@@ -159,12 +157,6 @@ def provide_analysis_internal(
 
 
 # ----- Worker (background pipeline) -----
-def provide_analysis_unit_of_work(
-    session: NamedDependency[AsyncSession],
-) -> SqlAlchemyUnitOfWork:
-    return SqlAlchemyUnitOfWork(session)
-
-
 def provide_metrics_collector(
     topography_api: NamedDependency[TopographyInternalAPI],
     climate_api: NamedDependency[ClimateInternalAPI],
@@ -203,14 +195,14 @@ def provide_collect_metrics_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     metrics_collector: NamedDependency[MetricsCollector],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
-    analysis_unit_of_work: NamedDependency[UnitOfWork],
+    unit_of_work: NamedDependency[UnitOfWork],
     analysis_profiles: NamedDependency[AnalysisProfileProvider],
 ) -> CollectMetricsUseCase:
     return CollectMetricsUseCase(
         analysis_repository,
         metrics_collector,
         fail_analysis_use_case,
-        analysis_unit_of_work,
+        unit_of_work,
         analysis_profiles,
     )
 
@@ -220,7 +212,7 @@ def provide_score_analysis_use_case(
     metrics_reader: NamedDependency[MetricsReader],
     analysis_scorer: NamedDependency[AnalysisScorer],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
-    analysis_unit_of_work: NamedDependency[UnitOfWork],
+    unit_of_work: NamedDependency[UnitOfWork],
     event_publisher: NamedDependency[EventPublisher],
 ) -> ScoreAnalysisUseCase:
     return ScoreAnalysisUseCase(
@@ -228,7 +220,7 @@ def provide_score_analysis_use_case(
         metrics_reader,
         analysis_scorer,
         fail_analysis_use_case,
-        analysis_unit_of_work,
+        unit_of_work,
         event_publisher,
     )
 
@@ -252,14 +244,8 @@ analysis_dependencies = {
 }
 
 analysis_worker_dependencies = {
-    "analysis_unit_of_work": Provide(provide_analysis_unit_of_work, sync_to_thread=False),
     "metrics_collector": Provide(provide_metrics_collector, sync_to_thread=False),
     "metrics_reader": Provide(provide_metrics_reader, sync_to_thread=False),
-    "analysis_profiles": Provide(
-        provide_analysis_profiles,
-        use_cache=True,
-        sync_to_thread=False,
-    ),
     "fail_analysis_use_case": Provide(provide_fail_analysis_use_case, sync_to_thread=False),
     COLLECT_METRICS_USE_CASE_KEY: Provide(provide_collect_metrics_use_case, sync_to_thread=False),
     SCORE_ANALYSIS_USE_CASE_KEY: Provide(provide_score_analysis_use_case, sync_to_thread=False),

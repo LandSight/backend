@@ -20,10 +20,9 @@ if TYPE_CHECKING:
         AnalysisRepository,
         AnalysisScorer,
         MetricsReader,
-        UnitOfWork,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
-    from app.module.shared.application.port import EventPublisher
+    from app.module.shared.application.port import EventPublisher, UnitOfWork
 
 
 class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):

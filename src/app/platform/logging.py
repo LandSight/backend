@@ -24,8 +24,12 @@ def _build_dict_config(config: LoggingConfig) -> dict[str, typing.Any]:
         Logging configuration.
     """
     return {
+        # Keep loggers created before configuration (e.g. ``app.worker.tasks``
+        # imported at worker startup, Celery's own loggers) enabled: with
+        # ``disable_existing_loggers=True`` every pre-existing logger gets
+        # disabled and task lifecycle/application messages vanish from the logs.
         "version": 1,
-        "disable_existing_loggers": True,
+        "disable_existing_loggers": False,
         "filters": {},
         "formatters": {
             "pretty": {
