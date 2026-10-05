@@ -329,7 +329,7 @@ class LLMConfig(BaseConfig):
         min_length=1,
     )
     timeout_seconds: float = Field(
-        default=60.0,
+        default=120.0,
         description="Per-request timeout in seconds",
         gt=0,
     )
@@ -339,8 +339,9 @@ class LLMConfig(BaseConfig):
         ge=0,
     )
     max_tokens: int = Field(
-        default=512,
-        description="Maximum tokens per answer",
+        default=4096,
+        description="Maximum tokens per answer; reasoning models also consume "
+        "tokens for their chain-of-thought before the visible answer begins",
         gt=0,
     )
 
