@@ -90,7 +90,7 @@ class GetAnalysisEvaluationUseCase(
             engine=evaluation.engine.value,
             model_version=evaluation.model_version,
             total_score=evaluation.total_score.unwrap(),
-            scale=evaluation.total_score.scale,
+            scale_max=evaluation.total_score.scale_max,
             metadata=EvaluationMetadataResponse(
                 evaluated_at=evaluation.created_at,
                 parcel_id=str(analysis.parcel_id.unwrap()),

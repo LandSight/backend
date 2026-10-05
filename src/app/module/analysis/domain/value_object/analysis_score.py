@@ -19,9 +19,9 @@ class AnalysisScore(BaseValueObject[float]):
     _MAX_VALUE = 10.0
 
     @property
-    def scale(self) -> str:
-        """Score scale derived from the valid value bounds."""
-        return f"{self._MIN_VALUE:g}-{self._MAX_VALUE:g}"
+    def scale_max(self) -> float:
+        """Upper bound of the score scale."""
+        return float(self._MAX_VALUE)
 
     @override
     def _normalize(self, value: float) -> float:

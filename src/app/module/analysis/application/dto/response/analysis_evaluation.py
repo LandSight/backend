@@ -149,9 +149,9 @@ class AnalysisEvaluationResponse:
     model_version : str
         Version of the scoring model.
     total_score : float
-        Final score on the 0-10 scale.
-    scale : str
-        Score scale.
+        Final score on the configured scale.
+    scale_max : float
+        Upper bound of the score scale.
     metadata : EvaluationMetadataResponse
         Evaluation metadata.
     extensions : Mapping[str, EvaluationExtensionResponse]
@@ -164,7 +164,7 @@ class AnalysisEvaluationResponse:
     engine: str
     model_version: str
     total_score: float
-    scale: str
+    scale_max: float
     metadata: EvaluationMetadataResponse
     extensions: Mapping[str, EvaluationExtensionResponse] = field(default_factory=dict)
     scenario_description: str = ""
