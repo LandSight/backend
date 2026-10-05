@@ -42,7 +42,7 @@ class AnalysisEvaluationBreakdownBuilder(EvaluationBreakdownBuilder):
         clusters = extension.clusters if isinstance(extension, HierarchicalExtensionResponse) else ()
         return EvaluationBreakdown(
             total_score=response.total_score,
-            scale=response.scale,
+            scale_max=response.scale_max,
             scenario=response.scenario,
             aspects=tuple(self._aspect(cluster) for cluster in clusters),
             scenario_description=response.scenario_description,

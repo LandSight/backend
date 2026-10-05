@@ -80,7 +80,24 @@ class OpenAICompatibleLLMClient(LLMClient):
             response = await client.post(url, json=payload)
             response.raise_for_status()
             data = response.json()
-        return str(data["choices"][0]["message"]["content"])
+        message = data["choices"][0]["message"]
+        content = message.get("content")
+        if content:
+            return str(content)
+        # Reasoning models (e.g. Gemma thinking) emit their chain-of-thought into
+        # ``reasoning_content`` and may exhaust the token budget before any answer
+        # appears in ``content``. Surface that as a generation error so the
+        # interpreter falls back to safe text and the real cause is logged.
+        if message.get("reasoning_content"):
+            finish_reason = data["choices"][0].get("finish_reason")
+            self._logger.warning(
+                "Model returned only reasoning content (finish_reason=%s); "
+                "the token budget ran out before the answer began",
+                finish_reason,
+            )
+            reason = "LLM consumed the whole token budget on reasoning; increase LLM_MAX_TOKENS"
+            raise InterpretationGenerationError(reason)
+        return ""
 
 
 __all__ = ("LLMClient", "OpenAICompatibleLLMClient")

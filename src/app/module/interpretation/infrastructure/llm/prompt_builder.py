@@ -71,7 +71,7 @@ class LlmPromptBuilder:
     ) -> Prompt:
         """Build the prompt for the combined top-aspects summary."""
         lines = [
-            f"Итоговый балл: {breakdown.total_score:g} из {breakdown.scale}",
+            f"Итоговый балл: {breakdown.total_score:g} из {breakdown.scale_max:g}",
             f"Сценарий: {breakdown.scenario}",
         ]
         if breakdown.scenario_description:

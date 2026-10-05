@@ -6,7 +6,7 @@ from uuid import UUID
 
 from litestar import get, post
 from litestar.controller import Controller
-from litestar.status_codes import HTTP_200_OK
+from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED
 
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.interpretation import (
@@ -51,17 +51,22 @@ class InterpretationController(Controller):
 
     @post(
         "/{analysis_id:uuid}/interpretation",
-        status_code=HTTP_200_OK,
-        description="Regenerate the interpretation report of an analysis.",
+        status_code=HTTP_202_ACCEPTED,
+        description="Order (re)generation of the interpretation report of an analysis.",
     )
-    async def generate_interpretation(
+    async def order_interpretation(
         self,
         analysis_id: UUID,
         current_user: CurrentUser,
         interpretation_api: InterpretationInternalAPI,
     ) -> InterpretationResultSchema:
-        """Regenerate the interpretation report of an analysis."""
-        result = await interpretation_api.generate_interpretation(
+        """Order (re)generation of the interpretation report.
+
+        The report row is created with the ``ordered`` status and generation is
+        requested through the transactional outbox; the actual LLM work runs in
+        the worker. Poll ``GET /{analysis_id}/interpretation`` for the status.
+        """
+        result = await interpretation_api.order_interpretation(
             GenerateInterpretationInput(analysis_id=analysis_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)
@@ -71,8 +76,9 @@ class InterpretationController(Controller):
         """Map an internal result DTO to the HTTP schema."""
         return InterpretationResultSchema(
             total_score=result.total_score,
-            scale=result.scale,
+            scale_max=result.scale_max,
             scenario=result.scenario,
+            status=result.status,
             aspects=[cls._to_aspect_schema(aspect) for aspect in result.aspects],
             top_aspects_summary=result.top_aspects_summary,
         )

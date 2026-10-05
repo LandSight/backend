@@ -48,8 +48,9 @@ class ReportAssembler:
         )
         return InterpretationResultResponse(
             total_score=breakdown.total_score,
-            scale=breakdown.scale,
+            scale_max=breakdown.scale_max,
             scenario=breakdown.scenario,
+            status=interpretation.status,
             aspects=aspects,
             top_aspects_summary=interpretation.summary,
         )

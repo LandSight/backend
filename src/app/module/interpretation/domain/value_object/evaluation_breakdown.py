@@ -26,8 +26,8 @@ class EvaluationBreakdown(BaseCompositeValueObject):
     ----------
     total_score : float
         Final score on the configured scale.
-    scale : str
-        Score scale (e.g. ``0-10``).
+    scale_max : float
+        Upper bound of the score scale.
     scenario : str
         Evaluation profile (e.g. ``izhs``).
     scenario_description : str
@@ -37,7 +37,7 @@ class EvaluationBreakdown(BaseCompositeValueObject):
     """
 
     total_score: float
-    scale: str
+    scale_max: float
     scenario: str
     aspects: tuple[Aspect, ...] = field(default_factory=tuple)
     scenario_description: str = ""

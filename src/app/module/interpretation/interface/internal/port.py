@@ -27,8 +27,8 @@ class InterpretationInternalAPI(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def generate_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
-        """Generate a fresh interpretation report of an analysis."""
+    async def order_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
+        """Order generation of an interpretation report of an analysis."""
         raise NotImplementedError
 
 

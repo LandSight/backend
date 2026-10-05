@@ -9,7 +9,7 @@ the next one starts.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID, uuid6
 
 from celery.signals import worker_process_init
 
@@ -29,6 +29,12 @@ from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import 
 )
 from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
 from app.module.interpretation.di import GENERATE_INTERPRETATION_USE_CASE_KEY
+from app.module.interpretation.domain.entity import Interpretation
+from app.module.interpretation.domain.event import (
+    INTERPRETATION_ORDERED_EVENT,
+    InterpretationOrderedEvent,
+)
+from app.module.interpretation.domain.value_object import InterpretationId, InterpretationStatus
 from app.module.interpretation.infrastructure.queue import PROCESS_INTERPRETATION_TASK_NAME
 from app.platform.config.loaders import load_logging_config
 from app.platform.logging import configure_logging, get_logger
@@ -42,7 +48,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from app.module.analysis.application.port import AnalysisTaskQueue, MetricsRemover
-    from app.module.interpretation.application.port import InterpretationTaskQueue
+    from app.module.interpretation.application.port import InterpretationRepository, InterpretationTaskQueue
     from app.module.interpretation.application.use_case import GenerateInterpretationUseCase
     from app.platform.outbox.repository import OutboxRepository
 
@@ -100,20 +106,49 @@ def process_interpretation(analysis_id: str, current_user_id: str) -> None:
 
 async def _process_interpretation(analysis_id: str, current_user_id: str) -> None:
     """Run report generation for one analysis."""
+    logger.info("Processing interpretation: analysis_id=%s", analysis_id)
     session_factory = get_session_factory()
     async with session_factory() as session:
         container = WorkerContainer(session)
+        repository: InterpretationRepository = container.resolve("interpretation_repository")
         generate: GenerateInterpretationUseCase = container.resolve(GENERATE_INTERPRETATION_USE_CASE_KEY)
-        await generate(
-            GenerateInterpretationCommand(
-                analysis_id=UUID(analysis_id),
-                current_user_id=UUID(current_user_id),
+        analysis_id_value = UUID(analysis_id)
+        user_id_value = UUID(current_user_id)
+
+        try:
+            report = await repository.get(analysis_id_value)
+            if report is None:
+                report = Interpretation(
+                    id=InterpretationId(uuid6()),
+                    analysis_id=analysis_id_value,
+                    model="",
+                    summary="",
+                    status=InterpretationStatus.ORDERED,
+                )
+            report.mark_running()
+            await repository.save(report)
+            # Commit the running status so clients see it while the LLM works.
+            await session.commit()
+
+            await generate(
+                GenerateInterpretationCommand(
+                    analysis_id=analysis_id_value,
+                    current_user_id=user_id_value,
+                )
             )
-        )
-        # The worker owns the transaction: unlike the HTTP request scope there is
-        # no middleware to commit, so the store call from the use case would be
-        # rolled back on session close otherwise.
-        await session.commit()
+            # The worker owns the transaction: unlike the HTTP request scope there
+            # is no middleware to commit, so the store call from the use case
+            # would be rolled back on session close otherwise.
+            await session.commit()
+        except Exception:
+            logger.exception("Interpretation generation failed for %s", analysis_id)
+            await session.rollback()
+            failed = await repository.get(analysis_id_value)
+            if failed is not None:
+                failed.fail()
+                await repository.save(failed)
+                await session.commit()
+            raise
 
 
 @celery_app.task(name=DRAIN_OUTBOX_TASK_NAME)
@@ -131,6 +166,7 @@ async def _drain_outbox() -> None:
         metrics_remover: MetricsRemover = container.resolve("metrics_remover")
         task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
         interpretation_task_queue: InterpretationTaskQueue = container.resolve("interpretation_task_queue")
+        interpretation_repository: InterpretationRepository = container.resolve("interpretation_repository")
 
         async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
             event = AnalysisQueuedEvent.from_payload(payload)
@@ -140,9 +176,27 @@ async def _drain_outbox() -> None:
             event = AnalysisDeletedEvent.from_payload(payload)
             await metrics_remover.delete(list(event.metrics))
 
+        async def _ensure_ordered(interpretation_repository: InterpretationRepository, analysis_id: UUID) -> None:
+            """Create the ordered report row on first touch, mirroring the analysis."""
+            if await interpretation_repository.get(analysis_id) is None:
+                await interpretation_repository.save(
+                    Interpretation(
+                        id=InterpretationId(uuid6()),
+                        analysis_id=analysis_id,
+                        model="",
+                        summary="",
+                        status=InterpretationStatus.ORDERED,
+                    )
+                )
+
         async def handle_analysis_evaluated(payload: Mapping[str, object]) -> None:
             event = AnalysisEvaluatedEvent.from_payload(payload)
+            await _ensure_ordered(interpretation_repository, event.analysis_id.unwrap())
             await interpretation_task_queue.enqueue(event.analysis_id.unwrap(), event.current_user_id)
+
+        async def handle_interpretation_ordered(payload: Mapping[str, object]) -> None:
+            event = InterpretationOrderedEvent.from_payload(payload)
+            await interpretation_task_queue.enqueue(event.analysis_id, event.current_user_id)
 
         drainer = OutboxDrainer(
             repository,
@@ -150,6 +204,7 @@ async def _drain_outbox() -> None:
                 ANALYSIS_QUEUED_EVENT: handle_analysis_queued,
                 ANALYSIS_DELETED_EVENT: handle_analysis_deleted,
                 ANALYSIS_EVALUATED_EVENT: handle_analysis_evaluated,
+                INTERPRETATION_ORDERED_EVENT: handle_interpretation_ordered,
             },
         )
         processed = await drainer.drain()

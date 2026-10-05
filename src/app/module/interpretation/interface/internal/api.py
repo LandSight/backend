@@ -28,8 +28,8 @@ if TYPE_CHECKING:
         InterpretationResultResponse,
     )
     from app.module.interpretation.application.use_case import (
-        GenerateInterpretationUseCase,
         GetInterpretationUseCase,
+        OrderInterpretationUseCase,
     )
     from app.module.interpretation.domain.value_object import AspectMetric
 
@@ -40,10 +40,10 @@ class InterpretationInternal(InterpretationInternalAPI):
     def __init__(
         self,
         get_interpretation_use_case: GetInterpretationUseCase,
-        generate_interpretation_use_case: GenerateInterpretationUseCase,
+        order_interpretation_use_case: OrderInterpretationUseCase,
     ) -> None:
         self._get_interpretation = get_interpretation_use_case
-        self._generate_interpretation = generate_interpretation_use_case
+        self._order_interpretation = order_interpretation_use_case
 
     @override
     async def get_interpretation(self, input_data: GetInterpretationInput) -> InterpretationResult:
@@ -57,9 +57,9 @@ class InterpretationInternal(InterpretationInternalAPI):
         return self._to_result(result)
 
     @override
-    async def generate_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
-        """See :meth:`InterpretationInternalAPI.generate_interpretation`."""
-        result = await self._generate_interpretation(
+    async def order_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
+        """See :meth:`InterpretationInternalAPI.order_interpretation`."""
+        result = await self._order_interpretation(
             GenerateInterpretationCommand(
                 analysis_id=input_data.analysis_id,
                 current_user_id=input_data.current_user_id,
@@ -72,8 +72,9 @@ class InterpretationInternal(InterpretationInternalAPI):
         """Map an application response DTO to an internal result DTO."""
         return InterpretationResult(
             total_score=result.total_score,
-            scale=result.scale,
+            scale_max=result.scale_max,
             scenario=result.scenario,
+            status=result.status,
             aspects=tuple(cls._to_aspect(aspect) for aspect in result.aspects),
             top_aspects_summary=result.top_aspects_summary,
         )

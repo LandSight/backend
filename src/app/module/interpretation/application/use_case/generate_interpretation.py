@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
+from uuid import uuid6
 
 from app.module.analysis.interface.internal.dto import GetAnalysisEvaluationInput
 from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
 from app.module.interpretation.application.dto.response import InterpretationResultResponse
+from app.module.interpretation.domain.entity import Interpretation
+from app.module.interpretation.domain.value_object import InterpretationId, InterpretationStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -55,7 +58,18 @@ class GenerateInterpretationUseCase(
         self._logger.info("Generating interpretation: analysis_id=%s", command.analysis_id)
 
         breakdown = await self._load_breakdown(command)
-        interpretation = await self._interpreter.explain(command.analysis_id, breakdown)
+        existing = await self._repository.get(command.analysis_id)
+        generated = await self._interpreter.explain(command.analysis_id, breakdown)
+        # The report row is created once (as ordered) and updated in place on
+        # every regeneration, so the stored row keeps its identity.
+        interpretation = Interpretation(
+            id=existing.id if existing is not None else InterpretationId(uuid6()),
+            analysis_id=command.analysis_id,
+            model=generated.model,
+            summary=generated.summary,
+            explanations=generated.explanations,
+            status=InterpretationStatus.COMPLETED,
+        )
         saved = await self._repository.save(interpretation)
         return self._assembler.assemble(breakdown, saved)
 

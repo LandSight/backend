@@ -36,6 +36,10 @@ def create_celery_app(redis_config: RedisConfig) -> Celery:
     app = Celery("landsight")
     app.conf.broker_url = broker_url
     app.conf.result_backend = broker_url
+    # Track started state so the logs show when a task actually begins running;
+    # "received" only means the message was pulled from the broker and the task
+    # may still be waiting behind other tasks on the worker.
+    app.conf.task_track_started = True
     # Results are required: the metrics phase is a chord whose callback runs
     # only after every header task finishes.
     app.conf.task_ignore_result = False

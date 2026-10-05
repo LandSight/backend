@@ -10,6 +10,7 @@ from .evaluation_breakdown import EvaluationBreakdown
 from .grade_verdict import GradeVerdict
 from .interpretation_id import InterpretationId
 from .interpretation_policy import InterpretationPolicy
+from .interpretation_status import InterpretationStatus
 from .metric_role import MetricRole
 from .prompt import Prompt
 
@@ -23,6 +24,7 @@ __all__ = (
     "GradeVerdict",
     "InterpretationId",
     "InterpretationPolicy",
+    "InterpretationStatus",
     "MetricRole",
     "Prompt",
 )

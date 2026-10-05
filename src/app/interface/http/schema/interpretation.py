@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from app.module.interpretation.domain.value_object import InterpretationStatus
+
 
 class MetricInfoSchema(BaseModel):
     """One metric selected for an aspect explanation."""
@@ -33,8 +35,12 @@ class InterpretationResultSchema(BaseModel):
     """Response body of an interpretation report."""
 
     total_score: float = Field(description="Final score on the configured scale.")
-    scale: str = Field(description="Score scale.")
+    scale_max: float = Field(description="Maximum score on the configured scale.")
     scenario: str = Field(description="Evaluation profile (e.g. izhs).")
+    status: InterpretationStatus = Field(
+        default=InterpretationStatus.COMPLETED,
+        description="Report generation status: ordered/running/completed/failed.",
+    )
     aspects: list[AspectInterpretationSchema] = Field(default_factory=list)
     top_aspects_summary: str = Field(description="Combined explanation of the top aspects.")
 

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, NoReturn, override
 
-from app.module.interpretation.domain.value_object import AspectExplanation, InterpretationId
+from app.module.interpretation.domain.value_object import (
+    AspectExplanation,
+    InterpretationId,
+    InterpretationStatus,
+)
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
 
@@ -49,6 +53,7 @@ class Interpretation(BaseEntity[InterpretationId]):
         model: str,
         summary: str,
         explanations: tuple[AspectExplanation, ...] = (),
+        status: InterpretationStatus = InterpretationStatus.COMPLETED,
         created_at: datetime.datetime | None = None,
         updated_at: datetime.datetime | None = None,
     ) -> None:
@@ -56,6 +61,7 @@ class Interpretation(BaseEntity[InterpretationId]):
         self._model: str = model
         self._summary: str = summary
         self._explanations: tuple[AspectExplanation, ...] = explanations
+        self._status: InterpretationStatus = status
         self._created_at: datetime.datetime | None = created_at
         self._updated_at: datetime.datetime | None = updated_at
 
@@ -63,12 +69,51 @@ class Interpretation(BaseEntity[InterpretationId]):
 
     @override
     def _validate(self) -> None:
-        if not self._model:
-            message = "An interpretation must carry a model."
-            raise InvariantViolationError(message)
-        if not self._summary:
-            message = "An interpretation must carry a summary."
-            raise InvariantViolationError(message)
+        # A report that is not yet completed may be a placeholder row created at
+        # ordering time; only a completed report must carry the generated text.
+        if self._status == InterpretationStatus.COMPLETED:
+            if not self._model:
+                message = "A completed interpretation must carry a model."
+                raise InvariantViolationError(message)
+            if not self._summary:
+                message = "A completed interpretation must carry a summary."
+                raise InvariantViolationError(message)
+
+    def mark_running(self) -> None:
+        """Transition the report to ``RUNNING``."""
+        if self._status is not InterpretationStatus.ORDERED:
+            self._raise_invalid_transition(InterpretationStatus.ORDERED)
+        self._status = InterpretationStatus.RUNNING
+
+    def complete(self) -> None:
+        """Transition the report to ``COMPLETED``.
+
+        Callers must fill the generated text (model/summary/explanations) before
+        saving so the validation of a completed report passes.
+        """
+        if self._status is not InterpretationStatus.RUNNING:
+            self._raise_invalid_transition(InterpretationStatus.RUNNING)
+        self._status = InterpretationStatus.COMPLETED
+
+    def fail(self) -> None:
+        """Transition the report to ``FAILED``."""
+        if self._status not in {InterpretationStatus.ORDERED, InterpretationStatus.RUNNING}:
+            self._raise_invalid_transition(InterpretationStatus.RUNNING)
+        self._status = InterpretationStatus.FAILED
+
+    def reset_to_ordered(self) -> None:
+        """Reset a stored report for regeneration: clear the text, mark ordered."""
+        self._status = InterpretationStatus.ORDERED
+        self._model = ""
+        self._summary = ""
+        self._explanations = ()
+
+    def _raise_invalid_transition(self, expected: InterpretationStatus) -> NoReturn:
+        message = (
+            f"Interpretation must be in '{expected.value}' status to perform this transition, "
+            f"got '{self._status.value}'."
+        )
+        raise InvariantViolationError(message)
 
     @property
     def analysis_id(self) -> UUID:
@@ -99,6 +144,11 @@ class Interpretation(BaseEntity[InterpretationId]):
     def updated_at(self) -> datetime.datetime | None:
         """When the report was last updated (UTC)."""
         return self._updated_at
+
+    @property
+    def status(self) -> InterpretationStatus:
+        """Generation status of the report."""
+        return self._status
 
     def explanation_for(self, aspect_key: str) -> str:
         """Return the explanation text of an aspect, or an empty string."""

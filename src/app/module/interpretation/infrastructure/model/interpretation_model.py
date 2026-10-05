@@ -33,6 +33,12 @@ class InterpretationModel(TimestampedModel):
     )
     model: Mapped[str] = mapped_column(String(128), nullable=False, comment="Model that generated the report")
     summary: Mapped[str] = mapped_column(Text, nullable=False, comment="Combined top-aspects summary")
+    status: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        server_default="completed",
+        comment="Report generation status: ordered/running/completed/failed",
+    )
     aspect_explanations: Mapped[dict[str, str]] = mapped_column(
         JSONB,
         nullable=False,

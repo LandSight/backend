@@ -8,7 +8,11 @@ from sqlalchemy import delete, select
 
 from app.module.interpretation.application.port import InterpretationRepository
 from app.module.interpretation.domain.entity import Interpretation
-from app.module.interpretation.domain.value_object import AspectExplanation, InterpretationId
+from app.module.interpretation.domain.value_object import (
+    AspectExplanation,
+    InterpretationId,
+    InterpretationStatus,
+)
 from app.module.interpretation.infrastructure.model import InterpretationModel
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
@@ -41,20 +45,33 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
 
     @override
     async def save(self, interpretation: Interpretation) -> Interpretation:
-        """See :class:`app.module.interpretation.application.port.InterpretationRepository.save`."""
-        await self._session.execute(
-            delete(InterpretationModel).where(InterpretationModel.analysis_id == interpretation.analysis_id),
-        )
-        model = InterpretationModel(
-            id=interpretation.id.unwrap(),
-            analysis_id=interpretation.analysis_id,
-            model=interpretation.model,
-            summary=interpretation.summary,
-            aspect_explanations={explanation.key: explanation.text for explanation in interpretation.explanations},
-        )
-        self._session.add(model)
+        """See :class:`app.module.interpretation.application.port.InterpretationRepository.save`.
+
+        One row per analysis: the report is inserted on the first save (with the
+        ``ordered`` status) and updated in place on every later save, mirroring
+        the analysis aggregate lifecycle.
+        """
+        model = await self._session.get(InterpretationModel, interpretation.id.unwrap())
+        if model is None:
+            model = InterpretationModel(
+                id=interpretation.id.unwrap(),
+                analysis_id=interpretation.analysis_id,
+                model=interpretation.model,
+                summary=interpretation.summary,
+                status=interpretation.status.value,
+                aspect_explanations={explanation.key: explanation.text for explanation in interpretation.explanations},
+            )
+            self._session.add(model)
+        else:
+            model.analysis_id = interpretation.analysis_id
+            model.model = interpretation.model
+            model.summary = interpretation.summary
+            model.status = interpretation.status.value
+            model.aspect_explanations = {
+                explanation.key: explanation.text for explanation in interpretation.explanations
+            }
+
         await self._session.flush()
-        await self._session.refresh(model)
         return self._to_domain(model)
 
     @override
@@ -73,6 +90,7 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
             analysis_id=model.analysis_id,
             model=model.model,
             summary=model.summary,
+            status=InterpretationStatus(model.status),
             explanations=tuple(
                 AspectExplanation(key=key, text=text) for key, text in model.aspect_explanations.items()
             ),

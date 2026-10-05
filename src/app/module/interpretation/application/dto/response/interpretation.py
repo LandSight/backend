@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from app.module.interpretation.domain.value_object import InterpretationStatus
+
 
 if TYPE_CHECKING:
     from app.module.interpretation.domain.value_object import AspectMetric
@@ -32,8 +34,9 @@ class InterpretationResultResponse:
     """Full interpretation report of an analysis evaluation."""
 
     total_score: float
-    scale: str
+    scale_max: float
     scenario: str
+    status: InterpretationStatus = InterpretationStatus.COMPLETED
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
 
