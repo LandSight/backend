@@ -194,7 +194,7 @@ class AnalysisController(Controller):
             engine=result.engine,
             model_version=result.model_version,
             total_score=result.total_score,
-            scale=result.scale,
+            scale_max=result.scale_max,
             metadata=EvaluationMetadataSchema(
                 evaluated_at=result.metadata.evaluated_at,
                 parcel_id=UUID(result.metadata.parcel_id),

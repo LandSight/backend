@@ -178,8 +178,8 @@ class AnalysisEvaluationSchema(BaseModel):
     scenario: str = Field(description="Evaluation profile (e.g. izhs).")
     engine: str = Field(description="Scoring engine (e.g. baseline).")
     model_version: str = Field(description="Version of the scoring model.")
-    total_score: float = Field(description="Final score on the 0-10 scale.")
-    scale: str = Field(description="Score scale.")
+    total_score: float = Field(description="Final score on the configured scale.")
+    scale_max: float = Field(description="Maximum score on the configured scale.")
     metadata: EvaluationMetadataSchema = Field(description="Evaluation metadata.")
     extensions: dict[
         str,
