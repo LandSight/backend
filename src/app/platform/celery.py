@@ -49,13 +49,19 @@ def create_celery_app(redis_config: RedisConfig) -> Celery:
     app.conf.result_serializer = "json"
     app.conf.timezone = "UTC"
     app.conf.enable_utc = True
+    # Acknowledge messages only after the task body finishes, so a crashed or
+    # restarted worker redelivers the message instead of losing it silently.
+    app.conf.task_acks_late = True
+    # Fetch one message at a time per worker process. Prevents one worker from
+    # hoarding a backlog of relay tasks while a report task waits behind them.
+    app.conf.worker_prefetch_multiplier = 1
     # Relay the transactional outbox. Runs on the Celery beat process alongside
     # the worker, so pending events are dispatched even if the producer crashed
     # after committing the state change.
     app.conf.beat_schedule = {
         "drain-outbox": {
             "task": DRAIN_OUTBOX_TASK_NAME,
-            "schedule": 5.0,
+            "schedule": 10.0,
         },
     }
     return app

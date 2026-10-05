@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
 
+from app.module.shared.application.port import UnitOfWork
+from app.module.shared.infrastructure.uow import SqlAlchemyUnitOfWork
 from app.platform.celery import create_celery_app
 from app.platform.config.loaders import (
     load_auth_config,
@@ -83,6 +85,12 @@ async def provide_async_session(
             await session.close()
 
 
+# ----- Unit of work -----
+def provide_unit_of_work(session: NamedDependency[AsyncSession]) -> UnitOfWork:
+    """Provide the session-bound transaction unit of work."""
+    return SqlAlchemyUnitOfWork(session)
+
+
 # ----- Outbox -----
 def provide_outbox_repository(
     session: NamedDependency[AsyncSession],
@@ -122,6 +130,7 @@ platform_dependencies = {
     "s3_config": Provide(provide_s3_config, use_cache=True, sync_to_thread=False),
     "session_factory": Provide(provide_async_session_factory, use_cache=True, sync_to_thread=False),
     "session": Provide(provide_async_session),
+    "unit_of_work": Provide(provide_unit_of_work, sync_to_thread=False),
     "outbox_repository": Provide(provide_outbox_repository, sync_to_thread=False),
     "event_publisher": Provide(provide_event_publisher, sync_to_thread=False),
     "boto_session": Provide(provide_boto_session, use_cache=True, sync_to_thread=False),
