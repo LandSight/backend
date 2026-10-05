@@ -105,50 +105,22 @@ def process_interpretation(analysis_id: str, current_user_id: str) -> None:
 
 
 async def _process_interpretation(analysis_id: str, current_user_id: str) -> None:
-    """Run report generation for one analysis."""
+    """Run report generation for one analysis.
+
+    The use case owns the whole lifecycle (running/completed/failed transitions,
+    commits and the idempotency guard), so the task only relays the command.
+    """
     logger.info("Processing interpretation: analysis_id=%s", analysis_id)
     session_factory = get_session_factory()
     async with session_factory() as session:
         container = WorkerContainer(session)
-        repository: InterpretationRepository = container.resolve("interpretation_repository")
         generate: GenerateInterpretationUseCase = container.resolve(GENERATE_INTERPRETATION_USE_CASE_KEY)
-        analysis_id_value = UUID(analysis_id)
-        user_id_value = UUID(current_user_id)
-
-        try:
-            report = await repository.get(analysis_id_value)
-            if report is None:
-                report = Interpretation(
-                    id=InterpretationId(uuid6()),
-                    analysis_id=analysis_id_value,
-                    model="",
-                    summary="",
-                    status=InterpretationStatus.ORDERED,
-                )
-            report.mark_running()
-            await repository.save(report)
-            # Commit the running status so clients see it while the LLM works.
-            await session.commit()
-
-            await generate(
-                GenerateInterpretationCommand(
-                    analysis_id=analysis_id_value,
-                    current_user_id=user_id_value,
-                )
+        await generate(
+            GenerateInterpretationCommand(
+                analysis_id=UUID(analysis_id),
+                current_user_id=UUID(current_user_id),
             )
-            # The worker owns the transaction: unlike the HTTP request scope there
-            # is no middleware to commit, so the store call from the use case
-            # would be rolled back on session close otherwise.
-            await session.commit()
-        except Exception:
-            logger.exception("Interpretation generation failed for %s", analysis_id)
-            await session.rollback()
-            failed = await repository.get(analysis_id_value)
-            if failed is not None:
-                failed.fail()
-                await repository.save(failed)
-                await session.commit()
-            raise
+        )
 
 
 @celery_app.task(name=DRAIN_OUTBOX_TASK_NAME)

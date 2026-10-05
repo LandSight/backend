@@ -30,7 +30,7 @@ from app.module.interpretation.infrastructure.llm import (
 from app.module.interpretation.infrastructure.queue import CeleryInterpretationTaskQueue
 from app.module.interpretation.infrastructure.repository import PostgresInterpretationRepository
 from app.module.interpretation.interface.internal.api import InterpretationInternal
-from app.module.shared.application.port import EventPublisher
+from app.module.shared.application.port import EventPublisher, UnitOfWork
 from app.platform.config.loaders import load_llm_config
 
 
@@ -127,6 +127,7 @@ def provide_generate_interpretation_use_case(
     evaluation_breakdown_builder: NamedDependency[AnalysisEvaluationBreakdownBuilder],
     interpreter: NamedDependency[LlmInterpreter],
     report_assembler: NamedDependency[ReportAssembler],
+    unit_of_work: NamedDependency[UnitOfWork],
 ) -> GenerateInterpretationUseCase:
     return GenerateInterpretationUseCase(
         analysis_api,
@@ -134,6 +135,7 @@ def provide_generate_interpretation_use_case(
         evaluation_breakdown_builder,
         interpreter,
         report_assembler,
+        unit_of_work,
     )
 
 
@@ -178,22 +180,13 @@ interpretation_dependencies = {
     "metric_classifier": Provide(provide_metric_classifier, use_cache=True, sync_to_thread=False),
     "aspect_extractor": Provide(provide_aspect_extractor, use_cache=True, sync_to_thread=False),
     "top_aspect_selector": Provide(provide_top_aspect_selector, use_cache=True, sync_to_thread=False),
-    "prompt_builder": Provide(provide_prompt_builder, use_cache=True, sync_to_thread=False),
-    "llm_client": Provide(provide_llm_client, use_cache=True, sync_to_thread=False),
-    "grader": Provide(provide_grader, use_cache=True, sync_to_thread=False),
-    "interpreter": Provide(provide_interpreter, use_cache=True, sync_to_thread=False),
     "report_assembler": Provide(provide_report_assembler, use_cache=True, sync_to_thread=False),
     "evaluation_breakdown_builder": Provide(
         provide_evaluation_breakdown_builder,
         use_cache=True,
         sync_to_thread=False,
     ),
-    "interpretation_task_queue": Provide(provide_interpretation_task_queue, use_cache=True, sync_to_thread=False),
     "interpretation_repository": Provide(provide_interpretation_repository, sync_to_thread=False),
-    GENERATE_INTERPRETATION_USE_CASE_KEY: Provide(
-        provide_generate_interpretation_use_case,
-        sync_to_thread=False,
-    ),
     GET_INTERPRETATION_USE_CASE_KEY: Provide(provide_get_interpretation_use_case, sync_to_thread=False),
     ORDER_INTERPRETATION_USE_CASE_KEY: Provide(
         provide_order_interpretation_use_case,
@@ -202,10 +195,26 @@ interpretation_dependencies = {
     "interpretation_api": Provide(provide_interpretation_internal, sync_to_thread=False),
 }
 
+# Worker-only graph (LLM generation, outbox relay), assembled by the worker
+# composition root. The HTTP layer resolves only ``interpretation_dependencies``,
+# so the LLM client and friends never leak into request scope.
+interpretation_worker_dependencies = {
+    "prompt_builder": Provide(provide_prompt_builder, use_cache=True, sync_to_thread=False),
+    "llm_client": Provide(provide_llm_client, use_cache=True, sync_to_thread=False),
+    "grader": Provide(provide_grader, use_cache=True, sync_to_thread=False),
+    "interpreter": Provide(provide_interpreter, use_cache=True, sync_to_thread=False),
+    "interpretation_task_queue": Provide(provide_interpretation_task_queue, use_cache=True, sync_to_thread=False),
+    GENERATE_INTERPRETATION_USE_CASE_KEY: Provide(
+        provide_generate_interpretation_use_case,
+        sync_to_thread=False,
+    ),
+}
+
 
 __all__ = (
     "GENERATE_INTERPRETATION_USE_CASE_KEY",
     "GET_INTERPRETATION_USE_CASE_KEY",
     "ORDER_INTERPRETATION_USE_CASE_KEY",
     "interpretation_dependencies",
+    "interpretation_worker_dependencies",
 )
