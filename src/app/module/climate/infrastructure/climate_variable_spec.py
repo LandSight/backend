@@ -43,33 +43,39 @@ class ClimateVariableSpec:
 
 
 #: Registry of external metadata for every supported climate variable.
+#
+# NOTE on temperature scaling: official WorldClim 2.1 base rasters store
+# temperature-derived variables scaled by 10 (BIO1/BIO5/BIO6) or 100 (BIO4),
+# but the COGs uploaded to the S3 bucket by the ETL already contain physical
+# degrees Celsius (floats), so the scale is 1. If the bucket is ever re-seeded
+# with raw WorldClim files, restore the divisor (10/100) here.
 CLIMATE_VARIABLE_SPECS: dict[ClimateVariable, ClimateVariableSpec] = {
     ClimateVariable.MEAN_ANNUAL_TEMPERATURE: ClimateVariableSpec(
         variable=ClimateVariable.MEAN_ANNUAL_TEMPERATURE,
         code="BIO1",
         object_key="bio_1.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.TEMPERATURE_SEASONALITY: ClimateVariableSpec(
         variable=ClimateVariable.TEMPERATURE_SEASONALITY,
         code="BIO4",
         object_key="bio_4.tif",
-        scale=100,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.MAX_TEMPERATURE_WARMEST_MONTH: ClimateVariableSpec(
         variable=ClimateVariable.MAX_TEMPERATURE_WARMEST_MONTH,
         code="BIO5",
         object_key="bio_5.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.MIN_TEMPERATURE_COLDEST_MONTH: ClimateVariableSpec(
         variable=ClimateVariable.MIN_TEMPERATURE_COLDEST_MONTH,
         code="BIO6",
         object_key="bio_6.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.ANNUAL_PRECIPITATION: ClimateVariableSpec(
