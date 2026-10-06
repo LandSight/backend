@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.response import HierarchicalExtensionResponse
 from app.module.analysis.interface.internal.dto import GetAnalysisEvaluationInput
-from app.module.interpretation.application.port import AnalysisEvaluationReader
+from app.module.interpretation.application.port import AnalysisService
 from app.module.interpretation.domain.value_object import Aspect, AspectMetric, EvaluationBreakdown, MetricRole
 
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from app.module.interpretation.domain.service import MetricClassifier
 
 
-class AnalysisEvaluationReaderImpl(AnalysisEvaluationReader):
+class AnalysisServiceImpl(AnalysisService):
     """Flattens the recursive evaluation tree into a domain breakdown.
 
     Only the facts needed by the rule-based services are kept; the resulting
@@ -97,4 +97,4 @@ class AnalysisEvaluationReaderImpl(AnalysisEvaluationReader):
         return replace(view, role=self._classifier.classify(view))
 
 
-__all__ = ("AnalysisEvaluationReaderImpl",)
+__all__ = ("AnalysisServiceImpl",)

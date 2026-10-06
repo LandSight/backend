@@ -20,6 +20,7 @@ from app.module.interpretation.application.use_case import (
 )
 from app.module.interpretation.domain.service import AspectExtractor, MetricClassifier, TopAspectSelector
 from app.module.interpretation.domain.value_object import InterpretationPolicy
+from app.module.interpretation.infrastructure.gateway import AnalysisServiceImpl
 from app.module.interpretation.infrastructure.llm import (
     LlmGrader,
     LlmInterpreter,
@@ -27,7 +28,6 @@ from app.module.interpretation.infrastructure.llm import (
     OpenAICompatibleLLMClient,
 )
 from app.module.interpretation.infrastructure.queue import CeleryInterpretationTaskQueue
-from app.module.interpretation.infrastructure.reader import AnalysisEvaluationReaderImpl
 from app.module.interpretation.infrastructure.repository import PostgresInterpretationRepository
 from app.module.interpretation.interface.internal.api import InterpretationInternal
 from app.module.shared.application.port import EventPublisher, UnitOfWork
@@ -104,8 +104,8 @@ def provide_report_assembler(
 def provide_analysis_evaluation_reader(
     analysis_api: NamedDependency[AnalysisInternalAPI],
     metric_classifier: NamedDependency[MetricClassifier],
-) -> AnalysisEvaluationReaderImpl:
-    return AnalysisEvaluationReaderImpl(analysis_api, metric_classifier)
+) -> AnalysisServiceImpl:
+    return AnalysisServiceImpl(analysis_api, metric_classifier)
 
 
 def provide_interpretation_task_queue(
@@ -124,7 +124,7 @@ def provide_interpretation_repository(
 # ----- Use cases -----
 def provide_generate_interpretation_use_case(
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
-    analysis_evaluation_reader: NamedDependency[AnalysisEvaluationReaderImpl],
+    analysis_evaluation_reader: NamedDependency[AnalysisServiceImpl],
     interpreter: NamedDependency[LlmInterpreter],
     report_assembler: NamedDependency[ReportAssembler],
     unit_of_work: NamedDependency[UnitOfWork],
@@ -140,7 +140,7 @@ def provide_generate_interpretation_use_case(
 
 def provide_get_interpretation_use_case(
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
-    analysis_evaluation_reader: NamedDependency[AnalysisEvaluationReaderImpl],
+    analysis_evaluation_reader: NamedDependency[AnalysisServiceImpl],
     report_assembler: NamedDependency[ReportAssembler],
 ) -> GetInterpretationUseCase:
     return GetInterpretationUseCase(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import llm, model, reader, repository
+from . import gateway, llm, model, repository
 
 
 __all__ = ("llm", "model", "reader", "repository")

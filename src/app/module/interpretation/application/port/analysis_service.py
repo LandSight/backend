@@ -12,12 +12,12 @@ if TYPE_CHECKING:
     from app.module.interpretation.domain.value_object import EvaluationBreakdown
 
 
-class AnalysisEvaluationReader(ABC):
-    """Reads an analysis evaluation and maps it to the interpretation domain.
+class AnalysisService(ABC):
+    """
+    Gateway to the analysis modules' internal APIs.
 
-    The reader hides the analysis module behind its internal API: it performs
-    the request and converts the recursive evaluation response into the flat
-    domain breakdown (anti-corruption layer).
+    Implementations:
+    - :class:`app.module.interpretation.infrastructure.gateway.analysis_service.AnalysisServiceImpl`
     """
 
     @abstractmethod
@@ -26,4 +26,4 @@ class AnalysisEvaluationReader(ABC):
         raise NotImplementedError
 
 
-__all__ = ("AnalysisEvaluationReader",)
+__all__ = ("AnalysisService",)
