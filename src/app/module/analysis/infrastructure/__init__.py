@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from . import gateways, metrics_normalizer, model, permission, queue, repository, scorer
+from . import gateway, metrics_normalizer, model, permission, queue, repository, scorer
 
 
 __all__ = (
     "fuzzy",
-    "gateways",
+    "gateway",
     "metrics_normalizer",
     "model",
     "permission",

@@ -22,7 +22,7 @@ class MetricsService(ABC):
     modules: calculating snapshots, reading their values and deleting them.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.gateways.metrics_service.MetricsServiceImpl`
+    - :class:`app.module.analysis.infrastructure.gateway.metrics_service.MetricsServiceImpl`
     """
 
     @abstractmethod

@@ -29,7 +29,7 @@ from app.module.analysis.application.use_case import (
     StartAnalysisUseCase,
 )
 from app.module.analysis.infrastructure.config import load_analysis_profiles
-from app.module.analysis.infrastructure.gateways import (
+from app.module.analysis.infrastructure.gateway import (
     InterpretationServiceImpl,
     MetricsServiceImpl,
     ParcelsServiceImpl,

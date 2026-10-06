@@ -14,7 +14,7 @@ class ParcelsService(ABC):
     """Gateway to the Parcel module's internal API.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.gateways.parcels_service.ParcelsServiceImpl`
+    - :class:`app.module.analysis.infrastructure.gateway.parcels_service.ParcelsServiceImpl`
     """
 
     @abstractmethod

@@ -18,7 +18,7 @@ class InterpretationService(ABC):
     completion.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.gateways.interpretation_service.InterpretationServiceImpl`
+    - :class:`app.module.analysis.infrastructure.gateway.interpretation_service.InterpretationServiceImpl`
     """
 
     @abstractmethod
