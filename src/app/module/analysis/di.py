@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.analysis.application.port import (
     AnalysisProfileProvider,
     AnalysisScorer,
-    MetricsCollector,
-    MetricsReader,
+    InterpretationService,
+    MetricsService,
+    ParcelsService,
 )
 from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
@@ -27,20 +28,22 @@ from app.module.analysis.application.use_case import (
     ScoreAnalysisUseCase,
     StartAnalysisUseCase,
 )
-from app.module.analysis.infrastructure.collector import MetricsCollectorImpl
 from app.module.analysis.infrastructure.config import load_analysis_profiles
-from app.module.analysis.infrastructure.parcel import OwnedParcelsProviderImpl
+from app.module.analysis.infrastructure.gateways import (
+    InterpretationServiceImpl,
+    MetricsServiceImpl,
+    ParcelsServiceImpl,
+)
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.provider import AnalysisProfileProviderImpl, EngineProviderImpl
 from app.module.analysis.infrastructure.queue import CeleryAnalysisTaskQueue
-from app.module.analysis.infrastructure.reader import MetricsReaderImpl
-from app.module.analysis.infrastructure.remover import MetricsRemoverImpl
 from app.module.analysis.infrastructure.repository import PostgresAnalysisRepository
 from app.module.analysis.infrastructure.scorer import HmcdaAnalysisScorer
 from app.module.analysis.infrastructure.scorer.hmcda.config import load_engine_config
 from app.module.analysis.interface.internal.api import AnalysisInternal
 from app.module.climate.interface.internal.port import ClimateInternalAPI
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
+from app.module.interpretation.interface.internal.port import InterpretationInternalAPI
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.shared.application.port import EventPublisher, UnitOfWork
 from app.module.topography.interface.internal.port import TopographyInternalAPI
@@ -64,10 +67,10 @@ def provide_analysis_permission_service(
     return AnalysisPermissionServiceImpl(parcel_api)
 
 
-def provide_owned_parcels_provider(
+def provide_parcels_service(
     parcel_api: NamedDependency[ParcelInternalAPI],
-) -> OwnedParcelsProviderImpl:
-    return OwnedParcelsProviderImpl(parcel_api)
+) -> ParcelsServiceImpl:
+    return ParcelsServiceImpl(parcel_api)
 
 
 # ----- Scoring -----
@@ -88,13 +91,13 @@ def provide_analysis_task_queue(celery_app: NamedDependency[Celery]) -> CeleryAn
 def provide_start_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
-    owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
+    parcels_service: NamedDependency[ParcelsService],
     event_publisher: NamedDependency[EventPublisher],
 ) -> StartAnalysisUseCase:
     return StartAnalysisUseCase(
         analysis_repository,
         analysis_permission_service,
-        owned_parcels_provider,
+        parcels_service,
         event_publisher,
     )
 
@@ -102,9 +105,9 @@ def provide_start_analysis_use_case(
 def provide_get_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     analysis_permission_service: NamedDependency[AnalysisPermissionServiceImpl],
-    owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
+    parcels_service: NamedDependency[ParcelsService],
 ) -> GetAnalysisUseCase:
-    return GetAnalysisUseCase(analysis_repository, analysis_permission_service, owned_parcels_provider)
+    return GetAnalysisUseCase(analysis_repository, analysis_permission_service, parcels_service)
 
 
 def provide_get_analysis_metrics_use_case(
@@ -124,9 +127,9 @@ def provide_get_analysis_evaluation_use_case(
 
 def provide_list_user_analyses_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
-    owned_parcels_provider: NamedDependency[OwnedParcelsProviderImpl],
+    parcels_service: NamedDependency[ParcelsService],
 ) -> ListUserAnalysesUseCase:
-    return ListUserAnalysesUseCase(analysis_repository, owned_parcels_provider)
+    return ListUserAnalysesUseCase(analysis_repository, parcels_service)
 
 
 def provide_delete_analysis_use_case(
@@ -157,28 +160,12 @@ def provide_analysis_internal(
 
 
 # ----- Worker (background pipeline) -----
-def provide_metrics_collector(
+def provide_metrics_service(
     topography_api: NamedDependency[TopographyInternalAPI],
     climate_api: NamedDependency[ClimateInternalAPI],
     infrastructure_api: NamedDependency[InfrastructureInternalAPI],
-) -> MetricsCollectorImpl:
-    return MetricsCollectorImpl(topography_api, climate_api, infrastructure_api)
-
-
-def provide_metrics_reader(
-    topography_api: NamedDependency[TopographyInternalAPI],
-    climate_api: NamedDependency[ClimateInternalAPI],
-    infrastructure_api: NamedDependency[InfrastructureInternalAPI],
-) -> MetricsReaderImpl:
-    return MetricsReaderImpl(topography_api, climate_api, infrastructure_api)
-
-
-def provide_metrics_remover(
-    topography_api: NamedDependency[TopographyInternalAPI],
-    climate_api: NamedDependency[ClimateInternalAPI],
-    infrastructure_api: NamedDependency[InfrastructureInternalAPI],
-) -> MetricsRemoverImpl:
-    return MetricsRemoverImpl(topography_api, climate_api, infrastructure_api)
+) -> MetricsServiceImpl:
+    return MetricsServiceImpl(topography_api, climate_api, infrastructure_api)
 
 
 def provide_analysis_profiles() -> AnalysisProfileProviderImpl:
@@ -193,46 +180,52 @@ def provide_fail_analysis_use_case(
 
 def provide_collect_metrics_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
-    metrics_collector: NamedDependency[MetricsCollector],
+    metrics_service: NamedDependency[MetricsService],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     unit_of_work: NamedDependency[UnitOfWork],
     analysis_profiles: NamedDependency[AnalysisProfileProvider],
 ) -> CollectMetricsUseCase:
     return CollectMetricsUseCase(
         analysis_repository,
-        metrics_collector,
+        metrics_service,
         fail_analysis_use_case,
         unit_of_work,
         analysis_profiles,
     )
 
 
+def provide_interpretation_service(
+    interpretation_api: NamedDependency[InterpretationInternalAPI],
+) -> InterpretationServiceImpl:
+    return InterpretationServiceImpl(interpretation_api)
+
+
 def provide_score_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
-    metrics_reader: NamedDependency[MetricsReader],
+    metrics_service: NamedDependency[MetricsService],
     analysis_scorer: NamedDependency[AnalysisScorer],
     fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     unit_of_work: NamedDependency[UnitOfWork],
-    event_publisher: NamedDependency[EventPublisher],
+    interpretation_service: NamedDependency[InterpretationService],
 ) -> ScoreAnalysisUseCase:
     return ScoreAnalysisUseCase(
         analysis_repository,
-        metrics_reader,
+        metrics_service,
         analysis_scorer,
         fail_analysis_use_case,
         unit_of_work,
-        event_publisher,
+        interpretation_service,
     )
 
 
 analysis_dependencies = {
     "analysis_repository": Provide(provide_postgres_analysis_repository, sync_to_thread=False),
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
-    "owned_parcels_provider": Provide(provide_owned_parcels_provider, sync_to_thread=False),
+    "parcels_service": Provide(provide_parcels_service, sync_to_thread=False),
+    "metrics_service": Provide(provide_metrics_service, sync_to_thread=False),
     "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
     "engine_provider": Provide(provide_engine_provider, use_cache=True, sync_to_thread=False),
     "analysis_profiles": Provide(provide_analysis_profiles, use_cache=True, sync_to_thread=False),
-    "metrics_remover": Provide(provide_metrics_remover, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),
     "start_analysis_use_case": Provide(provide_start_analysis_use_case, sync_to_thread=False),
     "get_analysis_use_case": Provide(provide_get_analysis_use_case, sync_to_thread=False),
@@ -244,8 +237,7 @@ analysis_dependencies = {
 }
 
 analysis_worker_dependencies = {
-    "metrics_collector": Provide(provide_metrics_collector, sync_to_thread=False),
-    "metrics_reader": Provide(provide_metrics_reader, sync_to_thread=False),
+    "interpretation_service": Provide(provide_interpretation_service, sync_to_thread=False),
     "fail_analysis_use_case": Provide(provide_fail_analysis_use_case, sync_to_thread=False),
     COLLECT_METRICS_USE_CASE_KEY: Provide(provide_collect_metrics_use_case, sync_to_thread=False),
     SCORE_ANALYSIS_USE_CASE_KEY: Provide(provide_score_analysis_use_case, sync_to_thread=False),

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisProfileProvider,
         AnalysisRepository,
-        MetricsCollector,
+        MetricsService,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
     from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
@@ -40,13 +40,13 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
-        metrics_collector: MetricsCollector,
+        metrics_service: MetricsService,
         fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
         analysis_profiles: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
-        self._metrics_collector = metrics_collector
+        self._metrics_service = metrics_service
         self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
         self._analysis_profiles = analysis_profiles
@@ -112,14 +112,14 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         parcel_id: UUID,
         user_id: UUID,
     ) -> list[AnalysisMetricRef]:
-        """Dispatch to the collector method for the requested metric module."""
+        """Dispatch to the gateway method for the requested metric module."""
         match metric_type:
             case MetricType.TOPOGRAPHY:
-                return [await self._metrics_collector.collect_topography(parcel_id, user_id)]
+                return [await self._metrics_service.collect_topography(parcel_id, user_id)]
             case MetricType.CLIMATE:
-                return [await self._metrics_collector.collect_climate(parcel_id, user_id)]
+                return [await self._metrics_service.collect_climate(parcel_id, user_id)]
             case MetricType.INFRASTRUCTURE:
-                return await self._metrics_collector.collect_infrastructure(
+                return await self._metrics_service.collect_infrastructure(
                     parcel_id,
                     user_id,
                     self._analysis_profiles.infrastructure_buffers(analysis_type),

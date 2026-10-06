@@ -72,10 +72,6 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
             }
 
         await self._session.flush()
-        # ``updated_at`` is populated by a server-side ``onupdate`` and is
-        # expired by the flush; reading it lazily here would raise
-        # MissingGreenlet in async SQLAlchemy, so reload it inside the greenlet
-        # context before mapping the model back to the domain entity.
         await self._session.refresh(model)
         return self._to_domain(model)
 

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.command import FailAnalysisCommand, ScoreAnalysisCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.event import ANALYSIS_EVALUATED_EVENT, AnalysisEvaluatedEvent
 from app.module.analysis.domain.value_object import AnalysisId, AnalysisStage, AnalysisStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
@@ -19,10 +18,11 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisRepository,
         AnalysisScorer,
-        MetricsReader,
+        InterpretationService,
+        MetricsService,
     )
     from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
-    from app.module.shared.application.port import EventPublisher, UnitOfWork
+    from app.module.shared.application.port import UnitOfWork
 
 
 class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
@@ -30,6 +30,12 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
 
     Runs as the final pipeline phase. On error it rolls back and records the
     failure in a separate transaction, then re-raises.
+
+    The interpretation report is started in the same transaction through the
+    ``InterpretationService`` port, so clients never see a completed analysis
+    without its report row; If starting the interpretation
+    fails, the analysis is still completed and committed (the report can be
+    generated manually), so a transient failure does not roll back scoring.
     """
 
     _DEMO_STEP_DELAY_SECONDS = 5
@@ -37,18 +43,18 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
-        metrics_reader: MetricsReader,
+        metrics_service: MetricsService,
         scorer: AnalysisScorer,
         fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
-        event_publisher: EventPublisher,
+        interpretation_service: InterpretationService,
     ) -> None:
         self._analysis_repository = analysis_repository
-        self._metrics_reader = metrics_reader
+        self._metrics_service = metrics_service
         self._scorer = scorer
         self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
-        self._event_publisher = event_publisher
+        self._interpretation_service = interpretation_service
         self._logger = get_logger("app.analysis.use_case.score_analysis")
 
     @override
@@ -85,7 +91,7 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
             await asyncio.sleep(self._DEMO_STEP_DELAY_SECONDS)
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
-        values = await self._metrics_reader.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)
+        values = await self._metrics_service.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)
         evaluation = self._scorer.evaluate(
             command.analysis_id,
             values,
@@ -95,13 +101,22 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         analysis.complete(evaluation.total_score, evaluation.model_version)
         await self._analysis_repository.save(analysis)
         await self._analysis_repository.save_evaluation(evaluation)
-        await self._event_publisher.publish(
-            ANALYSIS_EVALUATED_EVENT,
-            AnalysisEvaluatedEvent(
-                analysis_id=analysis.id,
+        # Start the report in the same transaction: the ordered row and the
+        # ``interpretation_started`` outbox event commit together with the
+        # completed analysis, so there is no relay hop in between.
+        try:
+            await self._interpretation_service.start(
+                analysis_id=command.analysis_id,
                 current_user_id=command.current_user_id,
-            ).to_payload(),
-        )
+            )
+        except Exception:
+            # The analysis stays completed without the report row; the user can
+            # start the report manually. This mirrors the pre-refactor behavior
+            # where the relay could fail to order the report.
+            self._logger.exception(
+                "Failed to start interpretation, analysis stays completed: analysis_id=%s",
+                command.analysis_id,
+            )
         await self._unit_of_work.commit()
 
         self._logger.info(

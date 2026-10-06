@@ -16,11 +16,10 @@ from app.module.interpretation.application.service import ReportAssembler
 from app.module.interpretation.application.use_case import (
     GenerateInterpretationUseCase,
     GetInterpretationUseCase,
-    OrderInterpretationUseCase,
+    StartInterpretationUseCase,
 )
 from app.module.interpretation.domain.service import AspectExtractor, MetricClassifier, TopAspectSelector
 from app.module.interpretation.domain.value_object import InterpretationPolicy
-from app.module.interpretation.infrastructure.breakdown import AnalysisEvaluationBreakdownBuilder
 from app.module.interpretation.infrastructure.llm import (
     LlmGrader,
     LlmInterpreter,
@@ -28,6 +27,7 @@ from app.module.interpretation.infrastructure.llm import (
     OpenAICompatibleLLMClient,
 )
 from app.module.interpretation.infrastructure.queue import CeleryInterpretationTaskQueue
+from app.module.interpretation.infrastructure.reader import AnalysisEvaluationReaderImpl
 from app.module.interpretation.infrastructure.repository import PostgresInterpretationRepository
 from app.module.interpretation.interface.internal.api import InterpretationInternal
 from app.module.shared.application.port import EventPublisher, UnitOfWork
@@ -36,7 +36,7 @@ from app.platform.config.loaders import load_llm_config
 
 GENERATE_INTERPRETATION_USE_CASE_KEY = "generate_interpretation_use_case"
 GET_INTERPRETATION_USE_CASE_KEY = "get_interpretation_use_case"
-ORDER_INTERPRETATION_USE_CASE_KEY = "order_interpretation_use_case"
+START_INTERPRETATION_USE_CASE_KEY = "start_interpretation_use_case"
 
 
 # ----- Domain services -----
@@ -101,10 +101,11 @@ def provide_report_assembler(
     return ReportAssembler(aspect_extractor)
 
 
-def provide_evaluation_breakdown_builder(
+def provide_analysis_evaluation_reader(
+    analysis_api: NamedDependency[AnalysisInternalAPI],
     metric_classifier: NamedDependency[MetricClassifier],
-) -> AnalysisEvaluationBreakdownBuilder:
-    return AnalysisEvaluationBreakdownBuilder(metric_classifier)
+) -> AnalysisEvaluationReaderImpl:
+    return AnalysisEvaluationReaderImpl(analysis_api, metric_classifier)
 
 
 def provide_interpretation_task_queue(
@@ -122,17 +123,15 @@ def provide_interpretation_repository(
 
 # ----- Use cases -----
 def provide_generate_interpretation_use_case(
-    analysis_api: NamedDependency[AnalysisInternalAPI],
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
-    evaluation_breakdown_builder: NamedDependency[AnalysisEvaluationBreakdownBuilder],
+    analysis_evaluation_reader: NamedDependency[AnalysisEvaluationReaderImpl],
     interpreter: NamedDependency[LlmInterpreter],
     report_assembler: NamedDependency[ReportAssembler],
     unit_of_work: NamedDependency[UnitOfWork],
 ) -> GenerateInterpretationUseCase:
     return GenerateInterpretationUseCase(
-        analysis_api,
         interpretation_repository,
-        evaluation_breakdown_builder,
+        analysis_evaluation_reader,
         interpreter,
         report_assembler,
         unit_of_work,
@@ -140,29 +139,23 @@ def provide_generate_interpretation_use_case(
 
 
 def provide_get_interpretation_use_case(
-    analysis_api: NamedDependency[AnalysisInternalAPI],
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
-    evaluation_breakdown_builder: NamedDependency[AnalysisEvaluationBreakdownBuilder],
+    analysis_evaluation_reader: NamedDependency[AnalysisEvaluationReaderImpl],
     report_assembler: NamedDependency[ReportAssembler],
 ) -> GetInterpretationUseCase:
     return GetInterpretationUseCase(
-        analysis_api,
         interpretation_repository,
-        evaluation_breakdown_builder,
+        analysis_evaluation_reader,
         report_assembler,
     )
 
 
-def provide_order_interpretation_use_case(
-    analysis_api: NamedDependency[AnalysisInternalAPI],
+def provide_start_interpretation_use_case(
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
-    evaluation_breakdown_builder: NamedDependency[AnalysisEvaluationBreakdownBuilder],
     event_publisher: NamedDependency[EventPublisher],
-) -> OrderInterpretationUseCase:
-    return OrderInterpretationUseCase(
-        analysis_api,
+) -> StartInterpretationUseCase:
+    return StartInterpretationUseCase(
         interpretation_repository,
-        evaluation_breakdown_builder,
         event_publisher,
     )
 
@@ -170,9 +163,9 @@ def provide_order_interpretation_use_case(
 # ----- Internal API -----
 def provide_interpretation_internal(
     get_interpretation_use_case: NamedDependency[GetInterpretationUseCase],
-    order_interpretation_use_case: NamedDependency[OrderInterpretationUseCase],
+    start_interpretation_use_case: NamedDependency[StartInterpretationUseCase],
 ) -> InterpretationInternal:
-    return InterpretationInternal(get_interpretation_use_case, order_interpretation_use_case)
+    return InterpretationInternal(get_interpretation_use_case, start_interpretation_use_case)
 
 
 interpretation_dependencies = {
@@ -181,15 +174,15 @@ interpretation_dependencies = {
     "aspect_extractor": Provide(provide_aspect_extractor, use_cache=True, sync_to_thread=False),
     "top_aspect_selector": Provide(provide_top_aspect_selector, use_cache=True, sync_to_thread=False),
     "report_assembler": Provide(provide_report_assembler, use_cache=True, sync_to_thread=False),
-    "evaluation_breakdown_builder": Provide(
-        provide_evaluation_breakdown_builder,
+    "analysis_evaluation_reader": Provide(
+        provide_analysis_evaluation_reader,
         use_cache=True,
         sync_to_thread=False,
     ),
     "interpretation_repository": Provide(provide_interpretation_repository, sync_to_thread=False),
     GET_INTERPRETATION_USE_CASE_KEY: Provide(provide_get_interpretation_use_case, sync_to_thread=False),
-    ORDER_INTERPRETATION_USE_CASE_KEY: Provide(
-        provide_order_interpretation_use_case,
+    START_INTERPRETATION_USE_CASE_KEY: Provide(
+        provide_start_interpretation_use_case,
         sync_to_thread=False,
     ),
     "interpretation_api": Provide(provide_interpretation_internal, sync_to_thread=False),
@@ -214,7 +207,7 @@ interpretation_worker_dependencies = {
 __all__ = (
     "GENERATE_INTERPRETATION_USE_CASE_KEY",
     "GET_INTERPRETATION_USE_CASE_KEY",
-    "ORDER_INTERPRETATION_USE_CASE_KEY",
+    "START_INTERPRETATION_USE_CASE_KEY",
     "interpretation_dependencies",
     "interpretation_worker_dependencies",
 )

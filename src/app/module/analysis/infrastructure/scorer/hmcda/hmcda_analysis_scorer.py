@@ -15,7 +15,7 @@ from app.module.analysis.domain.value_object import (
     AnalysisScore,
     AnalysisType,
 )
-from app.module.analysis.infrastructure.fuzzy import FuzzyNormalizer
+from app.module.analysis.infrastructure.metrics_normalizer import FuzzyNormalizer
 from app.module.analysis.infrastructure.scorer.hmcda.hierarchical_aggregator import HierarchicalAggregator
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.interface.internal import IntegerMetricValue, NumberMetricValue

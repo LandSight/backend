@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
-        OwnedParcelsProvider,
+        ParcelsService,
     )
     from app.module.shared.application.port import EventPublisher
 
@@ -37,12 +37,12 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
-        owned_parcels_provider: OwnedParcelsProvider,
+        parcels_service: ParcelsService,
         event_publisher: EventPublisher,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
-        self._owned_parcels_provider = owned_parcels_provider
+        self._parcels_service = parcels_service
         self._event_publisher = event_publisher
         self._logger = get_logger("app.analysis.use_case.start_analysis")
 
@@ -54,7 +54,7 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             reason = f"User is not allowed to analyze parcel '{command.parcel_id}'"
             raise ForbiddenError(reason)
 
-        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        parcels = await self._parcels_service.list_owned_parcels(command.current_user_id)
 
         analysis = Analysis(
             id=AnalysisId(uuid6()),

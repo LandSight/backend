@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
-        OwnedParcelsProvider,
+        ParcelsService,
     )
     from app.module.analysis.domain.entity import Analysis
 
@@ -34,11 +34,11 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
-        owned_parcels_provider: OwnedParcelsProvider,
+        parcels_service: ParcelsService,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
-        self._owned_parcels_provider = owned_parcels_provider
+        self._parcels_service = parcels_service
         self._logger = get_logger("app.analysis.use_case.get_analysis")
 
     @override
@@ -60,7 +60,7 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
             )
             self._raise_not_found(command.analysis_id)
 
-        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        parcels = await self._parcels_service.list_owned_parcels(command.current_user_id)
         return self._to_response(analysis, parcels.get(analysis.parcel_id.unwrap()))
 
     @staticmethod

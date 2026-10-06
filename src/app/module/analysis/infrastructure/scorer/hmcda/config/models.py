@@ -13,13 +13,13 @@ from typing import TYPE_CHECKING, Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.module.analysis.domain.value_object import AnalysisType  # noqa: TC001 - needed at runtime for pydantic
-from app.module.analysis.infrastructure.fuzzy.s_shaped import SShaped
-from app.module.analysis.infrastructure.fuzzy.trapezoidal import Trapezoidal
-from app.module.analysis.infrastructure.fuzzy.z_shaped import ZShaped
+from app.module.analysis.infrastructure.metrics_normalizer.s_shaped import SShaped
+from app.module.analysis.infrastructure.metrics_normalizer.trapezoidal import Trapezoidal
+from app.module.analysis.infrastructure.metrics_normalizer.z_shaped import ZShaped
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.infrastructure.ports import FuzzyFunction
+    from app.module.analysis.infrastructure.metrics_normalizer import FuzzyFunction
 
 
 _MAX_METRIC_DEPTH = 2

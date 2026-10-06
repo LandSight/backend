@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .generate_interpretation import GenerateInterpretationUseCase
 from .get_interpretation import GetInterpretationUseCase
-from .order_interpretation import OrderInterpretationUseCase
+from .start_interpretation import StartInterpretationUseCase
 
 
-__all__ = ("GenerateInterpretationUseCase", "GetInterpretationUseCase", "OrderInterpretationUseCase")
+__all__ = ("GenerateInterpretationUseCase", "GetInterpretationUseCase", "StartInterpretationUseCase")

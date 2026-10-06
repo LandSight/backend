@@ -52,21 +52,21 @@ class InterpretationController(Controller):
     @post(
         "/{analysis_id:uuid}/interpretation",
         status_code=HTTP_202_ACCEPTED,
-        description="Order (re)generation of the interpretation report of an analysis.",
+        description="Start (re)generation of the interpretation report of an analysis.",
     )
-    async def order_interpretation(
+    async def start_interpretation(
         self,
         analysis_id: UUID,
         current_user: CurrentUser,
         interpretation_api: InterpretationInternalAPI,
     ) -> InterpretationResultSchema:
-        """Order (re)generation of the interpretation report.
+        """Start (re)generation of the interpretation report.
 
         The report row is created with the ``ordered`` status and generation is
         requested through the transactional outbox; the actual LLM work runs in
         the worker. Poll ``GET /{analysis_id}/interpretation`` for the status.
         """
-        result = await interpretation_api.order_interpretation(
+        result = await interpretation_api.start_interpretation(
             GenerateInterpretationInput(analysis_id=analysis_id, current_user_id=current_user.id),
         )
         return self._to_schema(result)

@@ -1,4 +1,4 @@
-"""Owned parcels provider port."""
+"""Parcels service port."""
 
 from __future__ import annotations
 
@@ -10,11 +10,11 @@ if TYPE_CHECKING:
     from uuid import UUID
 
 
-class OwnedParcelsProvider(ABC):
-    """Port for resolving the parcels owned by a user.
+class ParcelsService(ABC):
+    """Gateway to the Parcel module's internal API.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.parcel.owned_parcels_provider.OwnedParcelsProviderImpl`
+    - :class:`app.module.analysis.infrastructure.gateways.parcels_service.ParcelsServiceImpl`
     """
 
     @abstractmethod
@@ -34,4 +34,4 @@ class OwnedParcelsProvider(ABC):
         raise NotImplementedError
 
 
-__all__ = ("OwnedParcelsProvider",)
+__all__ = ("ParcelsService",)

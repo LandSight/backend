@@ -5,7 +5,7 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import TYPE_CHECKING, ClassVar
 
-from app.module.analysis.infrastructure.ports import FuzzyFunction
+from app.module.analysis.infrastructure.metrics_normalizer import FuzzyFunction
 from app.module.shared.domain.error import ValidationError
 
 

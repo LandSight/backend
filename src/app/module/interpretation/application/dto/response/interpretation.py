@@ -33,9 +33,9 @@ class AspectInterpretationResponse:
 class InterpretationResultResponse:
     """Full interpretation report of an analysis evaluation."""
 
-    total_score: float
-    scale_max: float
-    scenario: str
+    total_score: float = 0.0
+    scale_max: float = 0.0
+    scenario: str = ""
     status: InterpretationStatus = InterpretationStatus.COMPLETED
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""

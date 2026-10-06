@@ -1,9 +1,11 @@
-"""Metrics collector port."""
+"""Metrics service port."""
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
+from app.module.shared.interface.internal import MetricsResponse
 
 
 if TYPE_CHECKING:
@@ -13,14 +15,14 @@ if TYPE_CHECKING:
     from app.module.analysis.domain.value_object import AnalysisMetricRef
 
 
-class MetricsCollector(ABC):
-    """Port for calculating the metrics required by an analysis.
+class MetricsService(ABC):
+    """Gateway to the metric modules' internal APIs.
 
-    Each method calculates and persists the module's metrics snapshots, then
-    returns the references to record for the analysis.
+    A single client for everything the analysis pipeline needs from the metric
+    modules: calculating snapshots, reading their values and deleting them.
 
     Implementations:
-    - :class:`app.module.analysis.infrastructure.collector.metrics_collector.MetricsCollectorImpl`
+    - :class:`app.module.analysis.infrastructure.gateways.metrics_service.MetricsServiceImpl`
     """
 
     @abstractmethod
@@ -43,5 +45,20 @@ class MetricsCollector(ABC):
         """Calculate and persist infrastructure metrics for the configured categories."""
         raise NotImplementedError
 
+    @abstractmethod
+    async def read(
+        self,
+        parcel_id: UUID,
+        refs: list[AnalysisMetricRef],
+        user_id: UUID,
+    ) -> list[MetricsResponse]:
+        """Read the neutral metrics responses behind the given references."""
+        raise NotImplementedError
 
-__all__ = ("MetricsCollector",)
+    @abstractmethod
+    async def delete(self, refs: list[AnalysisMetricRef]) -> None:
+        """Delete the metric snapshots behind the given references."""
+        raise NotImplementedError
+
+
+__all__ = ("MetricsResponse", "MetricsService")

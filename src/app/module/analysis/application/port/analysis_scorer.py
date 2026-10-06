@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.analysis.application.port.metrics_reader import MetricsResponse
+    from app.module.analysis.application.port.metrics_service import MetricsResponse
     from app.module.analysis.domain.entity import AnalysisEvaluation
     from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
 

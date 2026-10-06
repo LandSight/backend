@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
-from app.module.analysis.interface.internal.dto import GetAnalysisEvaluationInput
 from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
 from app.module.interpretation.application.dto.response import InterpretationResultResponse
 from app.module.interpretation.domain.entity import Interpretation
@@ -17,9 +16,8 @@ from app.platform.logging import get_logger
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.analysis.interface.internal.port import AnalysisInternalAPI
     from app.module.interpretation.application.port import (
-        EvaluationBreakdownBuilder,
+        AnalysisEvaluationReader,
         InterpretationRepository,
         Interpreter,
     )
@@ -45,16 +43,14 @@ class GenerateInterpretationUseCase(
 
     def __init__(
         self,
-        analysis_api: AnalysisInternalAPI,
         interpretation_repository: InterpretationRepository,
-        breakdown_builder: EvaluationBreakdownBuilder,
+        evaluation_reader: AnalysisEvaluationReader,
         interpreter: Interpreter,
         report_assembler: ReportAssembler,
         unit_of_work: UnitOfWork,
     ) -> None:
-        self._analysis_api = analysis_api
         self._repository = interpretation_repository
-        self._breakdown_builder = breakdown_builder
+        self._evaluation_reader = evaluation_reader
         self._interpreter = interpreter
         self._assembler = report_assembler
         self._unit_of_work = unit_of_work
@@ -118,13 +114,7 @@ class GenerateInterpretationUseCase(
 
     async def _load_breakdown(self, command: GenerateInterpretationCommand) -> EvaluationBreakdown:
         """Read the evaluation through the analysis API and flatten it."""
-        evaluation = await self._analysis_api.get_analysis_evaluation(
-            GetAnalysisEvaluationInput(
-                analysis_id=command.analysis_id,
-                current_user_id=command.current_user_id,
-            ),
-        )
-        return self._breakdown_builder.build(evaluation)
+        return await self._evaluation_reader.read(command.analysis_id, command.current_user_id)
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
         """Roll back and persist the failure in a fresh transaction."""

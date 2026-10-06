@@ -9,7 +9,7 @@ the next one starts.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from uuid import UUID, uuid6
+from uuid import UUID
 
 from celery.signals import worker_process_init
 
@@ -17,10 +17,8 @@ from app.module.analysis.application.dto.command import CollectMetricsCommand, S
 from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
 from app.module.analysis.domain.event import (
     ANALYSIS_DELETED_EVENT,
-    ANALYSIS_EVALUATED_EVENT,
     ANALYSIS_QUEUED_EVENT,
     AnalysisDeletedEvent,
-    AnalysisEvaluatedEvent,
     AnalysisQueuedEvent,
 )
 from app.module.analysis.domain.value_object import MetricType
@@ -29,12 +27,10 @@ from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import 
 )
 from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
 from app.module.interpretation.di import GENERATE_INTERPRETATION_USE_CASE_KEY
-from app.module.interpretation.domain.entity import Interpretation
 from app.module.interpretation.domain.event import (
-    INTERPRETATION_ORDERED_EVENT,
-    InterpretationOrderedEvent,
+    INTERPRETATION_STARTED_EVENT,
+    InterpretationStartedEvent,
 )
-from app.module.interpretation.domain.value_object import InterpretationId, InterpretationStatus
 from app.module.interpretation.infrastructure.queue import PROCESS_INTERPRETATION_TASK_NAME
 from app.platform.config.loaders import load_logging_config
 from app.platform.logging import configure_logging, get_logger
@@ -47,9 +43,8 @@ from app.worker.container import WorkerContainer, get_session_factory, run_in_wo
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsRemover
-    from app.module.interpretation.application.port import InterpretationRepository, InterpretationTaskQueue
-    from app.module.interpretation.application.use_case import GenerateInterpretationUseCase
+    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsService
+    from app.module.interpretation.application.port import InterpretationTaskQueue
     from app.platform.outbox.repository import OutboxRepository
 
 
@@ -114,7 +109,7 @@ async def _process_interpretation(analysis_id: str, current_user_id: str) -> Non
     session_factory = get_session_factory()
     async with session_factory() as session:
         container = WorkerContainer(session)
-        generate: GenerateInterpretationUseCase = container.resolve(GENERATE_INTERPRETATION_USE_CASE_KEY)
+        generate = container.resolve(GENERATE_INTERPRETATION_USE_CASE_KEY)
         await generate(
             GenerateInterpretationCommand(
                 analysis_id=UUID(analysis_id),
@@ -135,10 +130,9 @@ async def _drain_outbox() -> None:
     async with session_factory() as session:
         container = WorkerContainer(session)
         repository: OutboxRepository = container.resolve("outbox_repository")
-        metrics_remover: MetricsRemover = container.resolve("metrics_remover")
+        metrics_service: MetricsService = container.resolve("metrics_service")
         task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
         interpretation_task_queue: InterpretationTaskQueue = container.resolve("interpretation_task_queue")
-        interpretation_repository: InterpretationRepository = container.resolve("interpretation_repository")
 
         async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
             event = AnalysisQueuedEvent.from_payload(payload)
@@ -146,28 +140,10 @@ async def _drain_outbox() -> None:
 
         async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
             event = AnalysisDeletedEvent.from_payload(payload)
-            await metrics_remover.delete(list(event.metrics))
+            await metrics_service.delete(list(event.metrics))
 
-        async def _ensure_ordered(interpretation_repository: InterpretationRepository, analysis_id: UUID) -> None:
-            """Create the ordered report row on first touch, mirroring the analysis."""
-            if await interpretation_repository.get(analysis_id) is None:
-                await interpretation_repository.save(
-                    Interpretation(
-                        id=InterpretationId(uuid6()),
-                        analysis_id=analysis_id,
-                        model="",
-                        summary="",
-                        status=InterpretationStatus.ORDERED,
-                    )
-                )
-
-        async def handle_analysis_evaluated(payload: Mapping[str, object]) -> None:
-            event = AnalysisEvaluatedEvent.from_payload(payload)
-            await _ensure_ordered(interpretation_repository, event.analysis_id.unwrap())
-            await interpretation_task_queue.enqueue(event.analysis_id.unwrap(), event.current_user_id)
-
-        async def handle_interpretation_ordered(payload: Mapping[str, object]) -> None:
-            event = InterpretationOrderedEvent.from_payload(payload)
+        async def handle_interpretation_started(payload: Mapping[str, object]) -> None:
+            event = InterpretationStartedEvent.from_payload(payload)
             await interpretation_task_queue.enqueue(event.analysis_id, event.current_user_id)
 
         drainer = OutboxDrainer(
@@ -175,8 +151,7 @@ async def _drain_outbox() -> None:
             {
                 ANALYSIS_QUEUED_EVENT: handle_analysis_queued,
                 ANALYSIS_DELETED_EVENT: handle_analysis_deleted,
-                ANALYSIS_EVALUATED_EVENT: handle_analysis_evaluated,
-                INTERPRETATION_ORDERED_EVENT: handle_interpretation_ordered,
+                INTERPRETATION_STARTED_EVENT: handle_interpretation_started,
             },
         )
         processed = await drainer.drain()

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     )
     from app.module.interpretation.application.use_case import (
         GetInterpretationUseCase,
-        OrderInterpretationUseCase,
+        StartInterpretationUseCase,
     )
     from app.module.interpretation.domain.value_object import AspectMetric
 
@@ -40,10 +40,10 @@ class InterpretationInternal(InterpretationInternalAPI):
     def __init__(
         self,
         get_interpretation_use_case: GetInterpretationUseCase,
-        order_interpretation_use_case: OrderInterpretationUseCase,
+        start_interpretation_use_case: StartInterpretationUseCase,
     ) -> None:
         self._get_interpretation = get_interpretation_use_case
-        self._order_interpretation = order_interpretation_use_case
+        self._start_interpretation = start_interpretation_use_case
 
     @override
     async def get_interpretation(self, input_data: GetInterpretationInput) -> InterpretationResult:
@@ -57,9 +57,9 @@ class InterpretationInternal(InterpretationInternalAPI):
         return self._to_result(result)
 
     @override
-    async def order_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
-        """See :meth:`InterpretationInternalAPI.order_interpretation`."""
-        result = await self._order_interpretation(
+    async def start_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
+        """See :meth:`InterpretationInternalAPI.start_interpretation`."""
+        result = await self._start_interpretation(
             GenerateInterpretationCommand(
                 analysis_id=input_data.analysis_id,
                 current_user_id=input_data.current_user_id,
