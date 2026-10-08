@@ -219,6 +219,7 @@ profiles:
       "water_body:coverage_ratio":
         type: s_shaped
         params: { min: 0.01, max: 0.10 }
+        unit: ratio
       "water_body:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }
@@ -231,6 +232,7 @@ profiles:
       "forest:coverage_ratio":
         type: s_shaped
         params: { min: 0.05, max: 0.30 }
+        unit: ratio
       "forest:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }

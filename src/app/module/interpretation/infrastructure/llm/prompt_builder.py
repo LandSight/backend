@@ -19,10 +19,12 @@ Use ONLY the facts provided. Do NOT add your own judgments.
 Do NOT invent values that are not in the input.
 Answer ONLY in English.
 Answer format: 2-4 sentences of plain prose, no lists or headings.
-State points on the final scale (for example, "2.08 of 4.00 points"), not fractions.
-State how many points the aspect lost from its maximum.
+Use ONE scale: points of the total score (for example, "earned 2.08 of 4.00 points, losing 1.92").
+You may add the share of the aspect's maximum as a percentage (for example, "52% of its maximum").
+NEVER write a score as a fraction of 1.0.
 Explain why a metric failed through its zone: the value is above or below the expected range.
-Refer to metrics by their names exactly as given."""
+Refer to metrics by their names exactly as given.
+Do NOT start with or include labels such as "Aspect:" or "Summary:"; write plain prose only."""
 
 _SUMMARY_SYSTEM = """You turn structured data into human-readable text.
 Your task is to explain how the individual aspects shaped the total score.
@@ -30,8 +32,10 @@ Use ONLY the facts provided. Do NOT add your own judgments.
 Do NOT invent values that are not in the input.
 Answer ONLY in English.
 Answer format: 3-5 sentences of plain prose, no lists or headings.
-State points on the final scale (for example, "2.08 of 4.00 points").
-Name the main contribution and the main losses."""
+Use ONE scale: points of the total score (for example, "2.08 of 4.00 points").
+NEVER write a score as a fraction of 1.0.
+Name the main contribution and the main losses.
+Do NOT start with or include labels such as "Aspect:" or "Summary:"; write plain prose only."""
 
 _GRADER_SYSTEM = """You are a strict reviewer of an explanation text.
 Check that the explanation uses ONLY the facts from the FACTS block, does not
@@ -153,12 +157,14 @@ class LlmPromptBuilder:
     @classmethod
     def _aspect_header(cls, aspect: Aspect) -> list[str]:
         """Score, weight, points and loss of an aspect."""
+        # One scale only: points of the total score, plus the share of the
+        # aspect's maximum as a percentage. A 0-1 aspect score next to points
+        # made the model write "scored 0.46 of 1.0, lost 0.81 points".
         return [
-            f"Aspect: {cls._name(aspect.name, aspect.key)}",
-            f"Aspect score: {aspect.score:.2f} of 1.0",
-            f"Aspect weight: {aspect.weight:.2f} (up to {aspect.max_points:.2f} points of the total)",
-            f"Actual contribution: {aspect.points:.2f} of {aspect.max_points:.2f} points",
-            f"Lost: {aspect.loss:.2f} points ({aspect.loss_share:.0%} of the maximum)",
+            f"The {cls._name(aspect.name, aspect.key)} aspect can contribute up to "
+            f"{aspect.max_points:.2f} points to the total score.",
+            f"It earned {aspect.points:.2f} of {aspect.max_points:.2f} points "
+            f"({aspect.score:.0%} of its maximum) and lost {aspect.loss:.2f} points.",
         ]
 
     @staticmethod
@@ -173,9 +179,8 @@ class LlmPromptBuilder:
     def _aspect_breakdown(cls, aspects: Sequence[Aspect]) -> list[str]:
         """One line of points and loss per aspect."""
         return [
-            f"- {cls._name(aspect.name, aspect.key)} (weight {aspect.weight:.2f}): "
-            f"{aspect.points:.2f} of {aspect.max_points:.2f} points "
-            f"(lost {aspect.loss:.2f}, {aspect.loss_share:.0%})"
+            f"- {cls._name(aspect.name, aspect.key)}: earned {aspect.points:.2f} of "
+            f"{aspect.max_points:.2f} points ({aspect.score:.0%} of its maximum), lost {aspect.loss:.2f} points"
             for aspect in aspects
         ]
 
@@ -200,9 +205,10 @@ class LlmPromptBuilder:
         # write things like "Min distance to (power_line:min_distance_to)".
         name = metric.label or metric.key
         raw = "no data" if metric.raw_value is None else cls._value(metric.raw_value, metric.unit)
-        normalized = "n/a" if metric.normalized_value is None else f"{metric.normalized_value:.2f}"
-        contribution = "n/a" if metric.contribution is None else f"{metric.contribution:.3f}"
-        text = f"{name}: value {raw}, normalized {normalized}, contribution {contribution}"
+        # The metric score is a percentage; the in-aspect contribution is an
+        # internal weight product and is not shown, to keep a single scale.
+        score = "n/a" if metric.normalized_value is None else f"{metric.normalized_value:.0%}"
+        text = f"{name}: value {raw}, metric score {score}"
         zone = cls._zone(metric)
         return f"{text}; zone: the value is {zone}" if zone else text
 

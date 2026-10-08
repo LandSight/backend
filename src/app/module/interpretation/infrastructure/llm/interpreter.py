@@ -7,6 +7,7 @@ report is always produced.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Final, override
 from uuid import uuid6
 
@@ -35,6 +36,9 @@ class LlmInterpreter(Interpreter):
     """Generates the interpretation report with a local LLM."""
 
     _WRAPPING_QUOTES: Final = "\"'«»"
+    # Section labels the model sometimes copies from the prompt structure; they
+    # are dropped at the start of the text or of a sentence.
+    _SECTION_LABEL: Final = re.compile(r"(?:^|(?<=[.!?] ))(?:Aspect|Summary|Explanation|Answer)\s*:\s*")
 
     def __init__(
         self,
@@ -127,8 +131,9 @@ class LlmInterpreter(Interpreter):
 
     @classmethod
     def _clean(cls, text: str) -> str | None:
-        """Collapse whitespace and strip wrapping quotes; ``None`` when empty."""
+        """Collapse whitespace, strip wrapping quotes and section labels; ``None`` when empty."""
         cleaned = " ".join(text.split()).strip(cls._WRAPPING_QUOTES).strip()
+        cleaned = cls._SECTION_LABEL.sub("", cleaned).strip()
         return cleaned or None
 
     @staticmethod
