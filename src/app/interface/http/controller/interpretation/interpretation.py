@@ -81,6 +81,8 @@ class InterpretationController(Controller):
             status=result.status,
             aspects=[cls._to_aspect_schema(aspect) for aspect in result.aspects],
             top_aspects_summary=result.top_aspects_summary,
+            verdict=result.verdict.value if result.verdict else None,
+            verdict_label=result.verdict.label if result.verdict else None,
         )
 
     @classmethod
@@ -91,6 +93,10 @@ class InterpretationController(Controller):
             score=aspect.score,
             weight=aspect.weight,
             contribution=aspect.contribution,
+            points=aspect.points,
+            max_points=aspect.max_points,
+            loss=aspect.loss,
+            loss_share=aspect.loss_share,
             explanation=aspect.explanation,
             top_metrics=[cls._to_metric_schema(metric) for metric in aspect.top_metrics],
         )
@@ -105,6 +111,9 @@ class InterpretationController(Controller):
             contribution=metric.contribution,
             unit=metric.unit,
             role=metric.role.value,
+            position=metric.position.value,
+            membership_function=metric.membership_function,
+            membership_params=dict(metric.membership_params) if metric.membership_params is not None else None,
         )
 
 

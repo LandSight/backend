@@ -51,7 +51,7 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         try:
             await self._execute(command)
         except Exception as exc:
-            await self._record_failure(command.analysis_id, exc)
+            await self._record_failure(command.analysis_id, command.metric_type, exc)
             raise
 
     async def _execute(self, command: CollectMetricsCommand) -> None:
@@ -91,13 +91,18 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         await self._analysis_repository.save_metrics(analysis.id, refs)
         await self._unit_of_work.commit()
 
-    async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
-        """Roll back and persist the failure in a fresh transaction."""
-        self._logger.warning("Metrics collection failed: analysis_id=%s error=%s", analysis_id, error)
+    async def _record_failure(self, analysis_id: UUID, metric_type: MetricType, error: Exception) -> None:
+        """Log the error, roll back and persist a user-safe failure reason in a fresh transaction."""
+        self._logger.error(
+            "Metrics collection failed: analysis_id=%s metric_type=%s",
+            analysis_id,
+            metric_type,
+            exc_info=error,
+        )
         await self._unit_of_work.rollback()
         analysis = await self._analysis_repository.get(AnalysisId(analysis_id))
         if analysis is not None and analysis.status in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
-            analysis.fail(AnalysisStatusReason.from_error(error))
+            analysis.fail(AnalysisStatusReason.metrics_collection_failed(metric_type))
             await self._analysis_repository.save(analysis)
             await self._unit_of_work.commit()
 

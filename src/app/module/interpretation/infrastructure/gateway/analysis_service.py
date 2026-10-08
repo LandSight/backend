@@ -13,7 +13,14 @@ from typing import TYPE_CHECKING, override
 from app.module.analysis.application.dto.response import HierarchicalExtensionResponse
 from app.module.analysis.interface.internal.dto import GetAnalysisEvaluationInput
 from app.module.interpretation.application.port import AnalysisService
-from app.module.interpretation.domain.value_object import Aspect, AspectMetric, EvaluationBreakdown, MetricRole
+from app.module.interpretation.domain.value_object import (
+    Aspect,
+    AspectMetric,
+    EvaluationBreakdown,
+    Membership,
+    MetricRole,
+    ScoreScale,
+)
 
 
 if TYPE_CHECKING:
@@ -42,7 +49,7 @@ class AnalysisServiceImpl(AnalysisService):
 
     @override
     async def read(self, analysis_id: UUID, current_user_id: UUID) -> EvaluationBreakdown:
-        """See :class:`app.module.interpretation.application.port.AnalysisEvaluationReader.read`."""
+        """See :class:`app.module.interpretation.application.port.AnalysisService.read`."""
         response = await self._analysis_api.get_analysis_evaluation(
             GetAnalysisEvaluationInput(
                 analysis_id=analysis_id,
@@ -55,22 +62,28 @@ class AnalysisServiceImpl(AnalysisService):
         """Build the flat breakdown of an evaluation response."""
         extension = response.extensions.get("hierarchical")
         clusters = extension.clusters if isinstance(extension, HierarchicalExtensionResponse) else ()
+        aspects: tuple[Aspect, ...] = ()
+        if clusters:
+            scale = ScoreScale(response.scale_max, sum(cluster.weight for cluster in clusters))
+            aspects = tuple(self._aspect(cluster, scale) for cluster in clusters)
         return EvaluationBreakdown(
             total_score=response.total_score,
             scale_max=response.scale_max,
             scenario=response.scenario,
-            aspects=tuple(self._aspect(cluster) for cluster in clusters),
+            aspects=aspects,
             scenario_description=response.scenario_description,
         )
 
-    def _aspect(self, cluster: ClusterScoreResponse) -> Aspect:
-        """Build an aspect with all leaf metrics collected recursively."""
+    def _aspect(self, cluster: ClusterScoreResponse, scale: ScoreScale) -> Aspect:
+        """Build an aspect with its points and all leaf metrics collected recursively."""
         return Aspect(
             key=cluster.key,
             name=cluster.name or cluster.key,
             score=cluster.score,
             weight=cluster.weight,
             contribution=cluster.contribution,
+            points=scale.points(cluster.contribution),
+            max_points=scale.max_points(cluster.weight),
             metrics=tuple(self._metric(metric) for metric in self._collect(cluster)),
         )
 
@@ -93,8 +106,16 @@ class AnalysisServiceImpl(AnalysisService):
             contribution=metric.contribution,
             unit=metric.unit,
             role=MetricRole.NEUTRAL,
+            membership=self._membership(metric),
         )
         return replace(view, role=self._classifier.classify(view))
+
+    @staticmethod
+    def _membership(metric: MetricContributionResponse) -> Membership | None:
+        """Build the membership function of a metric when it is known."""
+        if not metric.membership_function or metric.membership_params is None:
+            return None
+        return Membership(function=metric.membership_function, params=dict(metric.membership_params))
 
 
 __all__ = ("AnalysisServiceImpl",)

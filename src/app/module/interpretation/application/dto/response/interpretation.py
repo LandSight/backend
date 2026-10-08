@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from app.module.interpretation.domain.value_object import InterpretationStatus
+from app.module.interpretation.domain.value_object import InterpretationStatus, SuitabilityVerdict
 
 
 if TYPE_CHECKING:
@@ -25,6 +25,10 @@ class AspectInterpretationResponse:
     score: float
     weight: float
     contribution: float
+    points: float
+    max_points: float
+    loss: float
+    loss_share: float
     explanation: str
     top_metrics: tuple[AspectMetric, ...] = field(default_factory=tuple)
 
@@ -39,6 +43,7 @@ class InterpretationResultResponse:
     status: InterpretationStatus = InterpretationStatus.COMPLETED
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
+    verdict: SuitabilityVerdict | None = None
 
 
 __all__ = (

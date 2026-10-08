@@ -5,10 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from app.module.interpretation.domain.value_object import InterpretationStatus
+from app.module.interpretation.domain.value_object import InterpretationStatus, SuitabilityVerdict, ValuePosition
 
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from uuid import UUID
 
     from app.module.interpretation.domain.value_object import MetricRole
@@ -41,6 +42,9 @@ class MetricInfoResult:
     contribution: float | None
     unit: str
     role: MetricRole
+    position: ValuePosition = ValuePosition.UNKNOWN
+    membership_function: str | None = None
+    membership_params: Mapping[str, float] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,6 +56,10 @@ class AspectInterpretationResult:
     score: float
     weight: float
     contribution: float
+    points: float
+    max_points: float
+    loss: float
+    loss_share: float
     explanation: str
     top_metrics: tuple[MetricInfoResult, ...] = field(default_factory=tuple)
 
@@ -66,6 +74,7 @@ class InterpretationResult:
     status: InterpretationStatus = InterpretationStatus.COMPLETED
     aspects: tuple[AspectInterpretationResult, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
+    verdict: SuitabilityVerdict | None = None
 
 
 __all__ = (

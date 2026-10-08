@@ -5,11 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from app.module.interpretation.domain.value_object.value_position import ValuePosition
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
+    from app.module.interpretation.domain.value_object.membership import Membership
     from app.module.interpretation.domain.value_object.metric_role import MetricRole
 
 
@@ -39,6 +41,8 @@ class AspectMetric(BaseCompositeValueObject):
         Unit of the raw value.
     role : MetricRole
         Rule-based role inside the aspect.
+    membership : Membership | None
+        Fuzzy function the metric was normalized with; ``None`` when unknown.
     """
 
     key: str
@@ -49,6 +53,7 @@ class AspectMetric(BaseCompositeValueObject):
     contribution: float | None
     unit: str
     role: MetricRole
+    membership: Membership | None = None
 
     def _validate(self) -> None:
         if not self.key:
@@ -68,6 +73,13 @@ class AspectMetric(BaseCompositeValueObject):
     def data_available(self) -> bool:
         """Whether a usable normalized reading is available."""
         return self.normalized_value is not None
+
+    @property
+    def position(self) -> ValuePosition:
+        """Where the raw value lies relative to the membership function zones."""
+        if self.membership is None or self.raw_value is None:
+            return ValuePosition.UNKNOWN
+        return self.membership.position(self.raw_value)
 
 
 __all__ = ("AspectMetric",)

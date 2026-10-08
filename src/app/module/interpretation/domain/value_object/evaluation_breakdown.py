@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from app.module.interpretation.domain.value_object.suitability_verdict import SuitabilityVerdict
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.domain.value_object import BaseCompositeValueObject
 
@@ -46,9 +47,17 @@ class EvaluationBreakdown(BaseCompositeValueObject):
         if self.total_score < 0:
             message = f"Evaluation breakdown total score must not be negative, got {self.total_score}."
             raise ValidationError(message)
+        if self.scale_max <= 0:
+            message = f"Evaluation breakdown scale maximum must be positive, got {self.scale_max}."
+            raise ValidationError(message)
         if not self.scenario:
             message = "Evaluation breakdown scenario must not be empty."
             raise ValidationError(message)
+
+    @property
+    def verdict(self) -> SuitabilityVerdict:
+        """Qualitative suitability verdict derived from the total score."""
+        return SuitabilityVerdict.from_ratio(self.total_score / self.scale_max)
 
 
 __all__ = ("EvaluationBreakdown",)

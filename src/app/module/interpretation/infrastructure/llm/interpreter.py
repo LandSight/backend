@@ -76,10 +76,7 @@ class LlmInterpreter(Interpreter):
         if not metrics:
             return fallback
 
-        facts = self._prompt_builder.facts(
-            f"Аспект: {aspect.name or aspect.key}; балл {aspect.score:.2f}; вклад {aspect.contribution:.3f}",
-            metrics,
-        )
+        facts = self._prompt_builder.aspect_facts(aspect, metrics)
         return await self._generate(self._prompt_builder.aspect_prompt(aspect, metrics), facts, fallback)
 
     async def _summarize(
@@ -89,12 +86,8 @@ class LlmInterpreter(Interpreter):
         explanations: dict[str, str],
     ) -> str:
         """Generate the combined top-aspects summary."""
-        weights_context = self._top_aspect_selector.weights_context(breakdown.aspects)
-        facts = "\n".join(
-            f"{aspect.name or aspect.key}: балл {aspect.score:.2f}, вклад {aspect.contribution:.3f}"
-            for aspect in top_aspects
-        )
-        prompt = self._prompt_builder.summary_prompt(breakdown, top_aspects, explanations, weights_context)
+        facts = self._prompt_builder.summary_facts(breakdown)
+        prompt = self._prompt_builder.summary_prompt(breakdown, top_aspects, explanations)
         return await self._generate(prompt, facts, self.summary_fallback())
 
     async def _generate(self, prompt: Prompt, facts: str, fallback: str) -> str:

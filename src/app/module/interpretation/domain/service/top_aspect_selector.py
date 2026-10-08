@@ -14,13 +14,7 @@ if TYPE_CHECKING:
 
 
 class TopAspectSelector:
-    """Selects the aspects that contributed most to the total score.
-
-    Weights exposed for the prompt are contribution shares: because the
-    aggregator renormalizes weights over the readings that are available, the
-    configured weights do not sum to one, so the share of the contribution is
-    the comparable value.
-    """
+    """Selects the aspects that contributed most points to the total score."""
 
     def __init__(self, policy: InterpretationPolicy | None = None) -> None:
         self._policy = policy or InterpretationPolicy()
@@ -31,17 +25,9 @@ class TopAspectSelector:
         return self._policy.aspect_limit
 
     def top_aspects(self, aspects: Sequence[Aspect]) -> tuple[Aspect, ...]:
-        """Return the top aspects ordered by contribution descending."""
-        ordered = sorted(aspects, key=lambda aspect: aspect.contribution, reverse=True)
+        """Return the top aspects ordered by points descending."""
+        ordered = sorted(aspects, key=lambda aspect: aspect.points, reverse=True)
         return tuple(ordered[: self.limit])
-
-    @staticmethod
-    def weights_context(aspects: Sequence[Aspect]) -> dict[str, float]:
-        """Return the contribution share of every aspect."""
-        total = sum(aspect.contribution for aspect in aspects)
-        if total <= 0:
-            return {aspect.key: 0.0 for aspect in aspects}
-        return {aspect.key: round(aspect.contribution / total, 4) for aspect in aspects}
 
 
 __all__ = ("TopAspectSelector",)

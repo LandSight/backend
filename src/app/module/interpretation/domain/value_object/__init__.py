@@ -11,8 +11,12 @@ from .grade_verdict import GradeVerdict
 from .interpretation_id import InterpretationId
 from .interpretation_policy import InterpretationPolicy
 from .interpretation_status import InterpretationStatus
+from .membership import Membership
 from .metric_role import MetricRole
 from .prompt import Prompt
+from .score_scale import ScoreScale
+from .suitability_verdict import SuitabilityVerdict
+from .value_position import ValuePosition
 
 
 __all__ = (
@@ -25,6 +29,10 @@ __all__ = (
     "InterpretationId",
     "InterpretationPolicy",
     "InterpretationStatus",
+    "Membership",
     "MetricRole",
     "Prompt",
+    "ScoreScale",
+    "SuitabilityVerdict",
+    "ValuePosition",
 )

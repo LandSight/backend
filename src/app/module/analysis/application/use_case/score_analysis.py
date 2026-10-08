@@ -129,12 +129,12 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         )
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
-        """Roll back and persist the failure in a fresh transaction."""
-        self._logger.warning("Analysis scoring failed: analysis_id=%s error=%s", analysis_id, error)
+        """Log the error, roll back and persist a user-safe failure reason in a fresh transaction."""
+        self._logger.error("Analysis scoring failed: analysis_id=%s", analysis_id, exc_info=error)
         await self._unit_of_work.rollback()
         analysis = await self._analysis_repository.get(AnalysisId(analysis_id))
         if analysis is not None and analysis.status in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
-            analysis.fail(AnalysisStatusReason.from_error(error))
+            analysis.fail(AnalysisStatusReason.scoring_failed())
             await self._analysis_repository.save(analysis)
             await self._unit_of_work.commit()
 

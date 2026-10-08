@@ -41,6 +41,10 @@ class ReportAssembler:
                 score=aspect.score,
                 weight=aspect.weight,
                 contribution=aspect.contribution,
+                points=aspect.points,
+                max_points=aspect.max_points,
+                loss=aspect.loss,
+                loss_share=aspect.loss_share,
                 explanation=interpretation.explanation_for(aspect.key),
                 top_metrics=self._aspect_extractor.top_metrics(aspect),
             )
@@ -53,6 +57,7 @@ class ReportAssembler:
             status=interpretation.status,
             aspects=aspects,
             top_aspects_summary=interpretation.summary,
+            verdict=breakdown.verdict,
         )
 
 

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
 from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
-from app.module.interpretation.application.dto.response import InterpretationResultResponse
 from app.module.interpretation.domain.entity import Interpretation
 from app.module.interpretation.domain.value_object import InterpretationId, InterpretationStatus
 from app.module.shared.application.use_case import BaseUseCase
@@ -17,18 +16,14 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.interpretation.application.port import (
-        AnalysisEvaluationReader,
+        AnalysisService,
         InterpretationRepository,
         Interpreter,
     )
-    from app.module.interpretation.application.service import ReportAssembler
-    from app.module.interpretation.domain.value_object import EvaluationBreakdown
     from app.module.shared.application.port import UnitOfWork
 
 
-class GenerateInterpretationUseCase(
-    BaseUseCase[GenerateInterpretationCommand, InterpretationResultResponse],
-):
+class GenerateInterpretationUseCase(BaseUseCase[GenerateInterpretationCommand, None]):
     """Generate the interpretation report of an analysis.
 
     The use case owns the report lifecycle, mirroring how the analysis pipeline
@@ -44,27 +39,25 @@ class GenerateInterpretationUseCase(
     def __init__(
         self,
         interpretation_repository: InterpretationRepository,
-        evaluation_reader: AnalysisEvaluationReader,
+        analysis_service: AnalysisService,
         interpreter: Interpreter,
-        report_assembler: ReportAssembler,
         unit_of_work: UnitOfWork,
     ) -> None:
         self._repository = interpretation_repository
-        self._evaluation_reader = evaluation_reader
+        self._analysis_service = analysis_service
         self._interpreter = interpreter
-        self._assembler = report_assembler
         self._unit_of_work = unit_of_work
         self._logger = get_logger("app.interpretation.use_case.generate")
 
     @override
-    async def __call__(self, command: GenerateInterpretationCommand) -> InterpretationResultResponse:
+    async def __call__(self, command: GenerateInterpretationCommand) -> None:
         try:
-            return await self._execute(command)
+            await self._execute(command)
         except Exception as exc:
             await self._record_failure(command.analysis_id, exc)
             raise
 
-    async def _execute(self, command: GenerateInterpretationCommand) -> InterpretationResultResponse:
+    async def _execute(self, command: GenerateInterpretationCommand) -> None:
         """Run the happy path for the generation phase."""
         self._logger.info("Generating interpretation: analysis_id=%s", command.analysis_id)
 
@@ -88,15 +81,14 @@ class GenerateInterpretationUseCase(
                 report.status.value,
             )
             await self._unit_of_work.commit()
-            breakdown = await self._load_breakdown(command)
-            return self._assembler.assemble(breakdown, report)
+            return
 
         report.mark_running()
         await self._repository.save(report)
         # Commit the running status so clients see it while the LLM works.
         await self._unit_of_work.commit()
 
-        breakdown = await self._load_breakdown(command)
+        breakdown = await self._analysis_service.read(command.analysis_id, command.current_user_id)
         generated = await self._interpreter.explain(command.analysis_id, breakdown)
         # The report row is created once (as ordered) and updated in place on
         # every regeneration, so the stored row keeps its identity.
@@ -108,13 +100,8 @@ class GenerateInterpretationUseCase(
             explanations=generated.explanations,
             status=InterpretationStatus.COMPLETED,
         )
-        saved = await self._repository.save(completed)
+        await self._repository.save(completed)
         await self._unit_of_work.commit()
-        return self._assembler.assemble(breakdown, saved)
-
-    async def _load_breakdown(self, command: GenerateInterpretationCommand) -> EvaluationBreakdown:
-        """Read the evaluation through the analysis API and flatten it."""
-        return await self._evaluation_reader.read(command.analysis_id, command.current_user_id)
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
         """Roll back and persist the failure in a fresh transaction."""

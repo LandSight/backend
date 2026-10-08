@@ -126,14 +126,12 @@ def provide_generate_interpretation_use_case(
     interpretation_repository: NamedDependency[PostgresInterpretationRepository],
     analysis_evaluation_reader: NamedDependency[AnalysisServiceImpl],
     interpreter: NamedDependency[LlmInterpreter],
-    report_assembler: NamedDependency[ReportAssembler],
     unit_of_work: NamedDependency[UnitOfWork],
 ) -> GenerateInterpretationUseCase:
     return GenerateInterpretationUseCase(
         interpretation_repository,
         analysis_evaluation_reader,
         interpreter,
-        report_assembler,
         unit_of_work,
     )
 

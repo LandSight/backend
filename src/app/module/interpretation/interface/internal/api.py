@@ -77,6 +77,7 @@ class InterpretationInternal(InterpretationInternalAPI):
             status=result.status,
             aspects=tuple(cls._to_aspect(aspect) for aspect in result.aspects),
             top_aspects_summary=result.top_aspects_summary,
+            verdict=result.verdict,
         )
 
     @classmethod
@@ -88,6 +89,10 @@ class InterpretationInternal(InterpretationInternalAPI):
             score=aspect.score,
             weight=aspect.weight,
             contribution=aspect.contribution,
+            points=aspect.points,
+            max_points=aspect.max_points,
+            loss=aspect.loss,
+            loss_share=aspect.loss_share,
             explanation=aspect.explanation,
             top_metrics=tuple(cls._to_metric(metric) for metric in aspect.top_metrics),
         )
@@ -103,6 +108,9 @@ class InterpretationInternal(InterpretationInternalAPI):
             contribution=metric.contribution,
             unit=metric.unit,
             role=metric.role,
+            position=metric.position,
+            membership_function=metric.membership.function if metric.membership else None,
+            membership_params=metric.membership.params if metric.membership else None,
         )
 
 

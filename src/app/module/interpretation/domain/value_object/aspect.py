@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.domain.value_object import BaseCompositeValueObject
@@ -32,15 +32,23 @@ class Aspect(BaseCompositeValueObject):
         Configured aspect weight.
     contribution : float
         ``score * weight``.
+    points : float
+        Points the aspect contributed to the total score.
+    max_points : float
+        Points the aspect could contribute at its best.
     metrics : tuple[AspectMetric, ...]
         Flattened leaf metrics.
     """
+
+    _TOLERANCE: ClassVar[float] = 1e-9
 
     key: str
     name: str
     score: float
     weight: float
     contribution: float
+    points: float
+    max_points: float
     metrics: tuple[AspectMetric, ...] = field(default_factory=tuple)
 
     def _validate(self) -> None:
@@ -56,6 +64,22 @@ class Aspect(BaseCompositeValueObject):
         if self.contribution < 0:
             message = f"Aspect '{self.key}' contribution must not be negative, got {self.contribution}."
             raise ValidationError(message)
+        if self.max_points <= 0:
+            message = f"Aspect '{self.key}' max points must be positive, got {self.max_points}."
+            raise ValidationError(message)
+        if not 0 <= self.points <= self.max_points + self._TOLERANCE:
+            message = f"Aspect '{self.key}' points must be within [0, {self.max_points}], got {self.points}."
+            raise ValidationError(message)
+
+    @property
+    def loss(self) -> float:
+        """Points the aspect fell short of its maximum."""
+        return max(self.max_points - self.points, 0.0)
+
+    @property
+    def loss_share(self) -> float:
+        """Share of the maximum points the aspect lost, in ``[0, 1]``."""
+        return self.loss / self.max_points
 
 
 __all__ = ("Aspect",)

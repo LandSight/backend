@@ -13,7 +13,7 @@ from app.platform.logging import get_logger
 
 if TYPE_CHECKING:
     from app.module.interpretation.application.port import (
-        AnalysisEvaluationReader,
+        AnalysisService,
         InterpretationRepository,
     )
     from app.module.interpretation.application.service import ReportAssembler
@@ -30,17 +30,17 @@ class GetInterpretationUseCase(BaseUseCase[GetInterpretationCommand, Interpretat
     def __init__(
         self,
         interpretation_repository: InterpretationRepository,
-        evaluation_reader: AnalysisEvaluationReader,
+        analysis_service: AnalysisService,
         report_assembler: ReportAssembler,
     ) -> None:
         self._repository = interpretation_repository
-        self._evaluation_reader = evaluation_reader
+        self._analysis_service = analysis_service
         self._assembler = report_assembler
         self._logger = get_logger("app.interpretation.use_case.get")
 
     @override
     async def __call__(self, command: GetInterpretationCommand) -> InterpretationResultResponse:
-        breakdown = await self._evaluation_reader.read(command.analysis_id, command.current_user_id)
+        breakdown = await self._analysis_service.read(command.analysis_id, command.current_user_id)
         interpretation = await self._repository.get(command.analysis_id)
         if interpretation is None:
             raise InterpretationNotAvailableError(str(command.analysis_id))
