@@ -14,6 +14,7 @@ from .analysis_profile_name import AnalysisProfileName
 from .analysis_score import AnalysisScore
 from .analysis_stage import AnalysisStage
 from .analysis_status import AnalysisStatus
+from .analysis_status_reason import AnalysisStatusReason
 from .analysis_type import AnalysisType
 from .cluster_score import ClusterScore
 from .contribution import Contribution
@@ -41,6 +42,7 @@ __all__ = (
     "AnalysisScore",
     "AnalysisStage",
     "AnalysisStatus",
+    "AnalysisStatusReason",
     "AnalysisType",
     "ClusterScore",
     "Contribution",

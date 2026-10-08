@@ -12,6 +12,7 @@ from app.module.analysis.domain.value_object import (
     AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
+    AnalysisStatusReason,
     AnalysisType,
     ParcelId,
 )
@@ -42,7 +43,7 @@ class Analysis(BaseEntity[AnalysisId]):
         Final score, set only when the analysis is completed.
     model_version : str | None
         Version of the scoring model, set when the analysis completes.
-    status_reason : str | None
+    status_reason : AnalysisStatusReason | None
         Human-readable explanation (e.g. failure reason).
     created_at : datetime | None
         When the analysis was created (UTC); ``None`` if not yet persisted.
@@ -62,7 +63,7 @@ class Analysis(BaseEntity[AnalysisId]):
         stage: AnalysisStage = AnalysisStage.METRICS,
         score: AnalysisScore | None = None,
         model_version: str | None = None,
-        status_reason: str | None = None,
+        status_reason: AnalysisStatusReason | None = None,
         created_at: datetime.datetime | None = None,
         completed_at: datetime.datetime | None = None,
     ) -> None:
@@ -74,7 +75,7 @@ class Analysis(BaseEntity[AnalysisId]):
         self._stage: AnalysisStage = stage
         self._score: AnalysisScore | None = score
         self._model_version: str | None = model_version
-        self._status_reason: str | None = status_reason
+        self._status_reason: AnalysisStatusReason | None = status_reason
         self._created_at: datetime.datetime | None = created_at
         self._completed_at: datetime.datetime | None = completed_at
 
@@ -117,7 +118,7 @@ class Analysis(BaseEntity[AnalysisId]):
             raise InvariantViolationError(message)
         self._stage = AnalysisStage.SCORING
 
-    def complete(self, score: AnalysisScore, model_version: str, reason: str | None = None) -> None:
+    def complete(self, score: AnalysisScore, model_version: str, reason: AnalysisStatusReason | None = None) -> None:
         """Transition the analysis to ``COMPLETED`` with its final score."""
         if self._status is not AnalysisStatus.RUNNING:
             self._raise_invalid_transition(AnalysisStatus.RUNNING)
@@ -130,7 +131,7 @@ class Analysis(BaseEntity[AnalysisId]):
         self._completed_at = datetime.datetime.now(tz=datetime.UTC)
         self._status = AnalysisStatus.COMPLETED
 
-    def fail(self, reason: str) -> None:
+    def fail(self, reason: AnalysisStatusReason) -> None:
         """Transition the analysis to ``FAILED`` with an explanation."""
         if self._status not in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
             self._raise_invalid_transition(AnalysisStatus.RUNNING)
@@ -182,7 +183,7 @@ class Analysis(BaseEntity[AnalysisId]):
         return self._model_version
 
     @property
-    def status_reason(self) -> str | None:
+    def status_reason(self) -> AnalysisStatusReason | None:
         """Human-readable status explanation."""
         return self._status_reason
 

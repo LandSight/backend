@@ -82,7 +82,7 @@ class GetAnalysisUseCase(BaseUseCase[GetAnalysisCommand, AnalysisResponse]):
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
             model_version=analysis.model_version,
-            status_reason=analysis.status_reason,
+            status_reason=analysis.status_reason.unwrap() if analysis.status_reason is not None else None,
             created_at=analysis.created_at,
             completed_at=analysis.completed_at,
         )

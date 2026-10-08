@@ -5,9 +5,14 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, override
 
-from app.module.analysis.application.dto.command import FailAnalysisCommand, ScoreAnalysisCommand
+from app.module.analysis.application.dto.command import ScoreAnalysisCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStage, AnalysisStatus
+from app.module.analysis.domain.value_object import (
+    AnalysisId,
+    AnalysisStage,
+    AnalysisStatus,
+    AnalysisStatusReason,
+)
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -21,7 +26,6 @@ if TYPE_CHECKING:
         InterpretationService,
         MetricsService,
     )
-    from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
     from app.module.shared.application.port import UnitOfWork
 
 
@@ -45,14 +49,12 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         analysis_repository: AnalysisRepository,
         metrics_service: MetricsService,
         scorer: AnalysisScorer,
-        fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
         interpretation_service: InterpretationService,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._metrics_service = metrics_service
         self._scorer = scorer
-        self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
         self._interpretation_service = interpretation_service
         self._logger = get_logger("app.analysis.use_case.score_analysis")
@@ -128,11 +130,13 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
         """Roll back and persist the failure in a fresh transaction."""
+        self._logger.warning("Analysis scoring failed: analysis_id=%s error=%s", analysis_id, error)
         await self._unit_of_work.rollback()
-        await self._fail_analysis_use_case(
-            FailAnalysisCommand(analysis_id=analysis_id, reason=str(error)),
-        )
-        await self._unit_of_work.commit()
+        analysis = await self._analysis_repository.get(AnalysisId(analysis_id))
+        if analysis is not None and analysis.status in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
+            analysis.fail(AnalysisStatusReason.from_error(error))
+            await self._analysis_repository.save(analysis)
+            await self._unit_of_work.commit()
 
 
 __all__ = ("ScoreAnalysisUseCase",)

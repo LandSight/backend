@@ -20,7 +20,6 @@ from app.module.analysis.application.port import (
 from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
     DeleteAnalysisUseCase,
-    FailAnalysisUseCase,
     GetAnalysisEvaluationUseCase,
     GetAnalysisMetricsUseCase,
     GetAnalysisUseCase,
@@ -172,23 +171,15 @@ def provide_analysis_profiles() -> AnalysisProfileProviderImpl:
     return AnalysisProfileProviderImpl(load_analysis_profiles())
 
 
-def provide_fail_analysis_use_case(
-    analysis_repository: NamedDependency[PostgresAnalysisRepository],
-) -> FailAnalysisUseCase:
-    return FailAnalysisUseCase(analysis_repository)
-
-
 def provide_collect_metrics_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     metrics_service: NamedDependency[MetricsService],
-    fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     unit_of_work: NamedDependency[UnitOfWork],
     analysis_profiles: NamedDependency[AnalysisProfileProvider],
 ) -> CollectMetricsUseCase:
     return CollectMetricsUseCase(
         analysis_repository,
         metrics_service,
-        fail_analysis_use_case,
         unit_of_work,
         analysis_profiles,
     )
@@ -204,7 +195,6 @@ def provide_score_analysis_use_case(
     analysis_repository: NamedDependency[PostgresAnalysisRepository],
     metrics_service: NamedDependency[MetricsService],
     analysis_scorer: NamedDependency[AnalysisScorer],
-    fail_analysis_use_case: NamedDependency[FailAnalysisUseCase],
     unit_of_work: NamedDependency[UnitOfWork],
     interpretation_service: NamedDependency[InterpretationService],
 ) -> ScoreAnalysisUseCase:
@@ -212,7 +202,6 @@ def provide_score_analysis_use_case(
         analysis_repository,
         metrics_service,
         analysis_scorer,
-        fail_analysis_use_case,
         unit_of_work,
         interpretation_service,
     )
@@ -238,7 +227,6 @@ analysis_dependencies = {
 
 analysis_worker_dependencies = {
     "interpretation_service": Provide(provide_interpretation_service, sync_to_thread=False),
-    "fail_analysis_use_case": Provide(provide_fail_analysis_use_case, sync_to_thread=False),
     COLLECT_METRICS_USE_CASE_KEY: Provide(provide_collect_metrics_use_case, sync_to_thread=False),
     SCORE_ANALYSIS_USE_CASE_KEY: Provide(provide_score_analysis_use_case, sync_to_thread=False),
 }

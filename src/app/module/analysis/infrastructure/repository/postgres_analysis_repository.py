@@ -20,6 +20,7 @@ from app.module.analysis.domain.value_object import (
     AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
+    AnalysisStatusReason,
     AnalysisType,
     ClusterScore,
     Contribution,
@@ -66,7 +67,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 stage=analysis.stage.value,
                 score=analysis.score.unwrap() if analysis.score is not None else None,
                 model_version=analysis.model_version,
-                status_reason=analysis.status_reason,
+                status_reason=analysis.status_reason.unwrap() if analysis.status_reason is not None else None,
                 completed_at=analysis.completed_at,
             )
             self._session.add(model)
@@ -78,7 +79,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             model.stage = analysis.stage.value
             model.score = analysis.score.unwrap() if analysis.score is not None else None
             model.model_version = analysis.model_version
-            model.status_reason = analysis.status_reason
+            model.status_reason = analysis.status_reason.unwrap() if analysis.status_reason is not None else None
             model.completed_at = analysis.completed_at
 
         await self._session.flush()
@@ -315,7 +316,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             stage=AnalysisStage(model.stage),
             score=AnalysisScore(model.score) if model.score is not None else None,
             model_version=model.model_version,
-            status_reason=model.status_reason,
+            status_reason=AnalysisStatusReason(model.status_reason) if model.status_reason is not None else None,
             created_at=model.created_at,
             completed_at=model.completed_at,
         )

@@ -5,12 +5,9 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, override
 
-from app.module.analysis.application.dto.command import (
-    CollectMetricsCommand,
-    FailAnalysisCommand,
-)
+from app.module.analysis.application.dto.command import CollectMetricsCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus, MetricType
+from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus, AnalysisStatusReason, MetricType
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -23,7 +20,6 @@ if TYPE_CHECKING:
         AnalysisRepository,
         MetricsService,
     )
-    from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
     from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
     from app.module.shared.application.port import UnitOfWork
 
@@ -41,13 +37,11 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         self,
         analysis_repository: AnalysisRepository,
         metrics_service: MetricsService,
-        fail_analysis_use_case: FailAnalysisUseCase,
         unit_of_work: UnitOfWork,
         analysis_profiles: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._metrics_service = metrics_service
-        self._fail_analysis_use_case = fail_analysis_use_case
         self._unit_of_work = unit_of_work
         self._analysis_profiles = analysis_profiles
         self._logger = get_logger("app.analysis.use_case.collect_metrics")
@@ -99,11 +93,13 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
 
     async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
         """Roll back and persist the failure in a fresh transaction."""
+        self._logger.warning("Metrics collection failed: analysis_id=%s error=%s", analysis_id, error)
         await self._unit_of_work.rollback()
-        await self._fail_analysis_use_case(
-            FailAnalysisCommand(analysis_id=analysis_id, reason=str(error)),
-        )
-        await self._unit_of_work.commit()
+        analysis = await self._analysis_repository.get(AnalysisId(analysis_id))
+        if analysis is not None and analysis.status in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
+            analysis.fail(AnalysisStatusReason.from_error(error))
+            await self._analysis_repository.save(analysis)
+            await self._unit_of_work.commit()
 
     async def _collect(
         self,
