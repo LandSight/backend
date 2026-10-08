@@ -8,7 +8,10 @@ the matching entity/DTO fields.
 
 Metric keys are generic within a family (``count``, ``min_distance_to``,
 ``coverage_ratio``): the kind of object is already carried by the response
-category, so no per-category key duplication is needed.
+category, so no per-category key duplication is needed. Labels, however, are
+shown on their own (in the evaluation table and the LLM prompt), so a family
+label is a template completed with the category noun: ``min_distance_to`` of
+``power_line`` becomes "Distance to nearest power line".
 """
 
 from __future__ import annotations
@@ -25,22 +28,45 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
+class CategoryNoun:
+    """Singular and plural noun naming the objects of a category."""
+
+    singular: str
+    plural: str
+
+
+@dataclass(frozen=True, slots=True)
 class MetricDefinition:
-    """Definition of a single infrastructure metric."""
+    """Definition of a single infrastructure metric.
+
+    ``label`` may contain the ``{singular}``, ``{Singular}`` and ``{plural}``
+    placeholders, completed with the category noun by :meth:`label_for`.
+    """
 
     key: str
     label: str
     unit: str
     kind: MetricValueKind
 
+    def label_for(self, category: str) -> str:
+        """Return the self-contained label of this metric for a category."""
+        noun = CATEGORY_NOUNS.get(category)
+        if noun is None:
+            return self.label
+        return self.label.format(
+            singular=noun.singular,
+            Singular=noun.singular.capitalize(),
+            plural=noun.plural,
+        )
 
-_BUFFER = MetricDefinition("buffer", "Buffer", "m", MetricValueKind.INTEGER)
-_COUNT = MetricDefinition("count", "Count", "", MetricValueKind.INTEGER)
-_MIN_DISTANCE = MetricDefinition("min_distance_to", "Min distance to", "m", MetricValueKind.NUMBER)
-_COVERAGE_RATIO = MetricDefinition("coverage_ratio", "Coverage ratio", "ratio", MetricValueKind.NUMBER)
+
+_BUFFER = MetricDefinition("buffer", "Search radius", "m", MetricValueKind.INTEGER)
+_COUNT = MetricDefinition("count", "Number of {plural}", "", MetricValueKind.INTEGER)
+_MIN_DISTANCE = MetricDefinition("min_distance_to", "Distance to nearest {singular}", "m", MetricValueKind.NUMBER)
+_COVERAGE_RATIO = MetricDefinition("coverage_ratio", "{Singular} coverage", "ratio", MetricValueKind.NUMBER)
 _DISTANCE_TO_LARGE_OBJECT = MetricDefinition(
     "distance_to_large_object",
-    "Distance to large object",
+    "Distance to nearest large {singular}",
     "m",
     MetricValueKind.NUMBER,
 )
@@ -87,6 +113,24 @@ CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingPro
 )
 
 
+CATEGORY_NOUNS: Final[Mapping[str, CategoryNoun]] = MappingProxyType(
+    {
+        "hospital": CategoryNoun("hospital", "hospitals"),
+        "grocery": CategoryNoun("grocery shop", "grocery shops"),
+        "bus_stop": CategoryNoun("bus stop", "bus stops"),
+        "railway_station": CategoryNoun("railway station", "railway stations"),
+        "police": CategoryNoun("police station", "police stations"),
+        "fire_station": CategoryNoun("fire station", "fire stations"),
+        "pharmacy": CategoryNoun("pharmacy", "pharmacies"),
+        "water_source": CategoryNoun("water source", "water sources"),
+        "water_body": CategoryNoun("water body", "water bodies"),
+        "forest": CategoryNoun("forest", "forests"),
+        "protected_area": CategoryNoun("protected area", "protected areas"),
+        "power_line": CategoryNoun("power line", "power lines"),
+    },
+)
+
+
 CATEGORY_LABELS: Final[Mapping[str, str]] = MappingProxyType(
     {
         "hospital": "Hospitals",
@@ -107,4 +151,4 @@ CATEGORY_LABELS: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
-__all__ = ("CATEGORY_LABELS", "CATEGORY_METRICS", "MetricDefinition")
+__all__ = ("CATEGORY_LABELS", "CATEGORY_METRICS", "CATEGORY_NOUNS", "CategoryNoun", "MetricDefinition")

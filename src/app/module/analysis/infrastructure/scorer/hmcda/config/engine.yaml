@@ -30,13 +30,13 @@ profiles:
                 - { key: slope_p75, weight: 0.15 }
                 - { key: slope_p90, weight: 0.30 }
             - key: elevation
-              name: Heights
+              name: Elevation
               weight: 0.15
               components:
                 - { key: elevation_range, weight: 0.60 }
                 - { key: elevation_std, weight: 0.40 }
             - key: shape
-              name: Форма участка
+              name: Plot shape
               weight: 0.30
               components:
                 - { key: area, weight: 0.30 }

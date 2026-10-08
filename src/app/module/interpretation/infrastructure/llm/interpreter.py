@@ -134,12 +134,12 @@ class LlmInterpreter(Interpreter):
     @staticmethod
     def aspect_fallback(name: str) -> str:
         """Safe text used when an aspect explanation cannot be generated."""
-        return f"Не удалось сгенерировать объяснение для аспекта «{name}»."
+        return f'Could not generate an explanation for the "{name}" aspect.'
 
     @staticmethod
     def summary_fallback() -> str:
         """Safe text used when the combined summary cannot be generated."""
-        return "Не удалось сгенерировать итоговое объяснение."
+        return "Could not generate the summary explanation."
 
 
 __all__ = ("LlmInterpreter",)

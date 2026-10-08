@@ -26,7 +26,7 @@ CATALOG: tuple[MetricDefinition, ...] = (
     MetricDefinition("max_elevation", "Max elevation", "m", MetricValueKind.NUMBER),
     MetricDefinition("min_elevation", "Min elevation", "m", MetricValueKind.NUMBER),
     MetricDefinition("elevation_range", "Elevation range", "m", MetricValueKind.NUMBER),
-    MetricDefinition("elevation_std", "Elevation std", "m", MetricValueKind.NUMBER),
+    MetricDefinition("elevation_std", "Elevation standard deviation", "m", MetricValueKind.NUMBER),
     MetricDefinition("mean_slope", "Mean slope", "deg", MetricValueKind.NUMBER),
     MetricDefinition("max_slope", "Max slope", "deg", MetricValueKind.NUMBER),
     MetricDefinition("aspect", "Aspect", "", MetricValueKind.TEXT),

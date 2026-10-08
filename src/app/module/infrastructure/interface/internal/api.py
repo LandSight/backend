@@ -195,13 +195,14 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                     module="infrastructure",
                     category=category,
                     id=metrics.id,
-                    metrics=InfrastructureInternal._category_values(metrics, definitions),
+                    metrics=InfrastructureInternal._category_values(category, metrics, definitions),
                 )
             )
         return responses
 
     @staticmethod
     def _category_values(
+        category: str,
         metrics: object,
         definitions: tuple[MetricDefinition, ...],
     ) -> list[MetricValue]:
@@ -213,7 +214,7 @@ class InfrastructureInternal(InfrastructureInternalAPI):
             values.append(
                 build_metric_value(
                     key=definition.key,
-                    label=definition.label,
+                    label=definition.label_for(category),
                     unit=definition.unit,
                     value_type=definition.kind,
                     raw=getattr(metrics, definition.key),

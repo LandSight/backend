@@ -28,7 +28,7 @@ class SuitabilityVerdict(StrEnum):
 
     @property
     def label(self) -> str:
-        """Human-readable Russian label."""
+        """Human-readable label."""
         return _LABELS[self]
 
 
@@ -40,11 +40,11 @@ _THRESHOLDS = (
 )
 
 _LABELS = {
-    SuitabilityVerdict.VERY_HIGH: "очень высокая пригодность",
-    SuitabilityVerdict.HIGH: "высокая пригодность",
-    SuitabilityVerdict.MEDIUM: "средняя пригодность",
-    SuitabilityVerdict.LOW: "низкая пригодность",
-    SuitabilityVerdict.VERY_LOW: "очень низкая пригодность",
+    SuitabilityVerdict.VERY_HIGH: "very high suitability",
+    SuitabilityVerdict.HIGH: "high suitability",
+    SuitabilityVerdict.MEDIUM: "medium suitability",
+    SuitabilityVerdict.LOW: "low suitability",
+    SuitabilityVerdict.VERY_LOW: "very low suitability",
 }
 
 

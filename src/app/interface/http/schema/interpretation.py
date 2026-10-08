@@ -63,7 +63,7 @@ class InterpretationResultSchema(BaseModel):
         default=None,
         description="Suitability verdict code (very_high/high/medium/low/very_low); null until generated.",
     )
-    verdict_label: str | None = Field(default=None, description="Human-readable verdict (Russian).")
+    verdict_label: str | None = Field(default=None, description="Human-readable verdict.")
 
 
 __all__ = (
