@@ -43,6 +43,11 @@ class AspectMetric(BaseCompositeValueObject):
         Rule-based role inside the aspect.
     membership : Membership | None
         Fuzzy function the metric was normalized with; ``None`` when unknown.
+    max_points : float
+        Points of the total score the metric can earn at its best: its weight
+        share inside the aspect (renormalized over the readings at every level,
+        as the aggregator does) times the aspect maximum. The metric points of
+        an aspect sum up to the aspect points; ``0`` when there is no reading.
     """
 
     key: str
@@ -54,6 +59,7 @@ class AspectMetric(BaseCompositeValueObject):
     unit: str
     role: MetricRole
     membership: Membership | None = None
+    max_points: float = 0.0
 
     def _validate(self) -> None:
         if not self.key:
@@ -68,11 +74,24 @@ class AspectMetric(BaseCompositeValueObject):
         if self.contribution is not None and self.contribution < 0:
             message = f"Aspect metric '{self.key}' contribution must not be negative, got {self.contribution}."
             raise ValidationError(message)
+        if self.max_points < 0:
+            message = f"Aspect metric '{self.key}' max points must not be negative, got {self.max_points}."
+            raise ValidationError(message)
 
     @property
     def data_available(self) -> bool:
         """Whether a usable normalized reading is available."""
         return self.normalized_value is not None
+
+    @property
+    def points(self) -> float:
+        """Points of the total score the metric earned."""
+        return (self.normalized_value or 0.0) * self.max_points
+
+    @property
+    def loss(self) -> float:
+        """Points of the total score the metric fell short of its maximum."""
+        return self.max_points - self.points if self.data_available else 0.0
 
     @property
     def position(self) -> ValuePosition:

@@ -1,8 +1,8 @@
 """LLM-backed interpreter.
 
 Generates the report text aspect by aspect: a draft is verified by the grader
-and retried once on rejection; any failure degrades to safe fallback text so a
-report is always produced.
+and, on rejection, regenerated once with the grader's remarks; any failure
+degrades to safe fallback text so a report is always produced.
 """
 
 from __future__ import annotations
@@ -90,12 +90,18 @@ class LlmInterpreter(Interpreter):
         explanations: dict[str, str],
     ) -> str:
         """Generate the combined top-aspects summary."""
-        facts = self._prompt_builder.summary_facts(breakdown)
+        facts = self._prompt_builder.summary_facts(breakdown, top_aspects, explanations)
         prompt = self._prompt_builder.summary_prompt(breakdown, top_aspects, explanations)
         return await self._generate(prompt, facts, self.summary_fallback())
 
     async def _generate(self, prompt: Prompt, facts: str, fallback: str) -> str:
-        """Generate one text and verify it, retrying once when the grader disagrees."""
+        """Generate one text and verify it, regenerating once with the grader's remarks.
+
+        The grader only reviews; the text is always written by the generator.
+        When the regenerated text is still rejected it is kept anyway (the
+        remarks are logged): a small grader also rejects correct texts, so
+        discarding the answer would lose more than it protects.
+        """
         draft = await self._complete(prompt)
         if draft is None:
             return fallback
@@ -103,14 +109,13 @@ class LlmInterpreter(Interpreter):
         if verdict.ok:
             return draft
 
-        retry_prompt = self._prompt_builder.retry_prompt(prompt, verdict.issues)
-        retry = await self._complete(retry_prompt)
+        retry = await self._complete(self._prompt_builder.retry_prompt(prompt, draft, verdict.issues))
         if retry is None:
-            return verdict.corrected_text or fallback
+            return draft
         final = await self._grade(facts, retry)
-        if final.ok:
-            return retry
-        return final.corrected_text or verdict.corrected_text or fallback
+        if not final.ok:
+            self._logger.warning("Explanation still rejected after the retry: issues=%s", final.issues)
+        return retry
 
     async def _complete(self, prompt: Prompt) -> str | None:
         """Call the model and clean the answer, returning ``None`` on failure."""

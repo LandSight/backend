@@ -19,26 +19,23 @@ class InterpretationPolicy(BaseCompositeValueObject):
     Attributes
     ----------
     strong_threshold : float
-        Contribution above which a metric is considered strong.
-    weak_threshold : float
-        Normalized value below which a metric may be considered weak.
+        Normalized value at or above which a metric earned (practically) its
+        full points and is a strength; below it the metric lost points and is
+        a weakness.
     metric_limit : int
-        Maximum number of metrics selected per aspect.
+        Maximum number of metrics selected per aspect, split between the
+        strengths and the weaknesses.
     aspect_limit : int
         Maximum number of aspects selected for the combined summary.
     """
 
-    strong_threshold: float = 0.05
-    weak_threshold: float = 0.3
+    strong_threshold: float = 0.95
     metric_limit: int = 5
     aspect_limit: int = 5
 
     def _validate(self) -> None:
-        if self.strong_threshold < 0:
-            message = f"Strong threshold must not be negative, got {self.strong_threshold}."
-            raise ValidationError(message)
-        if not 0 <= self.weak_threshold <= 1:
-            message = f"Weak threshold must be within [0, 1], got {self.weak_threshold}."
+        if not 0 < self.strong_threshold <= 1:
+            message = f"Strong threshold must be within (0, 1], got {self.strong_threshold}."
             raise ValidationError(message)
         if self.metric_limit < 1:
             message = f"Metric limit must be positive, got {self.metric_limit}."

@@ -14,10 +14,12 @@ if TYPE_CHECKING:
 class AspectExtractor:
     """Selects the metrics that best describe an aspect.
 
-    Strong metrics come first, ordered by contribution descending, then weak
-    metrics ordered by normalized value ascending. When this union has fewer
-    than the policy limit, neutral metrics fill the remaining slots so a sparse
-    aspect still gets an explanation.
+    The selection is balanced between the two sides of the explanation: the
+    strengths that earned the most points and the weaknesses that lost the
+    most points. The weaknesses get the larger half of the limit (they explain
+    why the aspect fell short of its maximum); when one side has fewer metrics
+    than its half, the other side fills the free slots. Strengths come first,
+    then weaknesses. Metrics without a reading are never selected.
     """
 
     def __init__(self, policy: InterpretationPolicy | None = None) -> None:
@@ -30,25 +32,19 @@ class AspectExtractor:
 
     def top_metrics(self, aspect: Aspect) -> tuple[AspectMetric, ...]:
         """Return up to the policy limit metrics describing the aspect."""
-        available = [metric for metric in aspect.metrics if metric.data_available]
         strong = sorted(
-            (metric for metric in available if metric.role is MetricRole.STRONG),
-            key=lambda metric: metric.contribution or 0.0,
+            (metric for metric in aspect.metrics if metric.role is MetricRole.STRONG),
+            key=lambda metric: metric.points,
             reverse=True,
         )
         weak = sorted(
-            (metric for metric in available if metric.role is MetricRole.WEAK),
-            key=lambda metric: metric.normalized_value or 0.0,
+            (metric for metric in aspect.metrics if metric.role is MetricRole.WEAK),
+            key=lambda metric: metric.loss,
+            reverse=True,
         )
-        selected = strong + weak
-        if len(selected) < self.limit:
-            neutral = sorted(
-                (metric for metric in available if metric.role is MetricRole.NEUTRAL),
-                key=lambda metric: metric.contribution or 0.0,
-                reverse=True,
-            )
-            selected += neutral
-        return tuple(selected[: self.limit])
+        weak_count = min(len(weak), max(self.limit - len(strong), (self.limit + 1) // 2))
+        strong_count = min(len(strong), self.limit - weak_count)
+        return (*strong[:strong_count], *weak[:weak_count])
 
 
 __all__ = ("AspectExtractor",)

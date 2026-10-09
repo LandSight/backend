@@ -84,18 +84,35 @@ class AnalysisServiceImpl(AnalysisService):
             contribution=cluster.contribution,
             points=scale.points(cluster.contribution),
             max_points=scale.max_points(cluster.weight),
-            metrics=tuple(self._metric(metric) for metric in self._collect(cluster)),
+            metrics=tuple(
+                self._metric(metric, share * scale.max_points(cluster.weight))
+                for metric, share in self._collect(cluster, 1.0)
+            ),
         )
 
-    def _collect(self, cluster: ClusterScoreResponse) -> Iterable[MetricContributionResponse]:
-        """Yield the leaf metrics of a cluster, recursing into subclusters."""
-        if cluster.metrics:
-            yield from cluster.metrics
-            return
-        for subcluster in cluster.subclusters:
-            yield from self._collect(subcluster)
+    def _collect(
+        self,
+        cluster: ClusterScoreResponse,
+        share: float,
+    ) -> Iterable[tuple[MetricContributionResponse, float]]:
+        """Yield the leaf metrics of a cluster with their weight share inside the aspect.
 
-    def _metric(self, metric: MetricContributionResponse) -> AspectMetric:
+        The share mirrors the aggregator: at every level the weights are
+        renormalized over the entries that have a reading (subclusters without
+        any reading are already dropped from the tree), so the shares of the
+        metrics with data sum up to ``share``.
+        """
+        if cluster.metrics:
+            total = sum(metric.weight for metric in cluster.metrics if metric.normalized_value is not None)
+            for metric in cluster.metrics:
+                available = metric.normalized_value is not None and total > 0
+                yield metric, share * metric.weight / total if available else 0.0
+            return
+        total = sum(subcluster.weight for subcluster in cluster.subclusters)
+        for subcluster in cluster.subclusters:
+            yield from self._collect(subcluster, share * subcluster.weight / total if total > 0 else 0.0)
+
+    def _metric(self, metric: MetricContributionResponse, max_points: float) -> AspectMetric:
         """Build a metric and assign its rule-based role."""
         view = AspectMetric(
             key=metric.key,
@@ -107,6 +124,7 @@ class AnalysisServiceImpl(AnalysisService):
             unit=metric.unit,
             role=MetricRole.NEUTRAL,
             membership=self._membership(metric),
+            max_points=max_points,
         )
         return replace(view, role=self._classifier.classify(view))
 

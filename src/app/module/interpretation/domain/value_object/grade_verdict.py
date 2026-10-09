@@ -17,14 +17,12 @@ class GradeVerdict(BaseCompositeValueObject):
     ok : bool
         Whether the explanation passed verification.
     issues : tuple[str, ...]
-        Human-readable reasons the explanation was rejected.
-    corrected_text : str | None
-        Corrected text proposed by the grader; ``None`` when absent.
+        Reviewer remarks: what is wrong in the explanation and what the facts
+        state instead. The grader never rewrites the text itself.
     """
 
     ok: bool
     issues: tuple[str, ...] = field(default_factory=tuple)
-    corrected_text: str | None = None
 
     def _validate(self) -> None:
         if any(not issue for issue in self.issues):

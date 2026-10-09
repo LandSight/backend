@@ -22,7 +22,10 @@ Answer format: 2-4 sentences of plain prose, no lists or headings.
 Use ONE scale: points of the total score (for example, "earned 2.08 of 4.00 points, losing 1.92").
 You may add the share of the aspect's maximum as a percentage (for example, "52% of its maximum").
 NEVER write a score as a fraction of 1.0.
-Explain why a metric failed through its zone: the value is above or below the expected range.
+Strengths earned their full points; weaknesses lost points.
+Explain why a weakness lost points through its zone: the value is above or below the expected range.
+Attribute the lost points to the weaknesses by the points each of them lost.
+Only the most significant metrics are listed; never call a listed metric the only reason.
 Refer to metrics by their names exactly as given.
 Do NOT start with or include labels such as "Aspect:" or "Summary:"; write plain prose only."""
 
@@ -38,12 +41,18 @@ Name the main contribution and the main losses.
 Do NOT start with or include labels such as "Aspect:" or "Summary:"; write plain prose only."""
 
 _GRADER_SYSTEM = """You are a strict reviewer of an explanation text.
-Check that the explanation uses ONLY the facts from the FACTS block, does not
-invent numbers or claims, follows the format (2-4 sentences for an aspect,
-3-5 for the summary) and is written in English.
-Do not add new facts. Return ONLY JSON without any commentary:
-{"ok": true|false, "issues": ["..."], "corrected_text": "..."}
-Fill corrected_text only when ok=false; otherwise null."""
+The FACTS block is exactly the input the explanation was written from.
+Check that the explanation:
+- uses only numbers that appear in the FACTS block (rounding is fine);
+- names only metrics and aspects that appear in the FACTS block;
+- never calls a strength a weakness or a weakness a strength;
+- describes every zone in the same direction as the FACTS (above or below);
+- makes no claims or causes that the FACTS block does not support.
+Rephrasing, shortening and leaving facts out are fine and are NOT issues.
+Do NOT rewrite the explanation. Return ONLY JSON without any commentary:
+{"ok": true|false, "issues": ["..."]}
+Each issue quotes the wrong statement and says what the FACTS state instead.
+issues is empty when ok is true."""
 
 # Zone templates of every membership function; the placeholders are the
 # function parameters (see the analysis module's fuzzy functions), rendered with
@@ -84,22 +93,12 @@ class LlmPromptBuilder:
 
     def aspect_prompt(self, aspect: Aspect, metrics: Sequence[AspectMetric]) -> Prompt:
         """Build the prompt for one aspect explanation."""
-        strong, weak, neutral = self._split(metrics)
         lines = [
-            *self._aspect_header(aspect),
-            "",
-            "Metrics that EARNED points (positive influence):",
-            self._format_metrics(strong),
-        ]
-        if weak:
-            lines += ["", "Metrics that FAILED (earned no points):", self._format_metrics(weak)]
-        if neutral:
-            lines += ["", "Other metrics:", self._format_metrics(neutral)]
-        lines += [
+            *self._aspect_body(aspect, metrics),
             "",
             "Explain:",
-            "1. Which metrics made the main contribution and why.",
-            "2. Which metrics failed and why (the value is above or below the expected range).",
+            "1. Which strengths earned the most points.",
+            "2. Which weaknesses lost the most points and why (the value is above or below the expected range).",
             "3. How many points the aspect fell short of its maximum.",
         ]
         return self._compose(_ASPECT_SYSTEM, "\n".join(lines))
@@ -111,15 +110,8 @@ class LlmPromptBuilder:
         explanations: Mapping[str, str],
     ) -> Prompt:
         """Build the prompt for the combined top-aspects summary."""
-        lines = [*self._summary_header(breakdown)]
-        if breakdown.scenario_description:
-            lines.append(f"Scenario description: {breakdown.scenario_description}")
-        lines += ["", "Breakdown by aspect:", *self._aspect_breakdown(breakdown.aspects)]
-        lines += ["", f"Top {len(top_aspects)} aspects by contribution:"]
-        for aspect in top_aspects:
-            explanation = explanations.get(aspect.key, "")
-            lines.append(f"- {self._name(aspect.name, aspect.key)}: {aspect.points:.2f} points. {explanation}".strip())
-        lines += [
+        lines = [
+            *self._summary_body(breakdown, top_aspects, explanations),
             "",
             "Explain:",
             "1. Which aspect made the main contribution.",
@@ -134,25 +126,53 @@ class LlmPromptBuilder:
         return self._compose(_GRADER_SYSTEM, user)
 
     @staticmethod
-    def retry_prompt(prompt: Prompt, issues: Sequence[str]) -> Prompt:
-        """Build the retry prompt from the rejected prompt and its issues."""
-        correction = "; ".join(issues) or "none"
-        return Prompt(f"{prompt.unwrap()}\n\nFix the reviewer's remarks: {correction}.")
+    def retry_prompt(prompt: Prompt, draft: str, issues: Sequence[str]) -> Prompt:
+        """Build the retry prompt from the rejected prompt, its draft and the reviewer remarks."""
+        remarks = "\n".join(f"- {issue}" for issue in issues) or "- none"
+        return Prompt(
+            f"{prompt.unwrap()}\n\nYour previous answer:\n{draft}\n\n"
+            f"A reviewer found these problems in it:\n{remarks}\n\n"
+            "Write the answer again, fixing these problems and following all the rules above."
+        )
 
     def aspect_facts(self, aspect: Aspect, metrics: Sequence[AspectMetric]) -> str:
-        """Build the fact block of an aspect explanation used by the grader."""
-        lines = self._aspect_header(aspect)
-        lines += [f"- {self._format_metric(metric)}" for metric in metrics]
-        return "\n".join(lines)
+        """Build the fact block of an aspect explanation: the same data the generator gets."""
+        return "\n".join(self._aspect_body(aspect, metrics))
 
-    def summary_facts(self, breakdown: EvaluationBreakdown) -> str:
-        """Build the fact block of the combined summary used by the grader."""
-        return "\n".join([*self._summary_header(breakdown), *self._aspect_breakdown(breakdown.aspects)])
+    def summary_facts(
+        self,
+        breakdown: EvaluationBreakdown,
+        top_aspects: Sequence[Aspect],
+        explanations: Mapping[str, str],
+    ) -> str:
+        """Build the fact block of the combined summary: the same data the generator gets."""
+        return "\n".join(self._summary_body(breakdown, top_aspects, explanations))
 
     @staticmethod
     def _compose(system: str, user: str) -> Prompt:
         """Join the system instruction and the user body into one prompt."""
         return Prompt(f"{system}\n\n{user}")
+
+    @classmethod
+    def _aspect_body(cls, aspect: Aspect, metrics: Sequence[AspectMetric]) -> list[str]:
+        """Header, strengths and weaknesses of an aspect: the data of its prompt and facts."""
+        strong = [metric for metric in metrics if metric.role is MetricRole.STRONG]
+        weak = [metric for metric in metrics if metric.role is MetricRole.WEAK]
+        lines = cls._aspect_header(aspect)
+        if weak:
+            listed_loss = sum(metric.loss for metric in weak)
+            lines.append(
+                f"The weaknesses listed below account for {listed_loss:.2f} of the {aspect.loss:.2f} points lost."
+            )
+        lines += [
+            "",
+            "Strengths (metrics that earned their full points):",
+            cls._format_metrics(strong),
+            "",
+            "Weaknesses (metrics that lost points, the biggest loss first):",
+            cls._format_metrics(weak),
+        ]
+        return lines
 
     @classmethod
     def _aspect_header(cls, aspect: Aspect) -> list[str]:
@@ -167,31 +187,31 @@ class LlmPromptBuilder:
             f"({aspect.score:.0%} of its maximum) and lost {aspect.loss:.2f} points.",
         ]
 
-    @staticmethod
-    def _summary_header(breakdown: EvaluationBreakdown) -> list[str]:
-        """Total score, verdict and scenario of an evaluation."""
-        return [
+    @classmethod
+    def _summary_body(
+        cls,
+        breakdown: EvaluationBreakdown,
+        top_aspects: Sequence[Aspect],
+        explanations: Mapping[str, str],
+    ) -> list[str]:
+        """Total score, per-aspect breakdown and top aspects: the data of the summary prompt and facts."""
+        lines = [
             f"Total score: {breakdown.total_score:.2f} of {breakdown.scale_max:g} ({breakdown.verdict.label})",
             f"Scenario: {breakdown.scenario}",
         ]
-
-    @classmethod
-    def _aspect_breakdown(cls, aspects: Sequence[Aspect]) -> list[str]:
-        """One line of points and loss per aspect."""
-        return [
+        if breakdown.scenario_description:
+            lines.append(f"Scenario description: {breakdown.scenario_description}")
+        lines += ["", "Breakdown by aspect:"]
+        lines += [
             f"- {cls._name(aspect.name, aspect.key)}: earned {aspect.points:.2f} of "
             f"{aspect.max_points:.2f} points ({aspect.score:.0%} of its maximum), lost {aspect.loss:.2f} points"
-            for aspect in aspects
+            for aspect in breakdown.aspects
         ]
-
-    @staticmethod
-    def _split(
-        metrics: Sequence[AspectMetric],
-    ) -> tuple[list[AspectMetric], list[AspectMetric], list[AspectMetric]]:
-        strong = [metric for metric in metrics if metric.role is MetricRole.STRONG]
-        weak = [metric for metric in metrics if metric.role is MetricRole.WEAK]
-        neutral = [metric for metric in metrics if metric.role is MetricRole.NEUTRAL]
-        return strong, weak, neutral
+        lines += ["", f"Top {len(top_aspects)} aspects by contribution:"]
+        for aspect in top_aspects:
+            explanation = explanations.get(aspect.key, "")
+            lines.append(f"- {cls._name(aspect.name, aspect.key)}: {aspect.points:.2f} points. {explanation}".strip())
+        return lines
 
     @classmethod
     def _format_metrics(cls, metrics: Sequence[AspectMetric]) -> str:
@@ -205,10 +225,12 @@ class LlmPromptBuilder:
         # write things like "Min distance to (power_line:min_distance_to)".
         name = metric.label or metric.key
         raw = "no data" if metric.raw_value is None else cls._value(metric.raw_value, metric.unit)
-        # The metric score is a percentage; the in-aspect contribution is an
-        # internal weight product and is not shown, to keep a single scale.
-        score = "n/a" if metric.normalized_value is None else f"{metric.normalized_value:.0%}"
-        text = f"{name}: value {raw}, metric score {score}"
+        # Metric points are on the same scale as the aspect points (points of
+        # the total score), so the prompt keeps a single scale.
+        points = f"earned {metric.points:.2f} of {metric.max_points:.2f} points"
+        if metric.role is MetricRole.WEAK:
+            points += f", lost {metric.loss:.2f}"
+        text = f"{name}: value {raw}; {points}"
         zone = cls._zone(metric)
         return f"{text}; zone: the value is {zone}" if zone else text
 

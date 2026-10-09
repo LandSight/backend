@@ -20,7 +20,8 @@ if TYPE_CHECKING:
 class LlmGrader:
     """Grades an explanation with a second model pass.
 
-    The grader must not invent facts; it only validates the draft. When the
+    The grader gets the same facts the generator got plus the generated text and
+    only returns remarks; it never rewrites the text. When the
     answer cannot be parsed into a :class:`GradeVerdict` the draft is accepted
     (and logged) rather than failing the whole report.
     """
@@ -46,11 +47,8 @@ class LlmGrader:
         except DaciteError, ValidationError:
             self._logger.warning("Grader answer did not match the expected shape: %r", raw[:200])
             return GradeVerdict(ok=True, issues=("grader_unparseable",))
-
-        corrected_text = verdict.corrected_text.strip() if verdict.corrected_text else None
-        if verdict.ok:
-            corrected_text = None
-        return GradeVerdict(ok=verdict.ok, issues=tuple(verdict.issues), corrected_text=corrected_text)
+        issues = tuple(issue.strip() for issue in verdict.issues if issue.strip())
+        return GradeVerdict(ok=verdict.ok, issues=issues)
 
     @staticmethod
     def _extract_json(raw: str) -> dict[str, object] | None:

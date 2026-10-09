@@ -11,11 +11,11 @@ class MetricRole(StrEnum):
     The role is decided before any LLM call and never by the model.
 
     ``STRONG``
-        The metric contributed above the strong threshold.
+        A strength: the metric earned (practically) its full points.
     ``WEAK``
-        The metric normalized below the weak threshold and barely contributed.
+        A weakness: the metric lost points, its value is outside the optimum.
     ``NEUTRAL``
-        Neither clearly strong nor weak, or has no usable reading.
+        The metric has no usable reading.
     """
 
     STRONG = "strong"

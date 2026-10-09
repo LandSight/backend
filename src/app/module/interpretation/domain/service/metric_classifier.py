@@ -12,12 +12,13 @@ if TYPE_CHECKING:
 
 
 class MetricClassifier:
-    """Splits aspect metrics into strong, weak and neutral roles.
+    """Splits aspect metrics into strengths, weaknesses and metrics without data.
 
-    A metric is strong when its contribution is above the policy's strong
-    threshold; it is weak when its normalized value is below the weak threshold
-    and it did not contribute enough to be strong. Everything else is neutral.
-    Metrics without a usable reading are neutral and never selected.
+    A metric is strong when its normalized value reaches the policy's strong
+    threshold, i.e. the value lies in (or practically in) the optimal zone and
+    the metric earned its full points. Every other metric with a reading lost
+    points and is weak. Metrics without a usable reading are neutral and never
+    selected.
     """
 
     def __init__(self, policy: InterpretationPolicy | None = None) -> None:
@@ -30,13 +31,11 @@ class MetricClassifier:
 
     def classify(self, metric: AspectMetric) -> MetricRole:
         """Return the rule-based role of a metric."""
-        if metric.normalized_value is None or metric.contribution is None:
+        if metric.normalized_value is None:
             return MetricRole.NEUTRAL
-        if metric.contribution > self._policy.strong_threshold:
+        if metric.normalized_value >= self._policy.strong_threshold:
             return MetricRole.STRONG
-        if metric.normalized_value < self._policy.weak_threshold:
-            return MetricRole.WEAK
-        return MetricRole.NEUTRAL
+        return MetricRole.WEAK
 
 
 __all__ = ("MetricClassifier",)
