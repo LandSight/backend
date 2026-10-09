@@ -54,10 +54,11 @@ class GeometryMetricsService(ABC):
 
     @abstractmethod
     def calculate_compactness(self, area: float, perimeter: float) -> float:
-        """Calculate the compactness index (4πA/P²).
+        """Calculate the compactness index relative to a square.
 
-        A perfect circle has compactness = 1.0.
-        Lower values indicate more irregular shapes.
+        The Polsby-Popper score (4πA/P²) divided by that of a square (π/4),
+        capped at 1.0. A square has compactness = 1.0; lower values indicate
+        more elongated or irregular shapes.
 
         Parameters
         ----------

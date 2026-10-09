@@ -33,8 +33,8 @@ CATALOG: tuple[MetricDefinition, ...] = (
     MetricDefinition("south_aspect_percentage", "South aspect percentage", "%", MetricValueKind.NUMBER),
     MetricDefinition("area", "Area", "m2", MetricValueKind.NUMBER),
     MetricDefinition("perimeter", "Perimeter", "m", MetricValueKind.NUMBER),
-    MetricDefinition("compactness_index", "Compactness index", "", MetricValueKind.NUMBER),
-    MetricDefinition("elongation_index", "Elongation index", "", MetricValueKind.NUMBER),
+    MetricDefinition("compactness_index", "Compactness index (1 = square)", "", MetricValueKind.NUMBER),
+    MetricDefinition("elongation_index", "Width to length ratio", "", MetricValueKind.NUMBER),
 )
 
 

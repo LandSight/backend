@@ -30,6 +30,9 @@ class ShapelyGeometryMetricsService(GeometryMetricsService):
 
     _MIN_MBR_VERTICES = 5
 
+    # Polsby-Popper score of a square, the reference shape of a land plot.
+    _SQUARE_POLSBY_POPPER = np.pi / 4
+
     # WGS84 ellipsoid for geodesic measurements (shared across instances).
     _GEOD = Geod(ellps="WGS84")
 
@@ -51,11 +54,15 @@ class ShapelyGeometryMetricsService(GeometryMetricsService):
     def calculate_compactness(self, area: float, perimeter: float) -> float:
         """See :class:`app.module.topography.application.port.GeometryMetricsService.calculate_compactness`.
 
+        The Polsby-Popper score ``4πA/P²`` is divided by that of a square
+        (``π/4``), so a square scores 1.0 and a 1:2 rectangle about 0.89; a
+        circle and other rounder shapes are capped at 1.0.
         Returns 0.0 for degenerate cases to avoid division by zero.
         """
         if perimeter <= 0 or area <= 0:
             return 0.0
-        return float((4 * np.pi * area) / (perimeter**2))
+        polsby_popper = (4 * np.pi * area) / (perimeter**2)
+        return float(min(polsby_popper / self._SQUARE_POLSBY_POPPER, 1.0))
 
     @override
     def calculate_elongation(self, polygon: GeoJSONPolygon) -> float:

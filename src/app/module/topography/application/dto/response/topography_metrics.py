@@ -46,7 +46,7 @@ class TopographyMetricsResponse:
     perimeter : float
         Parcel perimeter in meters.
     compactness_index : float
-        Compactness index (4πA/P²), dimensionless.
+        Compactness index relative to a square (1 = square), dimensionless.
     elongation_index : float
         Elongation index (width/length), dimensionless.
     created_at : datetime | None

@@ -59,7 +59,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
     perimeter : Perimeter
         Parcel perimeter in meters.
     compactness_index : CompactnessIndex
-        Compactness index (4πA/P²), dimensionless.
+        Compactness index relative to a square (1 = square), dimensionless.
     elongation_index : ElongationIndex
         Elongation index (width/length), dimensionless.
     created_at : datetime | None
@@ -182,7 +182,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
 
     @property
     def compactness_index(self) -> CompactnessIndex:
-        """Compactness index (4πA/P²), dimensionless."""
+        """Compactness index relative to a square (1 = square), dimensionless."""
         return self._compactness_index
 
     @property

@@ -89,7 +89,7 @@ class TopographyMetricsModel(TimestampedModel):
     compactness_index: Mapped[float] = mapped_column(
         Float,
         nullable=False,
-        comment="Compactness index (4πA/P²), dimensionless",
+        comment="Compactness index relative to a square (1 = square), dimensionless",
     )
     elongation_index: Mapped[float] = mapped_column(
         Float,
