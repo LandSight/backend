@@ -8,7 +8,7 @@ from app.module.interpretation.domain.value_object import InterpretationStatus
 
 
 class MetricInfoSchema(BaseModel):
-    """One metric selected for an aspect explanation."""
+    """One leaf metric of an aspect."""
 
     key: str = Field(description="Metric key.")
     label: str = Field(default="", description="Human-readable metric name.")
@@ -44,7 +44,14 @@ class AspectInterpretationSchema(BaseModel):
     loss: float = Field(description="Points lost from the maximum.")
     loss_share: float = Field(description="Share of the maximum points lost, in [0, 1].")
     explanation: str = Field(description="Human-readable explanation.")
-    top_metrics: list[MetricInfoSchema] = Field(default_factory=list)
+    top_metrics: list[MetricInfoSchema] = Field(
+        default_factory=list,
+        description="Key metrics selected for the explanation.",
+    )
+    metrics: list[MetricInfoSchema] = Field(
+        default_factory=list,
+        description="All leaf metrics of the aspect: strengths, then weaknesses, then metrics without data.",
+    )
 
 
 class InterpretationResultSchema(BaseModel):

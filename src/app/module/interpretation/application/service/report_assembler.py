@@ -1,7 +1,7 @@
 """Report assembler application service.
 
 Rebuilds the public report from the current evaluation and the stored
-generated text. Scores, weights, top metrics and evaluation metadata are
+generated text. Scores, weights, metrics and evaluation metadata are
 recomputed from the evaluation, so the stored entity stays a plain text and the
 response contract can change without a data migration.
 """
@@ -47,6 +47,7 @@ class ReportAssembler:
                 loss_share=aspect.loss_share,
                 explanation=interpretation.explanation_for(aspect.key),
                 top_metrics=self._aspect_extractor.top_metrics(aspect),
+                metrics=self._aspect_extractor.all_metrics(aspect),
             )
             for aspect in breakdown.aspects
         )

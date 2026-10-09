@@ -31,6 +31,7 @@ class AspectInterpretationResponse:
     loss_share: float
     explanation: str
     top_metrics: tuple[AspectMetric, ...] = field(default_factory=tuple)
+    metrics: tuple[AspectMetric, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True, slots=True)

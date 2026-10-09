@@ -32,19 +32,37 @@ class AspectExtractor:
 
     def top_metrics(self, aspect: Aspect) -> tuple[AspectMetric, ...]:
         """Return up to the policy limit metrics describing the aspect."""
-        strong = sorted(
+        strong, weak = self._strong(aspect), self._weak(aspect)
+        weak_count = min(len(weak), max(self.limit - len(strong), (self.limit + 1) // 2))
+        strong_count = min(len(strong), self.limit - weak_count)
+        return (*strong[:strong_count], *weak[:weak_count])
+
+    def all_metrics(self, aspect: Aspect) -> tuple[AspectMetric, ...]:
+        """Return every metric of the aspect in the order of the explanation.
+
+        Strengths by earned points, then weaknesses by lost points, then the
+        metrics without a reading in their original order.
+        """
+        neutral = tuple(metric for metric in aspect.metrics if metric.role is MetricRole.NEUTRAL)
+        return (*self._strong(aspect), *self._weak(aspect), *neutral)
+
+    @staticmethod
+    def _strong(aspect: Aspect) -> list[AspectMetric]:
+        """Strengths, the ones that earned the most points first."""
+        return sorted(
             (metric for metric in aspect.metrics if metric.role is MetricRole.STRONG),
             key=lambda metric: metric.points,
             reverse=True,
         )
-        weak = sorted(
+
+    @staticmethod
+    def _weak(aspect: Aspect) -> list[AspectMetric]:
+        """Weaknesses, the ones that lost the most points first."""
+        return sorted(
             (metric for metric in aspect.metrics if metric.role is MetricRole.WEAK),
             key=lambda metric: metric.loss,
             reverse=True,
         )
-        weak_count = min(len(weak), max(self.limit - len(strong), (self.limit + 1) // 2))
-        strong_count = min(len(strong), self.limit - weak_count)
-        return (*strong[:strong_count], *weak[:weak_count])
 
 
 __all__ = ("AspectExtractor",)

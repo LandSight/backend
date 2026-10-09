@@ -62,6 +62,7 @@ class AspectInterpretationResult:
     loss_share: float
     explanation: str
     top_metrics: tuple[MetricInfoResult, ...] = field(default_factory=tuple)
+    metrics: tuple[MetricInfoResult, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True, slots=True)

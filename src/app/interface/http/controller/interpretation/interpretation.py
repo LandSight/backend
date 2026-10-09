@@ -99,6 +99,7 @@ class InterpretationController(Controller):
             loss_share=aspect.loss_share,
             explanation=aspect.explanation,
             top_metrics=[cls._to_metric_schema(metric) for metric in aspect.top_metrics],
+            metrics=[cls._to_metric_schema(metric) for metric in aspect.metrics],
         )
 
     @staticmethod

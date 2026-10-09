@@ -95,11 +95,12 @@ class InterpretationInternal(InterpretationInternalAPI):
             loss_share=aspect.loss_share,
             explanation=aspect.explanation,
             top_metrics=tuple(cls._to_metric(metric) for metric in aspect.top_metrics),
+            metrics=tuple(cls._to_metric(metric) for metric in aspect.metrics),
         )
 
     @staticmethod
     def _to_metric(metric: AspectMetric) -> MetricInfoResult:
-        """Map one selected metric."""
+        """Map one aspect metric."""
         return MetricInfoResult(
             key=metric.key,
             label=metric.label,
