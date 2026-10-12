@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from app.module.infrastructure.domain.value_object import Category
-    from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
+    from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon
 
 
 class InfrastructureObject(BaseEntity[InfrastructureObjectId]):
@@ -21,8 +21,8 @@ class InfrastructureObject(BaseEntity[InfrastructureObjectId]):
     Represents a raw object (e.g. a school, hospital, grocery shop, transit
     stop or water body) with its identity, category and metadata. The object has
     a geometry that is a point, a polyline (roads, pipelines, power lines,
-    rivers) or a polygon (area-based categories such as water bodies and
-    forests).
+    rivers) or a polygon, possibly multi-part with holes (area-based
+    categories such as water bodies and forests).
 
     Attributes
     ----------
@@ -30,7 +30,7 @@ class InfrastructureObject(BaseEntity[InfrastructureObjectId]):
         Identifier of the object in the data source.
     category : Category
         Infrastructure category the object belongs to.
-    geometry : GeoPoint | LineString | Polygon
+    geometry : GeoPoint | LineString | Polygon | MultiPolygon
         Geometry of the object.
     name : str | None
         Optional human-readable name of the object.
@@ -43,12 +43,12 @@ class InfrastructureObject(BaseEntity[InfrastructureObjectId]):
         self,
         id: InfrastructureObjectId,
         category: Category,
-        geometry: GeoPoint | LineString | Polygon,
+        geometry: GeoPoint | LineString | Polygon | MultiPolygon,
         name: str | None = None,
         tags: Mapping[str, str] | None = None,
     ) -> None:
         self._category: Category = category
-        self._geometry: GeoPoint | LineString | Polygon = geometry
+        self._geometry: GeoPoint | LineString | Polygon | MultiPolygon = geometry
         self._name: str | None = name
         self._tags: Mapping[str, str] | None = tags
 
@@ -64,7 +64,7 @@ class InfrastructureObject(BaseEntity[InfrastructureObjectId]):
         return self._category
 
     @property
-    def geometry(self) -> GeoPoint | LineString | Polygon:
+    def geometry(self) -> GeoPoint | LineString | Polygon | MultiPolygon:
         """Geometry of the object."""
         return self._geometry
 

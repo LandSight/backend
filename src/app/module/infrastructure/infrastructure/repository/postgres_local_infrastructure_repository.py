@@ -12,7 +12,7 @@ from shapely.geometry import (
     Point as ShapelyPoint,
     Polygon as ShapelyPolygon,
 )
-from sqlalchemy import false, func, or_, select
+from sqlalchemy import and_, false, func, or_, select
 
 from app.module.infrastructure.application.port import LocalInfrastructureRepository
 from app.module.infrastructure.domain.entity import InfrastructureObject
@@ -29,16 +29,20 @@ from app.module.infrastructure.infrastructure.model import (
 from app.module.infrastructure.infrastructure.osm_tags import (
     DRIVABLE_ROAD_CLASSES,
     GROCERY_SHOPS,
+    NON_NATURE_PROTECT_CLASSES,
     POWER_LINE_KINDS,
     RAILWAY_STATION_KINDS,
     SETTLEMENT_PLACES,
 )
-from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
+from app.module.shared.domain.error import ValidationError
+from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon
 from app.module.shared.infrastructure.geo import Srid, dedupe_consecutive
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from geoalchemy2 import Geometry, WKBElement
     from sqlalchemy.engine import Row
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -55,8 +59,10 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
 
     Reads raw infrastructure objects from the OSM layers created by
     ``osm2pgsql`` (``planet_osm_point``, ``planet_osm_line`` and
-    ``planet_osm_polygon``), filtering by category and the buffer zone (ring)
-    around a parcel.
+    ``planet_osm_polygon``), filtering by category and the buffer zone around
+    a parcel. The whole buffer, parcel included, is searched, so an object
+    inside the parcel (a pond, a forest patch) is found at distance zero;
+    ring-based metrics clip to the ring themselves.
 
     Point-based categories are read from ``planet_osm_point``, line-based
     categories (roads, power lines, pipelines, rivers) from ``planet_osm_line``,
@@ -103,7 +109,7 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
         source: _SourceKind,
     ) -> list[InfrastructureObject]:
         """Read and convert objects of one OSM layer within the buffer zone."""
-        ring_web_mercator = self._build_ring(zone)
+        zone_web_mercator = self._build_zone(zone)
 
         stmt = (
             select(
@@ -113,22 +119,16 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
                 model.tags,
             )
             .where(self._tag_filter(category, source, model))
-            .where(func.ST_Intersects(model.way, ring_web_mercator))
+            .where(func.ST_Intersects(model.way, zone_web_mercator))
         )
         result = await self._session.execute(stmt)
 
         return [self._to_domain(row, category) for row in result.all()]
 
-    def _build_ring(self, zone: BufferZone) -> object:
-        """Build the buffer ring geometry in Web Mercator from a WGS 84 buffer zone."""
+    def _build_zone(self, zone: BufferZone) -> object:
+        """Build the outer buffer geometry in Web Mercator from a WGS 84 buffer zone."""
         outer_wkb = from_shape(self._polygon_to_shapely(zone.outer), srid=Srid.WGS84)
-        inner_wkb = from_shape(self._polygon_to_shapely(zone.inner), srid=Srid.WGS84)
-
-        ring_wgs84 = func.ST_Difference(
-            cast("Geometry", outer_wkb),
-            cast("Geometry", inner_wkb),
-        )
-        return func.ST_Transform(ring_wgs84, Srid.WEB_MERCATOR.value)
+        return func.ST_Transform(cast("Geometry", outer_wkb), Srid.WEB_MERCATOR.value)
 
     @staticmethod
     def _tag_filter(  # noqa: PLR0911, PLR0912
@@ -190,7 +190,13 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
             if category == Category.FOREST:
                 return or_(tags["landuse"] == "forest", tags["natural"] == "wood")
             if category == Category.PROTECTED_AREA:
-                return or_(tags["boundary"] == "protected_area", tags["leisure"] == "nature_reserve")
+                # Only nature protection counts: heritage sites and museum
+                # reserves are also mapped as protected areas.
+                return and_(
+                    or_(tags["boundary"] == "protected_area", tags["leisure"] == "nature_reserve"),
+                    func.coalesce(tags["protect_class"], "").not_in(NON_NATURE_PROTECT_CLASSES),
+                    func.coalesce(tags["protection_title"], "").not_ilike("%world heritage%"),
+                )
 
         return false()
 
@@ -223,8 +229,13 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
         )
 
     @classmethod
-    def _to_domain_geometry(cls, shapely_geom: object) -> GeoPoint | LineString | Polygon:
-        """Map a raw Shapely geometry to a normalized domain geometry."""
+    def _to_domain_geometry(cls, shapely_geom: object) -> GeoPoint | LineString | Polygon | MultiPolygon:
+        """Map a raw Shapely geometry to a normalized domain geometry.
+
+        A polygon keeps every part and every hole: dropping them misstates
+        coverage (a forest relation is often many parts around clearings and
+        villages). A single part without holes stays a Polygon.
+        """
         match shapely_geom:
             case ShapelyPoint():
                 return GeoPoint.create(float(shapely_geom.y), float(shapely_geom.x))
@@ -233,11 +244,7 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
                 points = dedupe_consecutive(GeoPoint.create(float(lat), float(lon)) for lon, lat in line.coords)
                 return LineString(tuple(points))
             case ShapelyPolygon() | ShapelyMultiPolygon():
-                polygon = cls._largest_polygon(shapely_geom)
-                points = dedupe_consecutive(
-                    GeoPoint.create(float(lat), float(lon)) for lon, lat in polygon.exterior.coords
-                )
-                return Polygon(tuple(points))
+                return cls._to_domain_polygon(shapely_geom)
             case _:
                 message = f"Unsupported geometry type: {type(shapely_geom).__name__}."
                 raise TypeError(message)
@@ -251,14 +258,33 @@ class PostgresLocalInfrastructureRepository(BaseSQLAlchemyRepository, LocalInfra
             return max(geom.geoms, key=lambda part: part.length)
         return geom
 
+    @classmethod
+    def _to_domain_polygon(cls, geom: ShapelyPolygon | ShapelyMultiPolygon) -> Polygon | MultiPolygon:
+        """Convert a (multi)polygon, keeping all parts and holes."""
+        shapely_parts = geom.geoms if isinstance(geom, ShapelyMultiPolygon) else (geom,)
+        parts: list[tuple[Polygon, ...]] = []
+        for shapely_part in shapely_parts:
+            exterior = cls._to_domain_ring(shapely_part.exterior.coords)
+            if exterior is None:
+                continue
+            holes = [hole for interior in shapely_part.interiors if (hole := cls._to_domain_ring(interior.coords))]
+            parts.append((exterior, *holes))
+
+        if not parts:
+            message = "Polygon has no valid exterior ring."
+            raise ValueError(message)
+        if len(parts) == 1 and len(parts[0]) == 1:
+            return parts[0][0]
+        return MultiPolygon(tuple(parts))
+
     @staticmethod
-    def _largest_polygon(
-        geom: ShapelyPolygon | ShapelyMultiPolygon,
-    ) -> ShapelyPolygon:
-        """Return the largest component of a (multi)polygon geometry."""
-        if isinstance(geom, ShapelyMultiPolygon):
-            return max(geom.geoms, key=lambda part: part.area)
-        return geom
+    def _to_domain_ring(coords: Iterable[tuple[float, float]]) -> Polygon | None:
+        """Convert one ring to a domain Polygon, or ``None`` when it is degenerate."""
+        points = dedupe_consecutive(GeoPoint.create(float(lat), float(lon)) for lon, lat in coords)
+        try:
+            return Polygon(tuple(points))
+        except ValidationError:
+            return None
 
 
 __all__ = ("PostgresLocalInfrastructureRepository",)

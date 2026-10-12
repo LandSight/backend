@@ -7,7 +7,7 @@ engine: hmcda
 key: baseline
 name: Fuzzy Hierarchical MCDA
 description: Baseline engine based on fuzzy hierarchical multi-criteria analysis
-model_version: v1.0
+model_version: v1.1
 
 profiles:
   izhs:
@@ -45,7 +45,7 @@ profiles:
 
         - key: climate
           name: Climate
-          weight: 0.10
+          weight: 0.08
           components:
             - key: temperature
               name: Temperature
@@ -63,7 +63,7 @@ profiles:
 
         - key: infrastructure
           name: Infrastructure
-          weight: 0.40
+          weight: 0.35
           components:
             - key: facility
               name: Facilities and services
@@ -82,7 +82,10 @@ profiles:
               name: Utility networks
               weight: 0.10
               components:
-                - { key: "power_line:min_distance_to", weight: 1.0 }
+                # Transmission lines are a building constraint, distribution
+                # lines a connection opportunity.
+                - { key: "power_line:transmission_line_clearance", weight: 0.60 }
+                - { key: "power_line:distance_to_distribution_line", weight: 0.40 }
             - key: road_accessibility
               name: Road accessibility
               weight: 0.45
@@ -92,18 +95,23 @@ profiles:
                 - { key: "road_accessibility:distance_to_any_road", weight: 0.20 }
                 - { key: "road_accessibility:road_density_1km", weight: 0.20 }
 
+        # Weighted up so that a plot near a forest, a lake or a river stands out
+        # from one in the middle of a built-up area.
         - key: ecology_recreation
           name: Ecology and Recreation
-          weight: 0.15
+          weight: 0.25
           components:
-            - { key: "water_body:coverage_ratio", weight: 0.35 }
-            - { key: "water_body:min_distance_to", weight: 0.25 }
             - { key: "forest:coverage_ratio", weight: 0.25 }
+            - { key: "forest:min_distance_to", weight: 0.10 }
+            - { key: "water_body:coverage_ratio", weight: 0.15 }
+            - { key: "water_body:river_density", weight: 0.10 }
+            - { key: "water_body:min_distance_to", weight: 0.10 }
+            - { key: "water_body:distance_to_large_object", weight: 0.15 }
             - { key: "protected_area:min_distance_to", weight: 0.15 }
 
         - key: geographic_position
           name: Geographical location
-          weight: 0.15
+          weight: 0.12
           components:
             - { key: "geographic_position:distance_to_settlement", weight: 0.50 }
             - { key: "geographic_position:distance_to_district_center", weight: 0.30 }
@@ -149,12 +157,14 @@ profiles:
         type: trapezoidal
         params: { low: 200, optimal_min: 600, optimal_max: 2000, high: 5000 }
         unit: m2
+      # Compactness relative to a square: 1 = square, 0.89 = 1:2 rectangle.
       compactness_index:
         type: s_shaped
-        params: { min: 0, max: 1 }
+        params: { min: 0.5, max: 0.85 }
+      # Width to length ratio: 1:2 or squarer is optimal, 1:5 is unusable.
       elongation_index:
-        type: z_shaped
-        params: { optimal_max: 2, acceptable_max: 5 }
+        type: s_shaped
+        params: { min: 0.2, max: 0.5 }
       # Climate - temperature
       mean_annual_temperature:
         type: trapezoidal
@@ -215,37 +225,64 @@ profiles:
         type: z_shaped
         params: { optimal_max: 2000, acceptable_max: 10000 }
         unit: m
-      # Ecology - water
+      # Ecology - water. Area densities are hectares of the objects per square
+      # kilometre of the 2 km ring around the parcel.
       "water_body:coverage_ratio":
         type: s_shaped
-        params: { min: 0.01, max: 0.10 }
-        unit: ratio
+        params: { min: 1, max: 10 }
+        unit: ha/km2
+      # One river crossing the 2 km ring is about 0.3 km/km2.
+      "water_body:river_density":
+        type: s_shaped
+        params: { min: 0, max: 0.3 }
+        unit: km/km2
+      # Closer is better: the Water Code allows houses in the water protection
+      # zone, only the 20 m shore strip (5 m for small rivers) is public.
       "water_body:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }
         unit: m
+        missing_value: 2000
+      # Lake or reservoir of 100 ha and more, within the 2 km search buffer.
       "water_body:distance_to_large_object":
         type: z_shaped
-        params: { optimal_max: 1000, acceptable_max: 5000 }
+        params: { optimal_max: 1000, acceptable_max: 2000 }
         unit: m
+        missing_value: 2000
       # Ecology - forest
       "forest:coverage_ratio":
         type: s_shaped
-        params: { min: 0.05, max: 0.30 }
-        unit: ratio
+        params: { min: 5, max: 30 }
+        unit: ha/km2
       "forest:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }
         unit: m
-      # Ecology - protected areas
+        missing_value: 2000
+      # Ecology - protected areas. There is no federal minimum distance from a
+      # house to a protected area: building inside one is barred by its regime
+      # and its buffer zone is set individually. Inside or on the edge scores 0,
+      # a few hundred metres to 3 km is optimal (nature nearby, nothing will be
+      # built there), farther fades out, none within 10 km scores 0.
       "protected_area:min_distance_to":
-        type: s_shaped
-        params: { min: 0, max: 5000 }
+        type: trapezoidal
+        params: { low: 0, optimal_min: 300, optimal_max: 3000, high: 10000 }
         unit: m
-      # Utility
-      "power_line:min_distance_to":
+        missing_value: 10000
+      # Utility. Gap between the parcel and the protection zone of the nearest
+      # transmission line (35 kV and up): 0 means the parcel reaches into the
+      # zone, where no house may be built. None within 1 km counts as clear.
+      "power_line:transmission_line_clearance":
+        type: s_shaped
+        params: { min: 0, max: 200 }
+        unit: m
+        missing_value: 1000
+      # Distribution lines (below 35 kV): a grid connection at the discounted
+      # rate needs one within 300 m in towns and 500 m in rural areas. Sparse
+      # in OSM, so a missing line stays unscored.
+      "power_line:distance_to_distribution_line":
         type: z_shaped
-        params: { optimal_max: 100, acceptable_max: 1000 }
+        params: { optimal_max: 300, acceptable_max: 1000 }
         unit: m
       # Roads
       "road_accessibility:distance_to_paved_road":

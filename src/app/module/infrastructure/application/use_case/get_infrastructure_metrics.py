@@ -139,6 +139,7 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             distance_to_large_object=(
                 entity.distance_to_large_object.unwrap() if entity.distance_to_large_object is not None else None
             ),
+            river_density=entity.river_density.unwrap() if entity.river_density is not None else None,
         )
 
     async def _handle_utility(
@@ -154,6 +155,14 @@ class GetInfrastructureMetricsUseCase(BaseUseCase[GetInfrastructureMetricsComman
             id=entity.id.unwrap(),
             buffer=entity.buffer.unwrap(),
             min_distance_to=entity.min_distance_to.unwrap() if entity.min_distance_to is not None else None,
+            transmission_line_clearance=(
+                entity.transmission_line_clearance.unwrap() if entity.transmission_line_clearance is not None else None
+            ),
+            distance_to_distribution_line=(
+                entity.distance_to_distribution_line.unwrap()
+                if entity.distance_to_distribution_line is not None
+                else None
+            ),
         )
 
     async def _handle_road_accessibility(

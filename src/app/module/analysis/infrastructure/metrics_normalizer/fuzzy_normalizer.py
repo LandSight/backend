@@ -15,10 +15,21 @@ if TYPE_CHECKING:
 
 
 class FuzzyNormalizer:
-    """Normalizes metrics with configured fuzzy membership functions."""
+    """Normalizes metrics with configured fuzzy membership functions.
 
-    def __init__(self, functions: Mapping[str, FuzzyFunction]) -> None:
+    A metric listed in ``missing_values`` that has no reading is normalized as
+    if it read that value instead of being left unavailable. It is meant for
+    metrics where finding nothing within the search buffer is itself a
+    result, e.g. no power line within 1 km reads as 1 km away.
+    """
+
+    def __init__(
+        self,
+        functions: Mapping[str, FuzzyFunction],
+        missing_values: Mapping[str, float] | None = None,
+    ) -> None:
         self._functions: dict[str, FuzzyFunction] = dict(functions)
+        self._missing_values: dict[str, float] = dict(missing_values or {})
 
     def normalize(self, key: str, value: float | None, label: str = "") -> NormalizedMetric:
         """Normalize one metric reading.
@@ -28,7 +39,8 @@ class FuzzyNormalizer:
         key : str
             Canonical metric key.
         value : float | None
-            Raw reading; ``None`` when the metric is unavailable.
+            Raw reading; ``None`` when the metric is unavailable, in which case
+            the configured missing value of the metric is used, if any.
         label : str
             Human-readable metric name; empty when not available.
 
@@ -47,6 +59,8 @@ class FuzzyNormalizer:
             message = f"No fuzzy function configured for metric '{key}'."
             raise ValidationError(message)
         analysis_key = AnalysisKey(key)
+        if value is None:
+            value = self._missing_values.get(key)
         if value is None:
             return NormalizedMetric(
                 key=analysis_key,

@@ -93,7 +93,7 @@ class HmcdaAnalysisScorer(AnalysisScorer):
             raise ValidationError(message)
         return HmcdaProfile(
             hierarchy=profile.hierarchy,
-            normalizer=FuzzyNormalizer(functions),
+            normalizer=FuzzyNormalizer(functions, profile.missing_values()),
             aggregator=HierarchicalAggregator(profile.hierarchy),
         )
 

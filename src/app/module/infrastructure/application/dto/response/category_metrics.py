@@ -30,6 +30,7 @@ class EcologyMetricsResponse:
     count: int
     min_distance_to: float | None
     distance_to_large_object: float | None
+    river_density: float | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,6 +40,8 @@ class UtilityMetricsResponse:
     id: UUID
     buffer: int
     min_distance_to: float | None
+    transmission_line_clearance: float | None
+    distance_to_distribution_line: float | None
 
 
 @dataclass(frozen=True, slots=True)

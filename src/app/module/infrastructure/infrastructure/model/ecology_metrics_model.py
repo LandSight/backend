@@ -53,6 +53,11 @@ class EcologyMetricsModel(TimestampedModel):
         nullable=True,
         comment="Distance to the nearest large object in meters, or NULL if none found",
     )
+    river_density: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="River length per buffer ring area in km/km2 (water bodies only), or NULL",
+    )
 
 
 __all__ = ("EcologyMetricsModel",)

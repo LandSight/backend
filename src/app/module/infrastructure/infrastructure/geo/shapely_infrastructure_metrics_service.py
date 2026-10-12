@@ -24,12 +24,12 @@ from app.module.infrastructure.domain.value_object import (
     Density,
     Distance,
 )
-from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
+from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon
 from app.module.shared.infrastructure.geo.projection import reproject_to, to_local_utm
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
 
 _ShapelyGeometry = (
@@ -74,11 +74,11 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         """See :class:`app.module.infrastructure.application.port.InfrastructureMetricsService.to_point_objects`."""
         points: list[InfrastructureObject] = []
         for obj in objects:
-            if not isinstance(obj.geometry, Polygon):
+            if not isinstance(obj.geometry, (Polygon, MultiPolygon)):
                 points.append(obj)
                 continue
 
-            representative = self._polygon_to_shapely(obj.geometry).representative_point()
+            representative = self._geometry_to_shapely(obj.geometry).representative_point()
             points.append(
                 InfrastructureObject(
                     id=obj.id,
@@ -116,6 +116,27 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
             return None
 
         return Distance(min_distance_m)
+
+    @override
+    def min_clearance(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: Polygon,
+        zone_widths_m: Sequence[float],
+    ) -> Distance | None:
+        """See :class:`app.module.infrastructure.application.port.InfrastructureMetricsService.min_clearance`."""
+        if not objects:
+            return None
+        if len(objects) != len(zone_widths_m):
+            message = f"Expected one zone width per object, got {len(zone_widths_m)} for {len(objects)} objects."
+            raise ValueError(message)
+
+        parcel_utm, epsg = to_local_utm(self._polygon_to_shapely(parcel_geometry))
+        clearances = (
+            parcel_utm.distance(reproject_to(self._geometry_to_shapely(obj.geometry), epsg)) - zone_width_m
+            for obj, zone_width_m in zip(objects, zone_widths_m, strict=True)
+        )
+        return Distance(max(0.0, min(clearances)))
 
     @override
     def nearest_object(
@@ -225,7 +246,7 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         polygon_geoms: list[_ShapelyGeometry] = []
         for obj in objects:
             geom = self._geometry_to_shapely(obj.geometry)
-            if not isinstance(geom, ShapelyPolygon) or obj.id.unwrap() in always_large:
+            if not isinstance(geom, (ShapelyPolygon, ShapelyMultiPolygon)) or obj.id.unwrap() in always_large:
                 large_geoms.append(reproject_to(geom, epsg))
             else:
                 polygon_geoms.append(reproject_to(geom, epsg))
@@ -287,9 +308,14 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         return ShapelyPolygon(coords)
 
     @staticmethod
+    def _ring_coords(ring: Polygon) -> list[tuple[float, float]]:
+        """Return the (lon, lat) coordinates of a ring."""
+        return [(point.longitude.unwrap(), point.latitude.unwrap()) for point in ring.points]
+
+    @staticmethod
     def _geometry_to_shapely(
-        geometry: GeoPoint | LineString | Polygon,
-    ) -> ShapelyPoint | ShapelyLineString | ShapelyPolygon:
+        geometry: GeoPoint | LineString | Polygon | MultiPolygon,
+    ) -> ShapelyPoint | ShapelyLineString | ShapelyPolygon | ShapelyMultiPolygon:
         """Convert a domain geometry to a Shapely geometry."""
         match geometry:
             case GeoPoint():
@@ -299,6 +325,16 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
                 return ShapelyLineString(coords)
             case Polygon():
                 return ShapelyInfrastructureMetricsService._polygon_to_shapely(geometry)
+            case MultiPolygon():
+                return ShapelyMultiPolygon(
+                    [
+                        (
+                            ShapelyInfrastructureMetricsService._ring_coords(exterior),
+                            [ShapelyInfrastructureMetricsService._ring_coords(hole) for hole in holes],
+                        )
+                        for exterior, *holes in geometry.parts
+                    ]
+                )
             case _:
                 message = f"Unsupported geometry type: {type(geometry).__name__}."
                 raise TypeError(message)

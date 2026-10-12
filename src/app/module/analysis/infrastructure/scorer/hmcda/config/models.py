@@ -24,6 +24,11 @@ if TYPE_CHECKING:
 
 _MAX_METRIC_DEPTH = 2
 
+_MISSING_VALUE_DESCRIPTION = (
+    "Raw reading assumed when the metric has no reading, e.g. nothing was found within the "
+    "search buffer; usually the buffer radius as a lower bound. Unset keeps the metric unavailable."
+)
+
 
 class HierarchyNode(BaseModel):
     """A node of the aggregation tree.
@@ -156,6 +161,7 @@ class ZShapedConfig(BaseModel):
     type: Literal["z_shaped"]
     params: ZShapedParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -174,6 +180,7 @@ class SShapedConfig(BaseModel):
     type: Literal["s_shaped"]
     params: SShapedParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -188,6 +195,7 @@ class TrapezoidalConfig(BaseModel):
     type: Literal["trapezoidal"]
     params: TrapezoidalParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -217,6 +225,14 @@ class ProfileConfig(BaseModel):
     def to_fuzzy_functions(self) -> dict[str, FuzzyFunction]:
         """Build concrete fuzzy functions keyed by metric key."""
         return {key: function.to_domain() for key, function in self.functions.items()}
+
+    def missing_values(self) -> dict[str, float]:
+        """Return the configured missing-reading substitutes keyed by metric key."""
+        return {
+            key: function.missing_value
+            for key, function in self.functions.items()
+            if function.missing_value is not None
+        }
 
 
 class EngineConfig(BaseModel):

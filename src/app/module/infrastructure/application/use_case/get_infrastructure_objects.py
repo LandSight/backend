@@ -21,7 +21,7 @@ from app.module.shared.application.dto.geojson import (
     GeoJSONPolygon,
 )
 from app.module.shared.application.use_case import BaseUseCase
-from app.module.shared.domain.value_object import GeoPoint, LineString, Polygon
+from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon
 from app.platform.logging import get_logger
 
 
@@ -144,7 +144,7 @@ class GetInfrastructureObjectsUseCase(
         objects = await self._object_handlers[category](zone, category)
         features = [
             InfrastructureObjectFeature(
-                geometry=self._to_geometry(obj.geometry),
+                geometry=geometry,
                 properties=InfrastructureObjectProperties(
                     osm_id=obj.id.unwrap(),
                     name=obj.name,
@@ -152,6 +152,7 @@ class GetInfrastructureObjectsUseCase(
                 ),
             )
             for obj in objects
+            for geometry in self._to_geometries(obj.geometry)
         ]
 
         return InfrastructureObjectFeatureCollection(features=features)
@@ -263,24 +264,37 @@ class GetInfrastructureObjectsUseCase(
         return [*polygons, *rivers]
 
     @staticmethod
-    def _to_geometry(geometry: GeoPoint | LineString | Polygon) -> GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon:
-        """Convert a domain geometry to a GeoJSON geometry DTO."""
+    def _to_geometries(
+        geometry: GeoPoint | LineString | Polygon | MultiPolygon,
+    ) -> list[GeoJSONPoint | GeoJSONLineString | GeoJSONPolygon]:
+        """Convert a domain geometry to GeoJSON geometry DTOs.
+
+        A multi-part polygon becomes one GeoJSON polygon (with its holes) per part.
+        """
         match geometry:
             case GeoPoint():
-                return GeoJSONPoint(coordinates=[geometry.longitude.unwrap(), geometry.latitude.unwrap()])
+                return [GeoJSONPoint(coordinates=[geometry.longitude.unwrap(), geometry.latitude.unwrap()])]
             case LineString():
-                return GeoJSONLineString(
-                    coordinates=[[point.longitude.unwrap(), point.latitude.unwrap()] for point in geometry.points],
-                )
+                return [
+                    GeoJSONLineString(
+                        coordinates=[[point.longitude.unwrap(), point.latitude.unwrap()] for point in geometry.points],
+                    )
+                ]
             case Polygon():
-                return GeoJSONPolygon(
-                    coordinates=[
-                        [[point.longitude.unwrap(), point.latitude.unwrap()] for point in geometry.points],
-                    ],
-                )
+                return [GeoJSONPolygon(coordinates=[GetInfrastructureObjectsUseCase._ring(geometry)])]
+            case MultiPolygon():
+                return [
+                    GeoJSONPolygon(coordinates=[GetInfrastructureObjectsUseCase._ring(ring) for ring in part])
+                    for part in geometry.parts
+                ]
             case _:
                 message = f"Unsupported geometry type: {type(geometry).__name__}."
                 raise TypeError(message)
+
+    @staticmethod
+    def _ring(ring: Polygon) -> list[list[float]]:
+        """Return the GeoJSON (lon, lat) coordinates of a ring."""
+        return [[point.longitude.unwrap(), point.latitude.unwrap()] for point in ring.points]
 
 
 __all__ = ("GetInfrastructureObjectsUseCase",)

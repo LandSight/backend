@@ -43,5 +43,14 @@ class InfrastructureObjectClassifier(ABC):
         """Return whether a protected area is significant regardless of its area."""
         raise NotImplementedError
 
+    @abstractmethod
+    def power_line_voltage_kv(self, obj: InfrastructureObject) -> float:
+        """Return the voltage of a power line in kV.
+
+        The highest voltage is used when a line carries several circuits; a
+        line without a known voltage gets a typical voltage for its kind.
+        """
+        raise NotImplementedError
+
 
 __all__ = ("InfrastructureObjectClassifier",)

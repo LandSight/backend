@@ -25,6 +25,10 @@ class UtilityMetrics(InfrastructureMetrics):
     Covers power lines, gas pipelines and water pipelines: each row records the
     utility type and the distance to the nearest one. Maps to the
     ``parcel_utility_metrics`` table.
+
+    Power lines are split by role: transmission lines are a building
+    constraint, measured as the clearance from their protection zone, while
+    distribution lines are a connection opportunity, measured as a distance.
     """
 
     def __init__(
@@ -34,9 +38,13 @@ class UtilityMetrics(InfrastructureMetrics):
         buffer: Buffer,
         utility_type: Category,
         min_distance_to: Distance | None,
+        transmission_line_clearance: Distance | None,
+        distance_to_distribution_line: Distance | None,
     ) -> None:
         self._utility_type: Category = utility_type
         self._min_distance_to: Distance | None = min_distance_to
+        self._transmission_line_clearance: Distance | None = transmission_line_clearance
+        self._distance_to_distribution_line: Distance | None = distance_to_distribution_line
 
         super().__init__(id=id, parcel_id=parcel_id, buffer=buffer)
 
@@ -49,6 +57,20 @@ class UtilityMetrics(InfrastructureMetrics):
     def min_distance_to(self) -> Distance | None:
         """Distance to the nearest utility network in meters, or ``None`` if none found."""
         return self._min_distance_to
+
+    @property
+    def transmission_line_clearance(self) -> Distance | None:
+        """Gap between the parcel and the nearest transmission line protection zone in meters.
+
+        Zero when the parcel reaches into a protection zone; ``None`` when no
+        transmission line was found within the buffer.
+        """
+        return self._transmission_line_clearance
+
+    @property
+    def distance_to_distribution_line(self) -> Distance | None:
+        """Distance to the nearest distribution line in meters, or ``None`` if none found."""
+        return self._distance_to_distribution_line
 
     def _validate(self) -> None:
         if family_of(self._utility_type) is not MetricFamily.UTILITY:

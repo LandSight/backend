@@ -41,12 +41,15 @@ class MetricDefinition:
 
     ``label`` may contain the ``{singular}``, ``{Singular}`` and ``{plural}``
     placeholders, completed with the category noun by :meth:`label_for`.
+    ``scale`` converts the stored value into the published unit (e.g. a
+    coverage ratio into hectares per square kilometre).
     """
 
     key: str
     label: str
     unit: str
     kind: MetricValueKind
+    scale: float = 1.0
 
     def label_for(self, category: str) -> str:
         """Return the self-contained label of this metric for a category."""
@@ -63,7 +66,15 @@ class MetricDefinition:
 _BUFFER = MetricDefinition("buffer", "Search radius", "m", MetricValueKind.INTEGER)
 _COUNT = MetricDefinition("count", "Number of {plural}", "", MetricValueKind.INTEGER)
 _MIN_DISTANCE = MetricDefinition("min_distance_to", "Distance to nearest {singular}", "m", MetricValueKind.NUMBER)
-_COVERAGE_RATIO = MetricDefinition("coverage_ratio", "{Singular} coverage", "ratio", MetricValueKind.NUMBER)
+# Published like road density: hectares of the objects per square kilometre of
+# the buffer ring around the parcel (a stored ratio of 0.06 is 6 ha/km2).
+_COVERAGE_RATIO = MetricDefinition(
+    "coverage_ratio",
+    "{Singular} area density",
+    "ha/km2",
+    MetricValueKind.NUMBER,
+    scale=100.0,
+)
 _DISTANCE_TO_LARGE_OBJECT = MetricDefinition(
     "distance_to_large_object",
     "Distance to nearest large {singular}",
@@ -79,7 +90,26 @@ _ECOLOGY_METRICS: Final[tuple[MetricDefinition, ...]] = (
     _MIN_DISTANCE,
     _DISTANCE_TO_LARGE_OBJECT,
 )
-_UTILITY_METRICS: Final[tuple[MetricDefinition, ...]] = (_BUFFER, _MIN_DISTANCE)
+_WATER_BODY_METRICS: Final[tuple[MetricDefinition, ...]] = (
+    *_ECOLOGY_METRICS,
+    MetricDefinition("river_density", "River density", "km/km2", MetricValueKind.NUMBER),
+)
+_UTILITY_METRICS: Final[tuple[MetricDefinition, ...]] = (
+    _BUFFER,
+    _MIN_DISTANCE,
+    MetricDefinition(
+        "transmission_line_clearance",
+        "Clearance from transmission line protection zone",
+        "m",
+        MetricValueKind.NUMBER,
+    ),
+    MetricDefinition(
+        "distance_to_distribution_line",
+        "Distance to distribution power line",
+        "m",
+        MetricValueKind.NUMBER,
+    ),
+)
 
 
 CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingProxyType(
@@ -92,7 +122,7 @@ CATEGORY_METRICS: Final[Mapping[str, tuple[MetricDefinition, ...]]] = MappingPro
         "fire_station": _FACILITY_METRICS,
         "pharmacy": _FACILITY_METRICS,
         "water_source": _FACILITY_METRICS,
-        "water_body": _ECOLOGY_METRICS,
+        "water_body": _WATER_BODY_METRICS,
         "forest": _ECOLOGY_METRICS,
         "protected_area": _ECOLOGY_METRICS,
         "power_line": _UTILITY_METRICS,

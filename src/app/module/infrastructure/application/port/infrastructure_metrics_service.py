@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
     from app.module.infrastructure.domain.entity import InfrastructureObject
     from app.module.infrastructure.domain.value_object import (
@@ -60,6 +60,22 @@ class InfrastructureMetricsService(ABC):
         parcel_geometry: Polygon,
     ) -> Distance | None:
         """Compute the distance from the parcel to the nearest object."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def min_clearance(
+        self,
+        objects: list[InfrastructureObject],
+        parcel_geometry: Polygon,
+        zone_widths_m: Sequence[float],
+    ) -> Distance | None:
+        """Compute the smallest gap between the parcel and the objects' protection zones.
+
+        ``zone_widths_m[i]`` is the zone half-width around ``objects[i]``. The
+        gap is the distance to the object minus its zone width, floored at zero
+        when the parcel reaches into the zone. Returns ``None`` when there are no
+        objects.
+        """
         raise NotImplementedError
 
     @abstractmethod

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         Category,
         Count,
         CoverageRatio,
+        Density,
         Distance,
         InfrastructureMetricsId,
         ParcelId,
@@ -27,7 +28,9 @@ class EcologyMetrics(InfrastructureMetrics):
     Covers water bodies, forests and protected areas: each row records the
     object type, the fraction of the buffer they cover, the number of distinct
     (connected) objects, the distance to the nearest one and the distance to the
-    nearest large one. Maps to the ``parcel_ecology_metrics`` table.
+    nearest large one. Water bodies also record the density of rivers, which
+    are lines and so add no coverage. Maps to the ``parcel_ecology_metrics``
+    table.
     """
 
     def __init__(
@@ -40,12 +43,14 @@ class EcologyMetrics(InfrastructureMetrics):
         count: Count,
         min_distance_to: Distance | None,
         distance_to_large_object: Distance | None,
+        river_density: Density | None,
     ) -> None:
         self._object_type: Category = object_type
         self._coverage_ratio: CoverageRatio = coverage_ratio
         self._count: Count = count
         self._min_distance_to: Distance | None = min_distance_to
         self._distance_to_large_object: Distance | None = distance_to_large_object
+        self._river_density: Density | None = river_density
 
         super().__init__(id=id, parcel_id=parcel_id, buffer=buffer)
 
@@ -73,6 +78,11 @@ class EcologyMetrics(InfrastructureMetrics):
     def distance_to_large_object(self) -> Distance | None:
         """Distance to the nearest large object in meters, or ``None`` if none found."""
         return self._distance_to_large_object
+
+    @property
+    def river_density(self) -> Density | None:
+        """River length per buffer ring area in km/km², or ``None`` for non-water categories."""
+        return self._river_density
 
     def _validate(self) -> None:
         if family_of(self._object_type) is not MetricFamily.ECOLOGY:

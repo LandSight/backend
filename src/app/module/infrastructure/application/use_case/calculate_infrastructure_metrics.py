@@ -24,12 +24,17 @@ from app.module.infrastructure.domain.entity import (
     RoadAccessibilityMetrics,
     UtilityMetrics,
 )
-from app.module.infrastructure.domain.metric_policy import LARGE_OBJECT_MIN_AREA_M2
+from app.module.infrastructure.domain.metric_policy import (
+    LARGE_OBJECT_MIN_AREA_M2,
+    TRANSMISSION_LINE_MIN_VOLTAGE_KV,
+    power_line_protection_zone_m,
+)
 from app.module.infrastructure.domain.value_object import (
     Buffer,
     BufferZone,
     Category,
     CityTier,
+    Density,
     InfrastructureMetricsId,
     ParcelId,
 )
@@ -191,9 +196,11 @@ class CalculateInfrastructureMetricsUseCase(
     ) -> EcologyMetricsResponse:
         polygons = await self._local_infrastructure_repository.get_polygon_objects(buffer_zone, category)
         objects = list(polygons)
+        river_density: Density | None = None
         if category is Category.WATER_BODY:
             rivers = await self._local_infrastructure_repository.get_line_objects(buffer_zone, category)
             objects.extend(rivers)
+            river_density = self._infrastructure_metrics_service.line_density(rivers, buffer_zone)
 
         coverage_ratio = self._infrastructure_metrics_service.coverage_ratio(polygons, buffer_zone)
         count = self._infrastructure_metrics_service.count_components(objects)
@@ -218,6 +225,7 @@ class CalculateInfrastructureMetricsUseCase(
             count=count,
             min_distance_to=min_distance_to,
             distance_to_large_object=distance_to_large_object,
+            river_density=river_density,
         )
         await self._metrics_repository.save_ecology(metrics)
         return EcologyMetricsResponse(
@@ -229,6 +237,7 @@ class CalculateInfrastructureMetricsUseCase(
             distance_to_large_object=(
                 distance_to_large_object.unwrap() if distance_to_large_object is not None else None
             ),
+            river_density=river_density.unwrap() if river_density is not None else None,
         )
 
     async def _handle_utility(
@@ -242,18 +251,49 @@ class CalculateInfrastructureMetricsUseCase(
         objects = await self._local_infrastructure_repository.get_line_objects(buffer_zone, category)
         min_distance_to = self._infrastructure_metrics_service.min_distance(objects, buffer_zone.inner)
 
+        # Transmission lines restrict building within their protection zone;
+        # distribution lines are where a house gets connected.
+        voltages_kv = [self._object_classifier.power_line_voltage_kv(obj) for obj in objects]
+        transmission = [
+            (obj, voltage_kv)
+            for obj, voltage_kv in zip(objects, voltages_kv, strict=True)
+            if voltage_kv >= TRANSMISSION_LINE_MIN_VOLTAGE_KV
+        ]
+        distribution = [
+            obj
+            for obj, voltage_kv in zip(objects, voltages_kv, strict=True)
+            if voltage_kv < TRANSMISSION_LINE_MIN_VOLTAGE_KV
+        ]
+        transmission_line_clearance = self._infrastructure_metrics_service.min_clearance(
+            [obj for obj, _ in transmission],
+            buffer_zone.inner,
+            [power_line_protection_zone_m(voltage_kv) for _, voltage_kv in transmission],
+        )
+        distance_to_distribution_line = self._infrastructure_metrics_service.min_distance(
+            distribution,
+            buffer_zone.inner,
+        )
+
         metrics = UtilityMetrics(
             id=id,
             parcel_id=parcel_id,
             buffer=buffer,
             utility_type=category,
             min_distance_to=min_distance_to,
+            transmission_line_clearance=transmission_line_clearance,
+            distance_to_distribution_line=distance_to_distribution_line,
         )
         await self._metrics_repository.save_utility(metrics)
         return UtilityMetricsResponse(
             id=id.unwrap(),
             buffer=buffer.unwrap(),
             min_distance_to=min_distance_to.unwrap() if min_distance_to is not None else None,
+            transmission_line_clearance=(
+                transmission_line_clearance.unwrap() if transmission_line_clearance is not None else None
+            ),
+            distance_to_distribution_line=(
+                distance_to_distribution_line.unwrap() if distance_to_distribution_line is not None else None
+            ),
         )
 
     async def _handle_road_accessibility(

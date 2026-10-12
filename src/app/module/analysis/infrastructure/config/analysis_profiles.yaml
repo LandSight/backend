@@ -20,8 +20,9 @@ profiles:
         pharmacy: 2000
         water_source: 1500
         water_body: 2000
-        forest: 1500
-        protected_area: 2000
+        forest: 2000
+        # Must reach where protected areas stop counting (see engine.yaml).
+        protected_area: 10000
         power_line: 1000
         road_accessibility: 2000
         # Must reach regional centers (see distance_to_regional_center).

@@ -83,6 +83,7 @@ _UNIT_SYMBOLS: dict[str, str] = {
     "degC": "°C",
     "m2": "m²",
     "km/km2": "km/km²",
+    "ha/km2": "ha/km²",
 }
 _RATIO_UNIT = "ratio"
 _ATTACHED_UNITS = frozenset({"°", "%"})
