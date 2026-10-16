@@ -22,7 +22,9 @@ class PolicyConstraintEvaluator(ConstraintEvaluator):
 
     A prohibition bars the scenario whatever the breakdown, a penalty lowers
     the score. Hits of kinds without a rule have no effect, and so does a
-    penalty scaled by a negligible share.
+    penalty scaled by a negligible share. Each kind is judged on its own, so
+    kinds overlapping the same part of the plot compound: a deliberately
+    conservative overstatement (see ``config/constraints.yaml``).
     """
 
     # A scaled penalty below this (e.g. a 1 m2 corner in a shore strip) changes

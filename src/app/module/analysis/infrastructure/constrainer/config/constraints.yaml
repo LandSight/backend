@@ -11,6 +11,15 @@
 #             only rule out the covered part of the plot
 # min_share above 0 absorbs OSM digitizing error at shared boundaries.
 #
+# Penalties multiply: their order does not matter, the score never goes below
+# 0, and only a prohibition reaches 0 (two 50% penalties leave 25%). Each kind
+# is counted on its own, so zones of different kinds lying on the same part of
+# the plot (e.g. a power line zone over a shore strip) are penalised twice.
+# This overstates the penalty slightly and is deliberately conservative: the
+# score errs low, never high. Counting shared area once would need effect
+# groups (building, fencing, ploughing, ...) mapped many-to-many to restriction
+# kinds, with the covered area merged within each group.
+#
 # Profiles are keyed by analysis type; every restriction kind must have a rule.
 profiles:
   izhs:
