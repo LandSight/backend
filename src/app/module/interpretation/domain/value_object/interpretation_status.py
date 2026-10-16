@@ -16,12 +16,15 @@ class InterpretationStatus(StrEnum):
         The report is generated and stored.
     ``FAILED``
         Generation failed; the report can be regenerated manually.
+    ``CANCELLED``
+        The user cancelled the generation; the report can be regenerated.
     """
 
     ORDERED = "ordered"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 __all__ = ("InterpretationStatus",)

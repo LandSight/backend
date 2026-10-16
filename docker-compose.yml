@@ -118,7 +118,8 @@ services:
       --port 8081
       --model /models/gemma-4-E4B-it-Q4_K_M.gguf
       --alias gemma-4-e4b-it
-      --ctx-size 4096
+      --ctx-size 8192
+      --parallel 2
       --n-gpu-layers 99
     deploy:
       resources:
@@ -151,9 +152,11 @@ services:
       llama-server:
         condition: service_healthy
 
-  worker:
+  # Analyses and interpretation reports run on separate queues, so a long LLM
+  # report never blocks an analysis; both workers also relay the outbox.
+  worker-analysis:
     <<: *backend
-    container_name: landsight-worker
+    container_name: landsight-worker-analysis
     command:
       - uv
       - run
@@ -162,13 +165,36 @@ services:
       - app.worker.celery_app:celery_app
       - worker
       - --loglevel=INFO
-      - --concurrency=${CELERY_CONCURRENCY:-1}
+      - --hostname=analysis@%h
+      - --queues=analysis,default
+      - --concurrency=${ANALYSIS_WORKER_CONCURRENCY:-2}
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
       minio:
+        condition: service_healthy
+
+  # Concurrency must match the llama-server --parallel slots.
+  worker-interpretation:
+    <<: *backend
+    container_name: landsight-worker-interpretation
+    command:
+      - uv
+      - run
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --hostname=interpretation@%h
+      - --queues=interpretation,default
+      - --concurrency=${INTERPRETATION_WORKER_CONCURRENCY:-2}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
         condition: service_healthy
       llama-server:
         condition: service_healthy

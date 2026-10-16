@@ -3,7 +3,9 @@
 Generates the report text aspect by aspect, then the combined summary and the
 explanation of the restriction zones: a draft is verified by the grader
 and, on rejection, regenerated once with the grader's remarks; any failure
-degrades to safe fallback text so a report is always produced.
+degrades to safe fallback text so a report is always produced. The progress is
+reported after every text and checked before every regeneration, which is
+where a cancelled attempt stops.
 """
 
 from __future__ import annotations
@@ -26,11 +28,30 @@ from app.platform.logging import get_logger
 if TYPE_CHECKING:
     from uuid import UUID
 
+    from app.module.interpretation.application.port import GenerationProgress
     from app.module.interpretation.domain.service import AspectExtractor, ConstraintExtractor, TopAspectSelector
     from app.module.interpretation.domain.value_object import Aspect, EvaluationBreakdown, Prompt
     from app.module.interpretation.infrastructure.llm.grader import LlmGrader
     from app.module.interpretation.infrastructure.llm.llm_client import LLMClient
     from app.module.interpretation.infrastructure.llm.prompt_builder import LlmPromptBuilder
+
+
+class _Steps:
+    """Counts the generated texts of one report and reports them."""
+
+    def __init__(self, progress: GenerationProgress, total: int) -> None:
+        self._progress = progress
+        self._total = total
+        self._done = 0
+
+    async def check(self) -> None:
+        """Report the current progress; raises when the attempt was cancelled."""
+        await self._progress.report(self._done, self._total)
+
+    async def advance(self) -> None:
+        """Count one more generated text and report it."""
+        self._done += 1
+        await self.check()
 
 
 class LlmInterpreter(Interpreter):
@@ -61,14 +82,32 @@ class LlmInterpreter(Interpreter):
         self._logger = get_logger("app.interpretation.interpreter")
 
     @override
-    async def explain(self, analysis_id: UUID, breakdown: EvaluationBreakdown) -> Interpretation:
+    async def explain(
+        self,
+        analysis_id: UUID,
+        breakdown: EvaluationBreakdown,
+        progress: GenerationProgress,
+    ) -> Interpretation:
         """See :class:`app.module.interpretation.application.port.Interpreter.explain`."""
         self._logger.info("Interpreting evaluation: analysis_id=%s scenario=%s", analysis_id, breakdown.scenario)
 
-        explanations = {aspect.key: await self._explain(aspect) for aspect in breakdown.aspects}
+        # One text per aspect, the summary and, when a zone applied, the
+        # restrictions explanation.
+        has_constraints = bool(self._constraint_extractor.top_constraints(breakdown))
+        steps = _Steps(progress, len(breakdown.aspects) + 1 + int(has_constraints))
+        await steps.check()
+
+        explanations: dict[str, str] = {}
+        for aspect in breakdown.aspects:
+            explanations[aspect.key] = await self._explain(aspect, steps)
+            await steps.advance()
         top_aspects = self._top_aspect_selector.top_aspects(breakdown.aspects)
-        summary = await self._summarize(breakdown, top_aspects, explanations)
-        constraints_explanation = await self._explain_constraints(breakdown)
+        summary = await self._summarize(breakdown, top_aspects, explanations, steps)
+        await steps.advance()
+        constraints_explanation = ""
+        if has_constraints:
+            constraints_explanation = await self._explain_constraints(breakdown, steps)
+            await steps.advance()
         return Interpretation(
             id=InterpretationId(uuid6()),
             analysis_id=analysis_id,
@@ -78,7 +117,7 @@ class LlmInterpreter(Interpreter):
             constraints_explanation=constraints_explanation,
         )
 
-    async def _explain(self, aspect: Aspect) -> str:
+    async def _explain(self, aspect: Aspect, steps: _Steps) -> str:
         """Generate one aspect explanation, falling back to a safe text."""
         metrics = self._aspect_extractor.top_metrics(aspect)
         fallback = self.aspect_fallback(aspect.name or aspect.key)
@@ -86,29 +125,28 @@ class LlmInterpreter(Interpreter):
             return fallback
 
         facts = self._prompt_builder.aspect_facts(aspect, metrics)
-        return await self._generate(self._prompt_builder.aspect_prompt(aspect, metrics), facts, fallback)
+        return await self._generate(self._prompt_builder.aspect_prompt(aspect, metrics), facts, fallback, steps)
 
     async def _summarize(
         self,
         breakdown: EvaluationBreakdown,
         top_aspects: tuple[Aspect, ...],
         explanations: dict[str, str],
+        steps: _Steps,
     ) -> str:
         """Generate the combined top-aspects summary."""
         facts = self._prompt_builder.summary_facts(breakdown, top_aspects, explanations)
         prompt = self._prompt_builder.summary_prompt(breakdown, top_aspects, explanations)
-        return await self._generate(prompt, facts, self.summary_fallback(breakdown))
+        return await self._generate(prompt, facts, self.summary_fallback(breakdown), steps)
 
-    async def _explain_constraints(self, breakdown: EvaluationBreakdown) -> str:
-        """Generate the restrictions explanation; empty when no zone applied."""
+    async def _explain_constraints(self, breakdown: EvaluationBreakdown, steps: _Steps) -> str:
+        """Generate the restrictions explanation of the most significant zones."""
         constraints = self._constraint_extractor.top_constraints(breakdown)
-        if not constraints:
-            return ""
         facts = self._prompt_builder.constraints_facts(breakdown, constraints)
         prompt = self._prompt_builder.constraints_prompt(breakdown, constraints)
-        return await self._generate(prompt, facts, self.constraints_fallback(breakdown))
+        return await self._generate(prompt, facts, self.constraints_fallback(breakdown), steps)
 
-    async def _generate(self, prompt: Prompt, facts: str, fallback: str) -> str:
+    async def _generate(self, prompt: Prompt, facts: str, fallback: str, steps: _Steps) -> str:
         """Generate one text and verify it, regenerating once with the grader's remarks.
 
         The grader only reviews; the text is always written by the generator.
@@ -123,6 +161,9 @@ class LlmInterpreter(Interpreter):
         if verdict.ok:
             return draft
 
+        # The retry costs two more model calls: do not spend them on a
+        # cancelled report.
+        await steps.check()
         retry = await self._complete(self._prompt_builder.retry_prompt(prompt, draft, verdict.issues))
         if retry is None:
             return draft

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID  # noqa: TC003
 
-from sqlalchemy import ForeignKey, Index, String, Text
+from sqlalchemy import ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -37,7 +37,26 @@ class InterpretationModel(TimestampedModel):
         String(16),
         nullable=False,
         server_default="completed",
-        comment="Report generation status: ordered/running/completed/failed",
+        comment="Report generation status: ordered/running/completed/failed/cancelled",
+    )
+    attempt_id: Mapped[UUID | None] = mapped_column(
+        nullable=True,
+        default=None,
+        comment="Generation attempt that owns the running report",
+    )
+    progress_done: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="Texts generated so far by the running attempt",
+    )
+    progress_total: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="Texts the running attempt has to generate",
     )
     constraints_explanation: Mapped[str] = mapped_column(
         Text,

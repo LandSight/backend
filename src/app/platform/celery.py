@@ -18,6 +18,13 @@ if TYPE_CHECKING:
     from app.platform.config.models import RedisConfig
 
 
+# Queue of the tasks sent without an explicit queue, notably the outbox relay.
+# Every worker consumes it next to its own queue (``analysis`` or
+# ``interpretation``, chosen by the module that enqueues the task), so the relay
+# keeps running while all the workers of one kind are busy.
+DEFAULT_QUEUE = "default"
+
+
 def create_celery_app(redis_config: RedisConfig) -> Celery:
     """Create a Celery application configured from Redis settings.
 
@@ -55,6 +62,7 @@ def create_celery_app(redis_config: RedisConfig) -> Celery:
     # Fetch one message at a time per worker process. Prevents one worker from
     # hoarding a backlog of relay tasks while a report task waits behind them.
     app.conf.worker_prefetch_multiplier = 1
+    app.conf.task_default_queue = DEFAULT_QUEUE
     # Relay the transactional outbox. Runs on the Celery beat process alongside
     # the worker, so pending events are dispatched even if the producer crashed
     # after committing the state change.
@@ -67,4 +75,4 @@ def create_celery_app(redis_config: RedisConfig) -> Celery:
     return app
 
 
-__all__ = ("create_celery_app",)
+__all__ = ("DEFAULT_QUEUE", "create_celery_app")

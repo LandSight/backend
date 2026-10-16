@@ -18,6 +18,7 @@ from app.interface.http.schema.interpretation import (
 from app.interface.http.util.guards import require_authorization
 from app.module.interpretation.interface.internal.dto import (
     AspectInterpretationResult,
+    CancelInterpretationInput,
     GenerateInterpretationInput,
     GetInterpretationInput,
     InterpretationResult,
@@ -72,6 +73,27 @@ class InterpretationController(Controller):
         )
         return self._to_schema(result)
 
+    @post(
+        "/{analysis_id:uuid}/interpretation/cancel",
+        status_code=HTTP_200_OK,
+        description="Cancel the generation of the interpretation report of an analysis.",
+    )
+    async def cancel_interpretation(
+        self,
+        analysis_id: UUID,
+        current_user: CurrentUser,
+        interpretation_api: InterpretationInternalAPI,
+    ) -> InterpretationResultSchema:
+        """Cancel an ordered or running report.
+
+        The report is marked ``cancelled`` at once; the worker stops at its next
+        step and discards its result. A finished report is returned as is.
+        """
+        result = await interpretation_api.cancel_interpretation(
+            CancelInterpretationInput(analysis_id=analysis_id, current_user_id=current_user.id),
+        )
+        return self._to_schema(result)
+
     @classmethod
     def _to_schema(cls, result: InterpretationResult) -> InterpretationResultSchema:
         """Map an internal result DTO to the HTTP schema."""
@@ -80,6 +102,8 @@ class InterpretationController(Controller):
             scale_max=result.scale_max,
             scenario=result.scenario,
             status=result.status,
+            progress_done=result.progress_done,
+            progress_total=result.progress_total,
             aspects=[cls._to_aspect_schema(aspect) for aspect in result.aspects],
             top_aspects_summary=result.top_aspects_summary,
             verdict=result.verdict.value if result.verdict else None,

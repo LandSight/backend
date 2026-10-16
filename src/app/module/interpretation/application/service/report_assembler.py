@@ -58,6 +58,8 @@ class ReportAssembler:
             scale_max=breakdown.scale_max,
             scenario=breakdown.scenario,
             status=interpretation.status,
+            progress_done=interpretation.progress_done,
+            progress_total=interpretation.progress_total,
             aspects=aspects,
             top_aspects_summary=interpretation.summary,
             verdict=breakdown.verdict,

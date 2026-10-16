@@ -43,6 +43,15 @@ class Interpretation(BaseEntity[InterpretationId]):
     constraints_explanation : str
         Explanation of the restriction zones that barred the scenario or
         lowered the score; empty when no zone applied.
+    attempt_id : UUID | None
+        Generation attempt that owns the report while it is running. A worker
+        writes its progress and the result only while the report still carries
+        its attempt, so a cancelled, regenerated or deleted report is never
+        overwritten by a stale worker.
+    progress_done : int
+        Texts generated so far by the running attempt.
+    progress_total : int
+        Texts the running attempt has to generate; ``0`` until it is known.
     created_at : datetime.datetime | None
         When the report was stored (UTC); ``None`` if not yet persisted.
     updated_at : datetime.datetime | None
@@ -59,6 +68,9 @@ class Interpretation(BaseEntity[InterpretationId]):
         explanations: tuple[AspectExplanation, ...] = (),
         constraints_explanation: str = "",
         status: InterpretationStatus = InterpretationStatus.COMPLETED,
+        attempt_id: UUID | None = None,
+        progress_done: int = 0,
+        progress_total: int = 0,
         created_at: datetime.datetime | None = None,
         updated_at: datetime.datetime | None = None,
     ) -> None:
@@ -68,6 +80,9 @@ class Interpretation(BaseEntity[InterpretationId]):
         self._explanations: tuple[AspectExplanation, ...] = explanations
         self._constraints_explanation: str = constraints_explanation
         self._status: InterpretationStatus = status
+        self._attempt_id: UUID | None = attempt_id
+        self._progress_done: int = progress_done
+        self._progress_total: int = progress_total
         self._created_at: datetime.datetime | None = created_at
         self._updated_at: datetime.datetime | None = updated_at
 
@@ -84,12 +99,18 @@ class Interpretation(BaseEntity[InterpretationId]):
             if not self._summary:
                 message = "A completed interpretation must carry a summary."
                 raise InvariantViolationError(message)
+        if not 0 <= self._progress_done <= max(self._progress_total, 0):
+            message = f"Interpretation progress must be within [0, {self._progress_total}], got {self._progress_done}."
+            raise InvariantViolationError(message)
 
-    def mark_running(self) -> None:
-        """Transition the report to ``RUNNING``."""
+    def mark_running(self, attempt_id: UUID) -> None:
+        """Transition the report to ``RUNNING`` under a new generation attempt."""
         if self._status is not InterpretationStatus.ORDERED:
             self._raise_invalid_transition(InterpretationStatus.ORDERED)
         self._status = InterpretationStatus.RUNNING
+        self._attempt_id = attempt_id
+        self._progress_done = 0
+        self._progress_total = 0
 
     def complete(self) -> None:
         """Transition the report to ``COMPLETED``.
@@ -107,6 +128,19 @@ class Interpretation(BaseEntity[InterpretationId]):
             self._raise_invalid_transition(InterpretationStatus.RUNNING)
         self._status = InterpretationStatus.FAILED
 
+    def cancel(self) -> bool:
+        """Cancel an ordered or running report; return whether it was cancelled.
+
+        A finished report (completed, failed or already cancelled) is left as
+        is, so cancelling is idempotent. Dropping the attempt makes the running
+        worker stop at its next step.
+        """
+        if self._status not in {InterpretationStatus.ORDERED, InterpretationStatus.RUNNING}:
+            return False
+        self._status = InterpretationStatus.CANCELLED
+        self._attempt_id = None
+        return True
+
     def reset_to_ordered(self) -> None:
         """Reset a stored report for regeneration: clear the text, mark ordered."""
         self._status = InterpretationStatus.ORDERED
@@ -114,6 +148,9 @@ class Interpretation(BaseEntity[InterpretationId]):
         self._summary = ""
         self._explanations = ()
         self._constraints_explanation = ""
+        self._attempt_id = None
+        self._progress_done = 0
+        self._progress_total = 0
 
     def _raise_invalid_transition(self, expected: InterpretationStatus) -> NoReturn:
         message = (
@@ -146,6 +183,21 @@ class Interpretation(BaseEntity[InterpretationId]):
     def constraints_explanation(self) -> str:
         """Explanation of the restriction zones."""
         return self._constraints_explanation
+
+    @property
+    def attempt_id(self) -> UUID | None:
+        """Generation attempt that owns the running report."""
+        return self._attempt_id
+
+    @property
+    def progress_done(self) -> int:
+        """Texts generated so far by the running attempt."""
+        return self._progress_done
+
+    @property
+    def progress_total(self) -> int:
+        """Texts the running attempt has to generate."""
+        return self._progress_total
 
     @property
     def created_at(self) -> datetime.datetime | None:

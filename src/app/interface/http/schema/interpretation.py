@@ -88,7 +88,13 @@ class InterpretationResultSchema(BaseModel):
     scenario: str = Field(description="Evaluation profile (e.g. izhs).")
     status: InterpretationStatus = Field(
         default=InterpretationStatus.COMPLETED,
-        description="Report generation status: ordered/running/completed/failed.",
+        description="Report generation status: ordered/running/completed/failed/cancelled.",
+    )
+    progress_done: int = Field(default=0, ge=0, description="Texts generated so far while the report is running.")
+    progress_total: int = Field(
+        default=0,
+        ge=0,
+        description="Texts the running report has to generate; 0 until the generation starts.",
     )
     aspects: list[AspectInterpretationSchema] = Field(default_factory=list)
     top_aspects_summary: str = Field(description="Combined explanation of the top aspects.")

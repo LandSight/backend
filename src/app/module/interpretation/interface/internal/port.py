@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.interpretation.interface.internal.dto import (
+        CancelInterpretationInput,
         GenerateInterpretationInput,
         GetInterpretationInput,
         InterpretationResult,
@@ -29,6 +30,11 @@ class InterpretationInternalAPI(ABC):
     @abstractmethod
     async def start_interpretation(self, input_data: GenerateInterpretationInput) -> InterpretationResult:
         """Start generation of an interpretation report of an analysis."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def cancel_interpretation(self, input_data: CancelInterpretationInput) -> InterpretationResult:
+        """Cancel the generation of an interpretation report of an analysis."""
         raise NotImplementedError
 
 

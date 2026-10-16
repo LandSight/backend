@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.analysis.interface.internal.port import AnalysisInternalAPI
 from app.module.interpretation.application.service import ReportAssembler
 from app.module.interpretation.application.use_case import (
+    CancelInterpretationUseCase,
     GenerateInterpretationUseCase,
     GetInterpretationUseCase,
     StartInterpretationUseCase,
@@ -42,6 +43,7 @@ from app.platform.config.loaders import load_llm_config
 GENERATE_INTERPRETATION_USE_CASE_KEY = "generate_interpretation_use_case"
 GET_INTERPRETATION_USE_CASE_KEY = "get_interpretation_use_case"
 START_INTERPRETATION_USE_CASE_KEY = "start_interpretation_use_case"
+CANCEL_INTERPRETATION_USE_CASE_KEY = "cancel_interpretation_use_case"
 
 
 # ----- Domain services -----
@@ -173,12 +175,24 @@ def provide_start_interpretation_use_case(
     )
 
 
+def provide_cancel_interpretation_use_case(
+    interpretation_repository: NamedDependency[PostgresInterpretationRepository],
+    analysis_evaluation_reader: NamedDependency[AnalysisServiceImpl],
+) -> CancelInterpretationUseCase:
+    return CancelInterpretationUseCase(interpretation_repository, analysis_evaluation_reader)
+
+
 # ----- Internal API -----
 def provide_interpretation_internal(
     get_interpretation_use_case: NamedDependency[GetInterpretationUseCase],
     start_interpretation_use_case: NamedDependency[StartInterpretationUseCase],
+    cancel_interpretation_use_case: NamedDependency[CancelInterpretationUseCase],
 ) -> InterpretationInternal:
-    return InterpretationInternal(get_interpretation_use_case, start_interpretation_use_case)
+    return InterpretationInternal(
+        get_interpretation_use_case,
+        start_interpretation_use_case,
+        cancel_interpretation_use_case,
+    )
 
 
 interpretation_dependencies = {
@@ -197,6 +211,10 @@ interpretation_dependencies = {
     GET_INTERPRETATION_USE_CASE_KEY: Provide(provide_get_interpretation_use_case, sync_to_thread=False),
     START_INTERPRETATION_USE_CASE_KEY: Provide(
         provide_start_interpretation_use_case,
+        sync_to_thread=False,
+    ),
+    CANCEL_INTERPRETATION_USE_CASE_KEY: Provide(
+        provide_cancel_interpretation_use_case,
         sync_to_thread=False,
     ),
     "interpretation_api": Provide(provide_interpretation_internal, sync_to_thread=False),
@@ -219,6 +237,7 @@ interpretation_worker_dependencies = {
 
 
 __all__ = (
+    "CANCEL_INTERPRETATION_USE_CASE_KEY",
     "GENERATE_INTERPRETATION_USE_CASE_KEY",
     "GET_INTERPRETATION_USE_CASE_KEY",
     "START_INTERPRETATION_USE_CASE_KEY",

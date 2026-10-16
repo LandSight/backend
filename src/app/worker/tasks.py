@@ -1,9 +1,10 @@
 """Celery tasks for the analysis pipeline.
 
 An analysis is processed end to end by a single task: it collects the metrics
-for every module and then scores the analysis. This keeps the pipeline of one
-analysis together, so with a single worker an earlier analysis finishes before
-the next one starts.
+for every module and then scores the analysis, so the pipeline of one analysis
+stays together. Analyses and interpretation reports run on separate queues and
+workers (``just worker-analysis`` and ``just worker-interpretation``); the
+outbox relay runs on the default queue that both kinds of workers consume.
 """
 
 from __future__ import annotations

@@ -32,6 +32,14 @@ class GenerateInterpretationInput:
 
 
 @dataclass(frozen=True, slots=True)
+class CancelInterpretationInput:
+    """Input for cancelling the generation of an interpretation report."""
+
+    analysis_id: UUID
+    current_user_id: UUID
+
+
+@dataclass(frozen=True, slots=True)
 class MetricInfoResult:
     """One metric selected for an aspect explanation."""
 
@@ -88,6 +96,8 @@ class InterpretationResult:
     scale_max: float
     scenario: str
     status: InterpretationStatus = InterpretationStatus.COMPLETED
+    progress_done: int = 0
+    progress_total: int = 0
     aspects: tuple[AspectInterpretationResult, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
     verdict: SuitabilityVerdict | None = None
@@ -99,6 +109,7 @@ class InterpretationResult:
 
 __all__ = (
     "AspectInterpretationResult",
+    "CancelInterpretationInput",
     "ConstraintInterpretationResult",
     "GenerateInterpretationInput",
     "GetInterpretationInput",

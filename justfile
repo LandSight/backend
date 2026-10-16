@@ -12,7 +12,8 @@ DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env("DOCS_PORT", "8008")
 
 COMPOSE_CMD := env("COMPOSE_CMD", "docker compose")
-CELERY_CONCURRENCY := env("CELERY_CONCURRENCY", "1")
+ANALYSIS_WORKER_CONCURRENCY := env("ANALYSIS_WORKER_CONCURRENCY", "2")
+INTERPRETATION_WORKER_CONCURRENCY := env("INTERPRETATION_WORKER_CONCURRENCY", "2")
 
 
 default:
@@ -82,7 +83,7 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker, beat)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery workers, beat)
 up:
     @{{ COMPOSE_CMD }} up --detach --wait --build
 
@@ -152,11 +153,22 @@ app-serve:
         --reload-paths="{{ SRC_DIR }}" \
         app.interface.http.asgi:create_asgi_application
 
-# Run the Celery worker that processes analyses
-worker:
+# Run the analysis workers (analysis pipeline + outbox relay)
+worker-analysis:
     @uv run celery -A app.worker.celery_app:celery_app worker \
         --loglevel="INFO" \
-        --concurrency="{{ CELERY_CONCURRENCY }}"
+        --hostname="analysis@%h" \
+        --queues="analysis,default" \
+        --concurrency="{{ ANALYSIS_WORKER_CONCURRENCY }}"
+
+# Keep INTERPRETATION_WORKER_CONCURRENCY equal to the llama-server --parallel slots.
+# Run the interpretation workers (LLM reports + outbox relay)
+worker-interpretation:
+    @uv run celery -A app.worker.celery_app:celery_app worker \
+        --loglevel="INFO" \
+        --hostname="interpretation@%h" \
+        --queues="interpretation,default" \
+        --concurrency="{{ INTERPRETATION_WORKER_CONCURRENCY }}"
 
 # Run the Celery beat scheduler that relays the transactional outbox
 beat:

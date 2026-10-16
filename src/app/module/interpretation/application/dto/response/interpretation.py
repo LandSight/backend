@@ -57,6 +57,8 @@ class InterpretationResultResponse:
     scale_max: float = 0.0
     scenario: str = ""
     status: InterpretationStatus = InterpretationStatus.COMPLETED
+    progress_done: int = 0
+    progress_total: int = 0
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
     verdict: SuitabilityVerdict | None = None

@@ -9,11 +9,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.interpretation.application.dto.command import (
+    CancelInterpretationCommand,
     GenerateInterpretationCommand,
     GetInterpretationCommand,
 )
 from app.module.interpretation.interface.internal.dto import (
     AspectInterpretationResult,
+    CancelInterpretationInput,
     ConstraintInterpretationResult,
     GenerateInterpretationInput,
     GetInterpretationInput,
@@ -29,6 +31,7 @@ if TYPE_CHECKING:
         InterpretationResultResponse,
     )
     from app.module.interpretation.application.use_case import (
+        CancelInterpretationUseCase,
         GetInterpretationUseCase,
         StartInterpretationUseCase,
     )
@@ -42,9 +45,11 @@ class InterpretationInternal(InterpretationInternalAPI):
         self,
         get_interpretation_use_case: GetInterpretationUseCase,
         start_interpretation_use_case: StartInterpretationUseCase,
+        cancel_interpretation_use_case: CancelInterpretationUseCase,
     ) -> None:
         self._get_interpretation = get_interpretation_use_case
         self._start_interpretation = start_interpretation_use_case
+        self._cancel_interpretation = cancel_interpretation_use_case
 
     @override
     async def get_interpretation(self, input_data: GetInterpretationInput) -> InterpretationResult:
@@ -68,6 +73,17 @@ class InterpretationInternal(InterpretationInternalAPI):
         )
         return self._to_result(result)
 
+    @override
+    async def cancel_interpretation(self, input_data: CancelInterpretationInput) -> InterpretationResult:
+        """See :meth:`InterpretationInternalAPI.cancel_interpretation`."""
+        result = await self._cancel_interpretation(
+            CancelInterpretationCommand(
+                analysis_id=input_data.analysis_id,
+                current_user_id=input_data.current_user_id,
+            )
+        )
+        return self._to_result(result)
+
     @classmethod
     def _to_result(cls, result: InterpretationResultResponse) -> InterpretationResult:
         """Map an application response DTO to an internal result DTO."""
@@ -76,6 +92,8 @@ class InterpretationInternal(InterpretationInternalAPI):
             scale_max=result.scale_max,
             scenario=result.scenario,
             status=result.status,
+            progress_done=result.progress_done,
+            progress_total=result.progress_total,
             aspects=tuple(cls._to_aspect(aspect) for aspect in result.aspects),
             top_aspects_summary=result.top_aspects_summary,
             verdict=result.verdict,
