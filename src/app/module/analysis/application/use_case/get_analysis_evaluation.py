@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING, override
 from app.module.analysis.application.dto.command import GetAnalysisEvaluationCommand
 from app.module.analysis.application.dto.response import (
     AnalysisEvaluationResponse,
+    AppliedConstraintResponse,
     ClusterScoreResponse,
+    ConstraintExtensionResponse,
     EvaluationMetadataResponse,
     HierarchicalExtensionResponse,
     MetricContributionResponse,
@@ -98,6 +100,22 @@ class GetAnalysisEvaluationUseCase(
             extensions={
                 "hierarchical": HierarchicalExtensionResponse(
                     clusters=tuple(self._to_cluster(cluster) for cluster in evaluation.clusters),
+                ),
+                "constraint": ConstraintExtensionResponse(
+                    base_score=evaluation.base_score.unwrap(),
+                    prohibited=evaluation.prohibited,
+                    applied_constraints=tuple(
+                        AppliedConstraintResponse(
+                            kind=constraint.kind,
+                            effect=constraint.effect.value,
+                            factor=constraint.factor,
+                            overlap_share=constraint.overlap_share.unwrap(),
+                            overlap_area_m2=constraint.overlap_area.unwrap(),
+                            zone_names=constraint.zone_names,
+                            legal_basis=constraint.legal_basis,
+                        )
+                        for constraint in evaluation.applied_constraints
+                    ),
                 ),
             },
             scenario_description=self._profile_provider.description(evaluation.analysis_type),

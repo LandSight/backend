@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class CheckRestrictionsInput:
-    """Input for checking which restriction zones overlap a parcel."""
+class CalculateCheckInput:
+    """Input for calculating the restriction check of a parcel."""
 
     parcel_id: UUID
     current_user_id: UUID
@@ -75,7 +75,7 @@ class RestrictionCheckResult:
 
 
 __all__ = (
-    "CheckRestrictionsInput",
+    "CalculateCheckInput",
     "DeleteChecksInput",
     "GetCheckInput",
     "RestrictionCheckResult",

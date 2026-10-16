@@ -103,16 +103,53 @@ class RuleBasedExtensionResponse:
 
 
 @dataclass(frozen=True, slots=True)
-class ConstraintExtensionResponse:
-    """Constraint-based extension of an evaluation.
+class AppliedConstraintResponse:
+    """A restriction zone that changed the score.
 
     Attributes
     ----------
-    applied_constraints : tuple[Mapping[str, object], ...]
-        Constraints that were applied, in application order.
+    kind : str
+        Restriction zone kind (e.g. ``power_line_zone``).
+    effect : str
+        ``prohibit`` or ``penalty``.
+    factor : float
+        Multiplier applied to the score.
+    overlap_share : float
+        Share of the parcel inside the zone, in ``[0, 1]``.
+    overlap_area_m2 : float
+        Area of the parcel inside the zone, in square meters.
+    zone_names : tuple[str, ...]
+        Names of the source objects, when known.
+    legal_basis : str
+        Short reference to the rule that defines the zone.
     """
 
-    applied_constraints: tuple[Mapping[str, object], ...] = field(default_factory=tuple)
+    kind: str
+    effect: str
+    factor: float
+    overlap_share: float
+    overlap_area_m2: float
+    zone_names: tuple[str, ...] = field(default_factory=tuple)
+    legal_basis: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class ConstraintExtensionResponse:
+    """Constraint extension of an evaluation.
+
+    Attributes
+    ----------
+    base_score : float
+        Score of the multi-criteria breakdown before the constraints.
+    prohibited : bool
+        Whether a constraint bars the scenario on the parcel.
+    applied_constraints : tuple[AppliedConstraintResponse, ...]
+        Constraints that changed the score, prohibitions first.
+    """
+
+    base_score: float
+    prohibited: bool = False
+    applied_constraints: tuple[AppliedConstraintResponse, ...] = field(default_factory=tuple)
 
 
 type EvaluationExtensionResponse = (
@@ -172,6 +209,7 @@ class AnalysisEvaluationResponse:
 
 __all__ = (
     "AnalysisEvaluationResponse",
+    "AppliedConstraintResponse",
     "ClusterScoreResponse",
     "ConstraintExtensionResponse",
     "EvaluationExtensionResponse",

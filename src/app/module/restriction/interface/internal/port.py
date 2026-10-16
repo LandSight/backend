@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.module.restriction.interface.internal.dto import (
-        CheckRestrictionsInput,
+        CalculateCheckInput,
         DeleteChecksInput,
         GetCheckInput,
         RestrictionCheckResult,
@@ -23,8 +23,8 @@ class RestrictionInternalAPI(ABC):
     """
 
     @abstractmethod
-    async def check_restrictions(self, input_data: CheckRestrictionsInput) -> RestrictionCheckResult:
-        """Check which restriction zones overlap a parcel and store the snapshot."""
+    async def calculate_check(self, input_data: CalculateCheckInput) -> RestrictionCheckResult:
+        """Calculate the restriction check of a parcel and store the snapshot."""
         raise NotImplementedError
 
     @abstractmethod

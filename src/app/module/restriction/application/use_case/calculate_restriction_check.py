@@ -1,11 +1,11 @@
-"""Check parcel restrictions use case."""
+"""Calculate restriction check use case."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
-from app.module.restriction.application.dto.command import CheckParcelRestrictionsCommand
+from app.module.restriction.application.dto.command import CalculateRestrictionCheckCommand
 from app.module.restriction.application.dto.response import RestrictionCheckResponse
 from app.module.restriction.application.error import RestrictionZonesNotLoadedError
 from app.module.restriction.application.use_case._mapping import to_check_response
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from app.module.restriction.application.port import CheckRepository, ParcelProvider, ZoneRepository
 
 
-class CheckParcelRestrictionsUseCase(BaseUseCase[CheckParcelRestrictionsCommand, RestrictionCheckResponse]):
+class CalculateRestrictionCheckUseCase(BaseUseCase[CalculateRestrictionCheckCommand, RestrictionCheckResponse]):
     """Find the restriction zones that overlap a parcel and store the result.
 
     Fetches the authoritative parcel geometry from the Parcel module (which
@@ -38,10 +38,10 @@ class CheckParcelRestrictionsUseCase(BaseUseCase[CheckParcelRestrictionsCommand,
         self._zone_repository = zone_repository
         self._check_repository = check_repository
         self._parcel_provider = parcel_provider
-        self._logger = get_logger("app.restriction.use_case.check_parcel_restrictions")
+        self._logger = get_logger("app.restriction.use_case.calculate_restriction_check")
 
     @override
-    async def __call__(self, command: CheckParcelRestrictionsCommand) -> RestrictionCheckResponse:
+    async def __call__(self, command: CalculateRestrictionCheckCommand) -> RestrictionCheckResponse:
         self._logger.info("Checking parcel restrictions: parcel_id=%s", command.parcel_id)
 
         # The Parcel module returns the geometry only for authorized users,
@@ -71,4 +71,4 @@ class CheckParcelRestrictionsUseCase(BaseUseCase[CheckParcelRestrictionsCommand,
         return to_check_response(persisted)
 
 
-__all__ = ("CheckParcelRestrictionsUseCase",)
+__all__ = ("CalculateRestrictionCheckUseCase",)

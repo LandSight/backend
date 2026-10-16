@@ -32,6 +32,11 @@ class AnalysisStatusReason(BaseValueObject[str]):
         return cls(f"Failed to collect {metric_type.value} data for the parcel. Please try again later.")
 
     @classmethod
+    def restrictions_check_failed(cls) -> AnalysisStatusReason:
+        """Reason for a failure while checking the restrictions on the parcel."""
+        return cls("Failed to check the land-use restrictions of the parcel. Please try again later.")
+
+    @classmethod
     def scoring_failed(cls) -> AnalysisStatusReason:
         """Reason for a failure while scoring the analysis."""
         return cls("Failed to calculate the analysis score. Please try again later.")

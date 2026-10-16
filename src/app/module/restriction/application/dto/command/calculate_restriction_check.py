@@ -1,4 +1,4 @@
-"""Check parcel restrictions command."""
+"""Calculate restriction check command."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True, slots=True)
-class CheckParcelRestrictionsCommand:
-    """Command for checking which restriction zones overlap a parcel.
+class CalculateRestrictionCheckCommand:
+    """Command for calculating the restriction check of a parcel.
 
     Attributes
     ----------
@@ -26,4 +26,4 @@ class CheckParcelRestrictionsCommand:
     current_user_id: UUID
 
 
-__all__ = ("CheckParcelRestrictionsCommand",)
+__all__ = ("CalculateRestrictionCheckCommand",)

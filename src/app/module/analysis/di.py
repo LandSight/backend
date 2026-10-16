@@ -16,9 +16,11 @@ from app.module.analysis.application.port import (
     InterpretationService,
     MetricsService,
     ParcelsService,
+    RestrictionService,
 )
 from app.module.analysis.application.use_case import (
     CollectMetricsUseCase,
+    CollectRestrictionsUseCase,
     DeleteAnalysisUseCase,
     GetAnalysisEvaluationUseCase,
     GetAnalysisMetricsUseCase,
@@ -32,6 +34,7 @@ from app.module.analysis.infrastructure.gateway import (
     InterpretationServiceImpl,
     MetricsServiceImpl,
     ParcelsServiceImpl,
+    RestrictionServiceImpl,
 )
 from app.module.analysis.infrastructure.permission import AnalysisPermissionServiceImpl
 from app.module.analysis.infrastructure.provider import AnalysisProfileProviderImpl, EngineProviderImpl
@@ -44,11 +47,13 @@ from app.module.climate.interface.internal.port import ClimateInternalAPI
 from app.module.infrastructure.interface.internal.port import InfrastructureInternalAPI
 from app.module.interpretation.interface.internal.port import InterpretationInternalAPI
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
+from app.module.restriction.interface.internal.port import RestrictionInternalAPI
 from app.module.shared.application.port import EventPublisher, UnitOfWork
 from app.module.topography.interface.internal.port import TopographyInternalAPI
 
 
 COLLECT_METRICS_USE_CASE_KEY = "collect_metrics_use_case"
+COLLECT_RESTRICTIONS_USE_CASE_KEY = "collect_restrictions_use_case"
 SCORE_ANALYSIS_USE_CASE_KEY = "score_analysis_use_case"
 
 
@@ -167,6 +172,20 @@ def provide_metrics_service(
     return MetricsServiceImpl(topography_api, climate_api, infrastructure_api)
 
 
+def provide_restriction_service(
+    restriction_api: NamedDependency[RestrictionInternalAPI],
+) -> RestrictionServiceImpl:
+    return RestrictionServiceImpl(restriction_api)
+
+
+def provide_collect_restrictions_use_case(
+    analysis_repository: NamedDependency[PostgresAnalysisRepository],
+    restriction_service: NamedDependency[RestrictionService],
+    unit_of_work: NamedDependency[UnitOfWork],
+) -> CollectRestrictionsUseCase:
+    return CollectRestrictionsUseCase(analysis_repository, restriction_service, unit_of_work)
+
+
 def provide_analysis_profiles() -> AnalysisProfileProviderImpl:
     return AnalysisProfileProviderImpl(load_analysis_profiles())
 
@@ -197,6 +216,7 @@ def provide_score_analysis_use_case(
     analysis_scorer: NamedDependency[AnalysisScorer],
     unit_of_work: NamedDependency[UnitOfWork],
     interpretation_service: NamedDependency[InterpretationService],
+    restriction_service: NamedDependency[RestrictionService],
 ) -> ScoreAnalysisUseCase:
     return ScoreAnalysisUseCase(
         analysis_repository,
@@ -204,6 +224,7 @@ def provide_score_analysis_use_case(
         analysis_scorer,
         unit_of_work,
         interpretation_service,
+        restriction_service,
     )
 
 
@@ -212,6 +233,7 @@ analysis_dependencies = {
     "analysis_permission_service": Provide(provide_analysis_permission_service, sync_to_thread=False),
     "parcels_service": Provide(provide_parcels_service, sync_to_thread=False),
     "metrics_service": Provide(provide_metrics_service, sync_to_thread=False),
+    "restriction_service": Provide(provide_restriction_service, sync_to_thread=False),
     "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
     "engine_provider": Provide(provide_engine_provider, use_cache=True, sync_to_thread=False),
     "analysis_profiles": Provide(provide_analysis_profiles, use_cache=True, sync_to_thread=False),
@@ -228,11 +250,13 @@ analysis_dependencies = {
 analysis_worker_dependencies = {
     "interpretation_service": Provide(provide_interpretation_service, sync_to_thread=False),
     COLLECT_METRICS_USE_CASE_KEY: Provide(provide_collect_metrics_use_case, sync_to_thread=False),
+    COLLECT_RESTRICTIONS_USE_CASE_KEY: Provide(provide_collect_restrictions_use_case, sync_to_thread=False),
     SCORE_ANALYSIS_USE_CASE_KEY: Provide(provide_score_analysis_use_case, sync_to_thread=False),
 }
 
 __all__ = (
     "COLLECT_METRICS_USE_CASE_KEY",
+    "COLLECT_RESTRICTIONS_USE_CASE_KEY",
     "SCORE_ANALYSIS_USE_CASE_KEY",
     "analysis_dependencies",
     "analysis_worker_dependencies",

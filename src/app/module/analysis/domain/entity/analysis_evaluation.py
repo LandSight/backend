@@ -10,7 +10,9 @@ from app.module.analysis.domain.value_object import (
     AnalysisId,
     AnalysisScore,
     AnalysisType,
+    AppliedConstraint,
     ClusterScore,
+    ConstraintEffect,
 )
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
@@ -40,9 +42,14 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
     model_version : str
         Version of the hierarchy and normalization configuration used.
     total_score : AnalysisScore
-        Final score in ``[0, 10]``.
+        Final score in ``[0, 10]``, after the constraints.
     clusters : tuple[ClusterScore, ...]
         Per-cluster breakdown.
+    base_score : AnalysisScore
+        Score of the multi-criteria breakdown before the constraints; equals
+        ``total_score`` when none applied.
+    applied_constraints : tuple[AppliedConstraint, ...]
+        Restriction zones that barred the scenario or lowered the score.
     created_at : datetime | None
         When the evaluation was created (UTC); ``None`` if not yet persisted.
     """
@@ -57,6 +64,8 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
         model_version: str,
         total_score: AnalysisScore,
         clusters: tuple[ClusterScore, ...],
+        base_score: AnalysisScore | None = None,
+        applied_constraints: tuple[AppliedConstraint, ...] = (),
         created_at: datetime.datetime | None = None,
     ) -> None:
         self._analysis_id: AnalysisId = analysis_id
@@ -65,6 +74,8 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
         self._model_version: str = model_version
         self._total_score: AnalysisScore = total_score
         self._clusters: tuple[ClusterScore, ...] = clusters
+        self._base_score: AnalysisScore = total_score if base_score is None else base_score
+        self._applied_constraints: tuple[AppliedConstraint, ...] = applied_constraints
         self._created_at: datetime.datetime | None = created_at
 
         super().__init__(id)
@@ -76,6 +87,12 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
             raise InvariantViolationError(message)
         if not self._clusters:
             message = "An evaluation must carry at least one cluster."
+            raise InvariantViolationError(message)
+        if self._total_score.unwrap() > self._base_score.unwrap():
+            message = "Constraints can only lower the score, never raise it above the base score."
+            raise InvariantViolationError(message)
+        if self.prohibited and self._total_score.unwrap() != 0:
+            message = "A prohibited evaluation must have a total score of 0."
             raise InvariantViolationError(message)
 
     @property
@@ -107,6 +124,21 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
     def clusters(self) -> tuple[ClusterScore, ...]:
         """Per-cluster breakdown."""
         return self._clusters
+
+    @property
+    def base_score(self) -> AnalysisScore:
+        """Score of the multi-criteria breakdown before the constraints."""
+        return self._base_score
+
+    @property
+    def applied_constraints(self) -> tuple[AppliedConstraint, ...]:
+        """Restriction zones that barred the scenario or lowered the score."""
+        return self._applied_constraints
+
+    @property
+    def prohibited(self) -> bool:
+        """Whether a constraint bars the scenario on the parcel."""
+        return any(constraint.effect is ConstraintEffect.PROHIBIT for constraint in self._applied_constraints)
 
     @property
     def created_at(self) -> datetime.datetime | None:

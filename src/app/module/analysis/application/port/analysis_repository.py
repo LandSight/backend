@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-    from app.module.analysis.domain.value_object import AnalysisId, AnalysisMetricRef
+    from app.module.analysis.domain.value_object import AnalysisId, AnalysisMetricRef, RestrictionCheckRef
 
 
 class AnalysisRepository(ABC):
@@ -114,6 +114,16 @@ class AnalysisRepository(ABC):
         list[AnalysisMetricRef]
             Metric references, empty if none were recorded.
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save_restriction_check(self, analysis_id: AnalysisId, ref: RestrictionCheckRef) -> None:
+        """Record the restriction check of an analysis, replacing a previous one."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_restriction_check(self, analysis_id: AnalysisId) -> RestrictionCheckRef | None:
+        """Return the restriction check of an analysis, or ``None`` when none was recorded."""
         raise NotImplementedError
 
     @abstractmethod

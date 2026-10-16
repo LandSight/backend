@@ -46,7 +46,7 @@ class MetricsService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def read(
+    async def get_metrics(
         self,
         parcel_id: UUID,
         refs: list[AnalysisMetricRef],

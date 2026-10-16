@@ -16,7 +16,9 @@ from .analysis_stage import AnalysisStage
 from .analysis_status import AnalysisStatus
 from .analysis_status_reason import AnalysisStatusReason
 from .analysis_type import AnalysisType
+from .applied_constraint import AppliedConstraint
 from .cluster_score import ClusterScore
+from .constraint_effect import ConstraintEffect
 from .contribution import Contribution
 from .engine import Engine
 from .engine_description import EngineDescription
@@ -26,6 +28,9 @@ from .metric_type import MetricType
 from .normalized_metric import NormalizedMetric
 from .normalized_score import NormalizedScore
 from .parcel_id import ParcelId
+from .restriction_check import RestrictionCheck
+from .restriction_check_ref import RestrictionCheckRef
+from .restriction_hit import RestrictionHit
 from .weight import Weight
 
 
@@ -44,7 +49,9 @@ __all__ = (
     "AnalysisStatus",
     "AnalysisStatusReason",
     "AnalysisType",
+    "AppliedConstraint",
     "ClusterScore",
+    "ConstraintEffect",
     "Contribution",
     "Engine",
     "EngineDescription",
@@ -54,5 +61,8 @@ __all__ = (
     "NormalizedMetric",
     "NormalizedScore",
     "ParcelId",
+    "RestrictionCheck",
+    "RestrictionCheckRef",
+    "RestrictionHit",
     "Weight",
 )

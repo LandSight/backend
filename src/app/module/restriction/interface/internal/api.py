@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.restriction.application.dto.command import (
-    CheckParcelRestrictionsCommand,
+    CalculateRestrictionCheckCommand,
     DeleteRestrictionChecksCommand,
     GetRestrictionCheckCommand,
 )
@@ -20,12 +20,12 @@ from app.module.restriction.interface.internal.port import RestrictionInternalAP
 if TYPE_CHECKING:
     from app.module.restriction.application.dto.response import RestrictionCheckResponse
     from app.module.restriction.application.use_case import (
-        CheckParcelRestrictionsUseCase,
+        CalculateRestrictionCheckUseCase,
         DeleteRestrictionChecksUseCase,
         GetRestrictionCheckUseCase,
     )
     from app.module.restriction.interface.internal.dto import (
-        CheckRestrictionsInput,
+        CalculateCheckInput,
         DeleteChecksInput,
         GetCheckInput,
     )
@@ -36,19 +36,19 @@ class RestrictionInternal(RestrictionInternalAPI):
 
     def __init__(
         self,
-        check_restrictions_use_case: CheckParcelRestrictionsUseCase,
+        calculate_check_use_case: CalculateRestrictionCheckUseCase,
         get_check_use_case: GetRestrictionCheckUseCase,
         delete_checks_use_case: DeleteRestrictionChecksUseCase,
     ) -> None:
-        self._check_restrictions = check_restrictions_use_case
+        self._calculate_check = calculate_check_use_case
         self._get_check = get_check_use_case
         self._delete_checks = delete_checks_use_case
 
     @override
-    async def check_restrictions(self, input_data: CheckRestrictionsInput) -> RestrictionCheckResult:
-        """See :meth:`RestrictionInternalAPI.check_restrictions`."""
-        result = await self._check_restrictions(
-            CheckParcelRestrictionsCommand(
+    async def calculate_check(self, input_data: CalculateCheckInput) -> RestrictionCheckResult:
+        """See :meth:`RestrictionInternalAPI.calculate_check`."""
+        result = await self._calculate_check(
+            CalculateRestrictionCheckCommand(
                 parcel_id=input_data.parcel_id,
                 current_user_id=input_data.current_user_id,
             )

@@ -144,6 +144,9 @@ elif service == "analysis":
     )
     from app.module.analysis.infrastructure.model.analysis_metric_model import AnalysisMetricModel
     from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel
+    from app.module.analysis.infrastructure.model.analysis_restriction_check_model import (
+        AnalysisRestrictionCheckModel,
+    )
     from app.module.identity.infrastructure.model.user_model import UserModel
     from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel

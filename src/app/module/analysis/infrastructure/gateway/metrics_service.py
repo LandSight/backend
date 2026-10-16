@@ -99,7 +99,7 @@ class MetricsServiceImpl(MetricsService):
         return [self._to_ref(response) for response in responses]
 
     @override
-    async def read(
+    async def get_metrics(
         self,
         parcel_id: UUID,
         refs: list[AnalysisMetricRef],

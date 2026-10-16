@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         AnalysisScorer,
         InterpretationService,
         MetricsService,
+        RestrictionService,
     )
     from app.module.shared.application.port import UnitOfWork
 
@@ -51,9 +52,11 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         scorer: AnalysisScorer,
         unit_of_work: UnitOfWork,
         interpretation_service: InterpretationService,
+        restriction_service: RestrictionService,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._metrics_service = metrics_service
+        self._restriction_service = restriction_service
         self._scorer = scorer
         self._unit_of_work = unit_of_work
         self._interpretation_service = interpretation_service
@@ -93,12 +96,20 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
             await asyncio.sleep(self._DEMO_STEP_DELAY_SECONDS)
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
-        values = await self._metrics_service.read(analysis.parcel_id.unwrap(), refs, command.current_user_id)
+        metrics = await self._metrics_service.get_metrics(analysis.parcel_id.unwrap(), refs, command.current_user_id)
+        # Analyses started before restrictions existed have no check.
+        restriction_check = await self._analysis_repository.get_restriction_check(analysis.id)
+        restrictions = (
+            ()
+            if restriction_check is None
+            else (await self._restriction_service.get(restriction_check, command.current_user_id)).hits
+        )
         evaluation = self._scorer.evaluate(
             command.analysis_id,
-            values,
+            metrics,
             analysis.analysis_type,
             analysis.engine,
+            restrictions,
         )
         analysis.complete(evaluation.total_score, evaluation.model_version)
         await self._analysis_repository.save(analysis)
@@ -122,9 +133,11 @@ class ScoreAnalysisUseCase(BaseUseCase[ScoreAnalysisCommand, None]):
         await self._unit_of_work.commit()
 
         self._logger.info(
-            "Analysis scored: analysis_id=%s score=%s model_version=%s",
+            "Analysis scored: analysis_id=%s score=%s base_score=%s constraints=%s model_version=%s",
             command.analysis_id,
             evaluation.total_score.unwrap(),
+            evaluation.base_score.unwrap(),
+            [constraint.kind for constraint in evaluation.applied_constraints],
             evaluation.model_version,
         )
 

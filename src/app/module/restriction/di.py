@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.module.parcel.interface.internal.port import ParcelInternalAPI
 from app.module.restriction.application.use_case import (
-    CheckParcelRestrictionsUseCase,
+    CalculateRestrictionCheckUseCase,
     DeleteRestrictionChecksUseCase,
     GetRestrictionCheckUseCase,
 )
@@ -36,12 +36,12 @@ def provide_restriction_permission_service(
 
 
 # ----- Use Cases -----
-def provide_check_parcel_restrictions_use_case(
+def provide_calculate_restriction_check_use_case(
     restriction_zone_repository: NamedDependency[PostgresZoneRepository],
     restriction_check_repository: NamedDependency[PostgresCheckRepository],
     restriction_parcel_provider: NamedDependency[ParcelProviderImpl],
-) -> CheckParcelRestrictionsUseCase:
-    return CheckParcelRestrictionsUseCase(
+) -> CalculateRestrictionCheckUseCase:
+    return CalculateRestrictionCheckUseCase(
         zone_repository=restriction_zone_repository,
         check_repository=restriction_check_repository,
         parcel_provider=restriction_parcel_provider,
@@ -64,12 +64,12 @@ def provide_delete_restriction_checks_use_case(
 
 # ----- Internal API -----
 def provide_restriction_internal(
-    check_parcel_restrictions_use_case: NamedDependency[CheckParcelRestrictionsUseCase],
+    calculate_restriction_check_use_case: NamedDependency[CalculateRestrictionCheckUseCase],
     get_restriction_check_use_case: NamedDependency[GetRestrictionCheckUseCase],
     delete_restriction_checks_use_case: NamedDependency[DeleteRestrictionChecksUseCase],
 ) -> RestrictionInternal:
     return RestrictionInternal(
-        check_restrictions_use_case=check_parcel_restrictions_use_case,
+        calculate_check_use_case=calculate_restriction_check_use_case,
         get_check_use_case=get_restriction_check_use_case,
         delete_checks_use_case=delete_restriction_checks_use_case,
     )
@@ -80,7 +80,7 @@ restriction_dependencies = {
     "restriction_check_repository": Provide(provide_restriction_check_repository, sync_to_thread=False),
     "restriction_parcel_provider": Provide(provide_restriction_parcel_provider, sync_to_thread=False),
     "restriction_permission_service": Provide(provide_restriction_permission_service, sync_to_thread=False),
-    "check_parcel_restrictions_use_case": Provide(provide_check_parcel_restrictions_use_case, sync_to_thread=False),
+    "calculate_restriction_check_use_case": Provide(provide_calculate_restriction_check_use_case, sync_to_thread=False),
     "get_restriction_check_use_case": Provide(provide_get_restriction_check_use_case, sync_to_thread=False),
     "delete_restriction_checks_use_case": Provide(provide_delete_restriction_checks_use_case, sync_to_thread=False),
     "restriction_api": Provide(provide_restriction_internal, sync_to_thread=False),

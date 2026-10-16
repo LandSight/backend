@@ -11,6 +11,7 @@ from .engine_provider import EngineProvider
 from .interpretation_service import InterpretationService
 from .metrics_service import MetricsResponse, MetricsService
 from .parcels_service import ParcelsService
+from .restriction_service import RestrictionService
 
 
 __all__ = (
@@ -24,4 +25,5 @@ __all__ = (
     "MetricsResponse",
     "MetricsService",
     "ParcelsService",
+    "RestrictionService",
 )

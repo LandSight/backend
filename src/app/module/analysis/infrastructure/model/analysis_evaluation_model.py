@@ -43,7 +43,12 @@ class AnalysisEvaluationModel(TimestampedModel):
     total_score: Mapped[float] = mapped_column(
         Float,
         nullable=False,
-        comment="Final score on the 0-10 scale",
+        comment="Final score on the 0-10 scale, after the constraints",
+    )
+    base_score: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Score of the multi-criteria breakdown before the constraints; NULL before constraints existed",
     )
 
 
