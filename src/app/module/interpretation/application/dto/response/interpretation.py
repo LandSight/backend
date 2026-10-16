@@ -35,6 +35,21 @@ class AspectInterpretationResponse:
 
 
 @dataclass(frozen=True, slots=True)
+class ConstraintInterpretationResponse:
+    """A restriction zone that barred the scenario or lowered the score."""
+
+    kind: str
+    label: str
+    effect: str
+    factor: float
+    overlap_share: float
+    zone_names: tuple[str, ...] = field(default_factory=tuple)
+    legal_basis: str = ""
+    score_reduction: float = 0.0
+    points_lost: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
 class InterpretationResultResponse:
     """Full interpretation report of an analysis evaluation."""
 
@@ -45,9 +60,14 @@ class InterpretationResultResponse:
     aspects: tuple[AspectInterpretationResponse, ...] = field(default_factory=tuple)
     top_aspects_summary: str = ""
     verdict: SuitabilityVerdict | None = None
+    base_score: float | None = None
+    constraints_loss: float = 0.0
+    constraints_explanation: str = ""
+    constraints: tuple[ConstraintInterpretationResponse, ...] = field(default_factory=tuple)
 
 
 __all__ = (
     "AspectInterpretationResponse",
+    "ConstraintInterpretationResponse",
     "InterpretationResultResponse",
 )

@@ -98,6 +98,7 @@ class GenerateInterpretationUseCase(BaseUseCase[GenerateInterpretationCommand, N
             model=generated.model,
             summary=generated.summary,
             explanations=generated.explanations,
+            constraints_explanation=generated.constraints_explanation,
             status=InterpretationStatus.COMPLETED,
         )
         await self._repository.save(completed)

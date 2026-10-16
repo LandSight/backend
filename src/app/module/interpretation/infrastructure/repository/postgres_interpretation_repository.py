@@ -58,6 +58,7 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
                 analysis_id=interpretation.analysis_id,
                 model=interpretation.model,
                 summary=interpretation.summary,
+                constraints_explanation=interpretation.constraints_explanation,
                 status=interpretation.status.value,
                 aspect_explanations={explanation.key: explanation.text for explanation in interpretation.explanations},
             )
@@ -66,6 +67,7 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
             model.analysis_id = interpretation.analysis_id
             model.model = interpretation.model
             model.summary = interpretation.summary
+            model.constraints_explanation = interpretation.constraints_explanation
             model.status = interpretation.status.value
             model.aspect_explanations = {
                 explanation.key: explanation.text for explanation in interpretation.explanations
@@ -91,6 +93,7 @@ class PostgresInterpretationRepository(BaseSQLAlchemyRepository, InterpretationR
             analysis_id=model.analysis_id,
             model=model.model,
             summary=model.summary,
+            constraints_explanation=model.constraints_explanation,
             status=InterpretationStatus(model.status),
             explanations=tuple(
                 AspectExplanation(key=key, text=text) for key, text in model.aspect_explanations.items()

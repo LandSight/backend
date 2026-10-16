@@ -9,7 +9,8 @@ class SuitabilityVerdict(StrEnum):
     """Qualitative verdict of a parcel's suitability derived from its score.
 
     The verdict is decided by fixed thresholds on the share of the maximum
-    score, never by the model.
+    score, never by the model. ``PROHIBITED`` overrides the thresholds when a
+    restriction zone bars the scenario on the parcel.
     """
 
     VERY_HIGH = "very_high"
@@ -17,6 +18,7 @@ class SuitabilityVerdict(StrEnum):
     MEDIUM = "medium"
     LOW = "low"
     VERY_LOW = "very_low"
+    PROHIBITED = "prohibited"
 
     @classmethod
     def from_ratio(cls, ratio: float) -> SuitabilityVerdict:
@@ -45,6 +47,7 @@ _LABELS = {
     SuitabilityVerdict.MEDIUM: "medium suitability",
     SuitabilityVerdict.LOW: "low suitability",
     SuitabilityVerdict.VERY_LOW: "very low suitability",
+    SuitabilityVerdict.PROHIBITED: "unsuitable: building is barred by a restriction zone",
 }
 
 

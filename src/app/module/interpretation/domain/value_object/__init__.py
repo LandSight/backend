@@ -6,6 +6,7 @@ from .aspect import Aspect
 from .aspect_explanation import AspectExplanation
 from .aspect_metric import AspectMetric
 from .completion import Completion
+from .constraint_finding import ConstraintFinding
 from .evaluation_breakdown import EvaluationBreakdown
 from .grade_verdict import GradeVerdict
 from .interpretation_id import InterpretationId
@@ -24,6 +25,7 @@ __all__ = (
     "AspectExplanation",
     "AspectMetric",
     "Completion",
+    "ConstraintFinding",
     "EvaluationBreakdown",
     "GradeVerdict",
     "InterpretationId",

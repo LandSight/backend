@@ -11,6 +11,7 @@ from litestar.status_codes import HTTP_200_OK, HTTP_202_ACCEPTED
 from app.interface.http.schema.current_user import CurrentUser
 from app.interface.http.schema.interpretation import (
     AspectInterpretationSchema,
+    ConstraintInterpretationSchema,
     InterpretationResultSchema,
     MetricInfoSchema,
 )
@@ -83,6 +84,23 @@ class InterpretationController(Controller):
             top_aspects_summary=result.top_aspects_summary,
             verdict=result.verdict.value if result.verdict else None,
             verdict_label=result.verdict.label if result.verdict else None,
+            base_score=result.base_score,
+            constraints_loss=result.constraints_loss,
+            constraints_explanation=result.constraints_explanation,
+            constraints=[
+                ConstraintInterpretationSchema(
+                    kind=constraint.kind,
+                    label=constraint.label,
+                    effect=constraint.effect,
+                    factor=constraint.factor,
+                    overlap_share=constraint.overlap_share,
+                    zone_names=list(constraint.zone_names),
+                    legal_basis=constraint.legal_basis,
+                    score_reduction=constraint.score_reduction,
+                    points_lost=constraint.points_lost,
+                )
+                for constraint in result.constraints
+            ],
         )
 
     @classmethod

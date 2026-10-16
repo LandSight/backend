@@ -27,11 +27,15 @@ class InterpretationPolicy(BaseCompositeValueObject):
         strengths and the weaknesses.
     aspect_limit : int
         Maximum number of aspects selected for the combined summary.
+    constraint_limit : int
+        Maximum number of restriction zones selected for the restrictions
+        explanation.
     """
 
     strong_threshold: float = 0.95
     metric_limit: int = 5
     aspect_limit: int = 5
+    constraint_limit: int = 5
 
     def _validate(self) -> None:
         if not 0 < self.strong_threshold <= 1:
@@ -42,6 +46,9 @@ class InterpretationPolicy(BaseCompositeValueObject):
             raise ValidationError(message)
         if self.aspect_limit < 1:
             message = f"Aspect limit must be positive, got {self.aspect_limit}."
+            raise ValidationError(message)
+        if self.constraint_limit < 1:
+            message = f"Constraint limit must be positive, got {self.constraint_limit}."
             raise ValidationError(message)
 
 

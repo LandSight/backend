@@ -10,12 +10,13 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import TYPE_CHECKING, override
 
-from app.module.analysis.application.dto.response import HierarchicalExtensionResponse
+from app.module.analysis.application.dto.response import ConstraintExtensionResponse, HierarchicalExtensionResponse
 from app.module.analysis.interface.internal.dto import GetAnalysisEvaluationInput
 from app.module.interpretation.application.port import AnalysisService
 from app.module.interpretation.domain.value_object import (
     Aspect,
     AspectMetric,
+    ConstraintFinding,
     EvaluationBreakdown,
     Membership,
     MetricRole,
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
         MetricContributionResponse,
     )
     from app.module.analysis.interface.internal.port import AnalysisInternalAPI
-    from app.module.interpretation.domain.service import MetricClassifier
+    from app.module.interpretation.domain.service import ConstraintExtractor, MetricClassifier
 
 
 class AnalysisServiceImpl(AnalysisService):
@@ -43,9 +44,15 @@ class AnalysisServiceImpl(AnalysisService):
     breakdown is never persisted.
     """
 
-    def __init__(self, analysis_api: AnalysisInternalAPI, classifier: MetricClassifier) -> None:
+    def __init__(
+        self,
+        analysis_api: AnalysisInternalAPI,
+        classifier: MetricClassifier,
+        constraint_extractor: ConstraintExtractor,
+    ) -> None:
         self._analysis_api = analysis_api
         self._classifier = classifier
+        self._constraint_extractor = constraint_extractor
 
     @override
     async def read(self, analysis_id: UUID, current_user_id: UUID) -> EvaluationBreakdown:
@@ -66,12 +73,34 @@ class AnalysisServiceImpl(AnalysisService):
         if clusters:
             scale = ScoreScale(response.scale_max, sum(cluster.weight for cluster in clusters))
             aspects = tuple(self._aspect(cluster, scale) for cluster in clusters)
+        constraint = response.extensions.get("constraint")
+        base_score = None
+        constraints: tuple[ConstraintFinding, ...] = ()
+        if isinstance(constraint, ConstraintExtensionResponse):
+            base_score = constraint.base_score
+            constraints = self._constraint_extractor.attribute(
+                base_score,
+                response.total_score,
+                [
+                    ConstraintFinding(
+                        kind=applied.kind,
+                        effect=applied.effect,
+                        factor=applied.factor,
+                        overlap_share=applied.overlap_share,
+                        zone_names=tuple(applied.zone_names),
+                        legal_basis=applied.legal_basis,
+                    )
+                    for applied in constraint.applied_constraints
+                ],
+            )
         return EvaluationBreakdown(
             total_score=response.total_score,
             scale_max=response.scale_max,
             scenario=response.scenario,
             aspects=aspects,
             scenario_description=response.scenario_description,
+            base_score=base_score,
+            constraints=constraints,
         )
 
     def _aspect(self, cluster: ClusterScoreResponse, scale: ScoreScale) -> Aspect:

@@ -18,7 +18,12 @@ from app.module.interpretation.application.use_case import (
     GetInterpretationUseCase,
     StartInterpretationUseCase,
 )
-from app.module.interpretation.domain.service import AspectExtractor, MetricClassifier, TopAspectSelector
+from app.module.interpretation.domain.service import (
+    AspectExtractor,
+    ConstraintExtractor,
+    MetricClassifier,
+    TopAspectSelector,
+)
 from app.module.interpretation.domain.value_object import InterpretationPolicy
 from app.module.interpretation.infrastructure.gateway import AnalysisServiceImpl
 from app.module.interpretation.infrastructure.llm import (
@@ -56,6 +61,12 @@ def provide_aspect_extractor(
     return AspectExtractor(interpretation_policy)
 
 
+def provide_constraint_extractor(
+    interpretation_policy: NamedDependency[InterpretationPolicy],
+) -> ConstraintExtractor:
+    return ConstraintExtractor(interpretation_policy)
+
+
 def provide_top_aspect_selector(
     interpretation_policy: NamedDependency[InterpretationPolicy],
 ) -> TopAspectSelector:
@@ -84,6 +95,7 @@ def provide_interpreter(
     grader: NamedDependency[LlmGrader],
     aspect_extractor: NamedDependency[AspectExtractor],
     top_aspect_selector: NamedDependency[TopAspectSelector],
+    constraint_extractor: NamedDependency[ConstraintExtractor],
 ) -> LlmInterpreter:
     return LlmInterpreter(
         llm_client,
@@ -91,21 +103,24 @@ def provide_interpreter(
         grader,
         aspect_extractor,
         top_aspect_selector,
+        constraint_extractor,
         model=load_llm_config().model,
     )
 
 
 def provide_report_assembler(
     aspect_extractor: NamedDependency[AspectExtractor],
+    constraint_extractor: NamedDependency[ConstraintExtractor],
 ) -> ReportAssembler:
-    return ReportAssembler(aspect_extractor)
+    return ReportAssembler(aspect_extractor, constraint_extractor)
 
 
 def provide_analysis_evaluation_reader(
     analysis_api: NamedDependency[AnalysisInternalAPI],
     metric_classifier: NamedDependency[MetricClassifier],
+    constraint_extractor: NamedDependency[ConstraintExtractor],
 ) -> AnalysisServiceImpl:
-    return AnalysisServiceImpl(analysis_api, metric_classifier)
+    return AnalysisServiceImpl(analysis_api, metric_classifier, constraint_extractor)
 
 
 def provide_interpretation_task_queue(
@@ -170,6 +185,7 @@ interpretation_dependencies = {
     "interpretation_policy": Provide(provide_interpretation_policy, use_cache=True, sync_to_thread=False),
     "metric_classifier": Provide(provide_metric_classifier, use_cache=True, sync_to_thread=False),
     "aspect_extractor": Provide(provide_aspect_extractor, use_cache=True, sync_to_thread=False),
+    "constraint_extractor": Provide(provide_constraint_extractor, use_cache=True, sync_to_thread=False),
     "top_aspect_selector": Provide(provide_top_aspect_selector, use_cache=True, sync_to_thread=False),
     "report_assembler": Provide(provide_report_assembler, use_cache=True, sync_to_thread=False),
     "analysis_evaluation_reader": Provide(

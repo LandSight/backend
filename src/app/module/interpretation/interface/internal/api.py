@@ -14,6 +14,7 @@ from app.module.interpretation.application.dto.command import (
 )
 from app.module.interpretation.interface.internal.dto import (
     AspectInterpretationResult,
+    ConstraintInterpretationResult,
     GenerateInterpretationInput,
     GetInterpretationInput,
     InterpretationResult,
@@ -78,6 +79,23 @@ class InterpretationInternal(InterpretationInternalAPI):
             aspects=tuple(cls._to_aspect(aspect) for aspect in result.aspects),
             top_aspects_summary=result.top_aspects_summary,
             verdict=result.verdict,
+            base_score=result.base_score,
+            constraints_loss=result.constraints_loss,
+            constraints_explanation=result.constraints_explanation,
+            constraints=tuple(
+                ConstraintInterpretationResult(
+                    kind=constraint.kind,
+                    label=constraint.label,
+                    effect=constraint.effect,
+                    factor=constraint.factor,
+                    overlap_share=constraint.overlap_share,
+                    zone_names=constraint.zone_names,
+                    legal_basis=constraint.legal_basis,
+                    score_reduction=constraint.score_reduction,
+                    points_lost=constraint.points_lost,
+                )
+                for constraint in result.constraints
+            ),
         )
 
     @classmethod

@@ -54,6 +54,32 @@ class AspectInterpretationSchema(BaseModel):
     )
 
 
+class ConstraintInterpretationSchema(BaseModel):
+    """A restriction zone that barred the scenario or lowered the score."""
+
+    kind: str = Field(description="Restriction zone kind, e.g. power_line_zone.")
+    label: str = Field(description="Human-readable name of the zone kind.")
+    effect: str = Field(description="prohibit (score set to 0) or penalty (score multiplied by factor).")
+    factor: float = Field(ge=0.0, le=1.0, description="Multiplier applied to the score.")
+    overlap_share: float = Field(ge=0.0, le=1.0, description="Share of the parcel inside the zone.")
+    zone_names: list[str] = Field(default_factory=list, description="Names of the source objects, when known.")
+    legal_basis: str = Field(default="", description="Short reference to the rule that defines the zone.")
+    score_reduction: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Share of the score the zone takes away on its own (1 - factor).",
+    )
+    points_lost: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "Points of the total score attributed to the zone; the points of all zones add up to "
+            "constraints_loss. Penalties outweighed by a prohibition get 0."
+        ),
+    )
+
+
 class InterpretationResultSchema(BaseModel):
     """Response body of an interpretation report."""
 
@@ -68,13 +94,35 @@ class InterpretationResultSchema(BaseModel):
     top_aspects_summary: str = Field(description="Combined explanation of the top aspects.")
     verdict: str | None = Field(
         default=None,
-        description="Suitability verdict code (very_high/high/medium/low/very_low); null until generated.",
+        description=(
+            "Suitability verdict code (very_high/high/medium/low/very_low, or prohibited when a "
+            "restriction zone bars the scenario); null until generated."
+        ),
     )
     verdict_label: str | None = Field(default=None, description="Human-readable verdict.")
+    base_score: float | None = Field(
+        default=None,
+        description="Score of the aspects before the restriction zones; null until generated.",
+    )
+    constraints_loss: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Points the restriction zones took away from base_score.",
+    )
+    constraints_explanation: str = Field(
+        default="",
+        description="Explanation of the restriction zones; empty when no zone applied.",
+    )
+    constraints: list[ConstraintInterpretationSchema] = Field(
+        default_factory=list,
+        description="Restriction zones that barred the scenario or lowered the score, prohibitions first, "
+        "then by points_lost.",
+    )
 
 
 __all__ = (
     "AspectInterpretationSchema",
+    "ConstraintInterpretationSchema",
     "InterpretationResultSchema",
     "MetricInfoSchema",
 )

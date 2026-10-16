@@ -22,7 +22,8 @@ class Interpretation(BaseEntity[InterpretationId]):
     """Generated interpretation report of one analysis.
 
     The aggregate stores only the generated text and the model that produced it:
-    the combined summary and the per-aspect explanations. Scores, weights and
+    the combined summary, the per-aspect explanations and the explanation of the
+    restriction zones. Scores, weights and
     evaluation metadata are recomputed from the current evaluation when the
     report is read.
 
@@ -39,6 +40,9 @@ class Interpretation(BaseEntity[InterpretationId]):
         Combined top-aspects summary text.
     explanations : tuple[AspectExplanation, ...]
         Per-aspect explanation texts.
+    constraints_explanation : str
+        Explanation of the restriction zones that barred the scenario or
+        lowered the score; empty when no zone applied.
     created_at : datetime.datetime | None
         When the report was stored (UTC); ``None`` if not yet persisted.
     updated_at : datetime.datetime | None
@@ -53,6 +57,7 @@ class Interpretation(BaseEntity[InterpretationId]):
         model: str,
         summary: str,
         explanations: tuple[AspectExplanation, ...] = (),
+        constraints_explanation: str = "",
         status: InterpretationStatus = InterpretationStatus.COMPLETED,
         created_at: datetime.datetime | None = None,
         updated_at: datetime.datetime | None = None,
@@ -61,6 +66,7 @@ class Interpretation(BaseEntity[InterpretationId]):
         self._model: str = model
         self._summary: str = summary
         self._explanations: tuple[AspectExplanation, ...] = explanations
+        self._constraints_explanation: str = constraints_explanation
         self._status: InterpretationStatus = status
         self._created_at: datetime.datetime | None = created_at
         self._updated_at: datetime.datetime | None = updated_at
@@ -107,6 +113,7 @@ class Interpretation(BaseEntity[InterpretationId]):
         self._model = ""
         self._summary = ""
         self._explanations = ()
+        self._constraints_explanation = ""
 
     def _raise_invalid_transition(self, expected: InterpretationStatus) -> NoReturn:
         message = (
@@ -134,6 +141,11 @@ class Interpretation(BaseEntity[InterpretationId]):
     def explanations(self) -> tuple[AspectExplanation, ...]:
         """Per-aspect explanation texts."""
         return self._explanations
+
+    @property
+    def constraints_explanation(self) -> str:
+        """Explanation of the restriction zones."""
+        return self._constraints_explanation
 
     @property
     def created_at(self) -> datetime.datetime | None:

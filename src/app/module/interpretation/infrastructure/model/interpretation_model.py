@@ -39,6 +39,13 @@ class InterpretationModel(TimestampedModel):
         server_default="completed",
         comment="Report generation status: ordered/running/completed/failed",
     )
+    constraints_explanation: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        default="",
+        server_default="",
+        comment="Explanation of the restriction zones that lowered the score",
+    )
     aspect_explanations: Mapped[dict[str, str]] = mapped_column(
         JSONB,
         nullable=False,
