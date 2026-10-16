@@ -13,15 +13,23 @@ from uuid import UUID
 
 from celery.signals import worker_process_init
 
-from app.module.analysis.application.dto.command import CollectMetricsCommand, ScoreAnalysisCommand
-from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
+from app.module.analysis.application.dto.command import (
+    CollectMetricsCommand,
+    CollectRestrictionsCommand,
+    ScoreAnalysisCommand,
+)
+from app.module.analysis.di import (
+    COLLECT_METRICS_USE_CASE_KEY,
+    COLLECT_RESTRICTIONS_USE_CASE_KEY,
+    SCORE_ANALYSIS_USE_CASE_KEY,
+)
 from app.module.analysis.domain.event import (
     ANALYSIS_DELETED_EVENT,
     ANALYSIS_QUEUED_EVENT,
     AnalysisDeletedEvent,
     AnalysisQueuedEvent,
 )
-from app.module.analysis.domain.value_object import MetricType
+from app.module.analysis.domain.value_object.metric import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
     PROCESS_ANALYSIS_TASK_NAME,
 )
@@ -43,7 +51,7 @@ from app.worker.container import WorkerContainer, get_session_factory, run_in_wo
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsService
+    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsService, RestrictionService
     from app.module.interpretation.application.port import InterpretationTaskQueue
     from app.platform.outbox.repository import OutboxRepository
 
@@ -71,6 +79,7 @@ async def _process(analysis_id: str, current_user_id: str) -> None:
     async with session_factory() as session:
         container = WorkerContainer(session)
         collect = container.resolve(COLLECT_METRICS_USE_CASE_KEY)
+        collect_restrictions = container.resolve(COLLECT_RESTRICTIONS_USE_CASE_KEY)
         score = container.resolve(SCORE_ANALYSIS_USE_CASE_KEY)
 
         analysis_id_value = UUID(analysis_id)
@@ -84,6 +93,12 @@ async def _process(analysis_id: str, current_user_id: str) -> None:
                     metric_type=metric_type,
                 )
             )
+
+        # Restrictions are not metrics: they are checked once the inputs of the
+        # multi-criteria score are in, and applied to it when scoring.
+        await collect_restrictions(
+            CollectRestrictionsCommand(analysis_id=analysis_id_value, current_user_id=user_id_value),
+        )
 
         await score(
             ScoreAnalysisCommand(
@@ -131,6 +146,7 @@ async def _drain_outbox() -> None:
         container = WorkerContainer(session)
         repository: OutboxRepository = container.resolve("outbox_repository")
         metrics_service: MetricsService = container.resolve("metrics_service")
+        restriction_service: RestrictionService = container.resolve("restriction_service")
         task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
         interpretation_task_queue: InterpretationTaskQueue = container.resolve("interpretation_task_queue")
 
@@ -141,6 +157,8 @@ async def _drain_outbox() -> None:
         async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
             event = AnalysisDeletedEvent.from_payload(payload)
             await metrics_service.delete(list(event.metrics))
+            if event.restriction_check is not None:
+                await restriction_service.delete([event.restriction_check], event.current_user_id)
 
         async def handle_interpretation_started(payload: Mapping[str, object]) -> None:
             event = InterpretationStartedEvent.from_payload(payload)
