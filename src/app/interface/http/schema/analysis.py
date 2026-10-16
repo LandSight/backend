@@ -152,10 +152,24 @@ class RuleBasedExtensionSchema(BaseModel):
     applied_rules: list[dict[str, Any]] = Field(default_factory=list)
 
 
-class ConstraintExtensionSchema(BaseModel):
-    """Constraint-based extension of an evaluation."""
+class AppliedConstraintSchema(BaseModel):
+    """A restriction zone that changed the score."""
 
-    applied_constraints: list[dict[str, Any]] = Field(default_factory=list)
+    kind: str = Field(description="Restriction zone kind, e.g. power_line_zone.")
+    effect: str = Field(description="prohibit (score set to 0) or penalty (score multiplied by factor).")
+    factor: float = Field(ge=0.0, le=1.0, description="Multiplier applied to the score.")
+    overlap_share: float = Field(ge=0.0, le=1.0, description="Share of the parcel inside the zone.")
+    overlap_area_m2: float = Field(ge=0.0, description="Area of the parcel inside the zone, in square meters.")
+    zone_names: list[str] = Field(default_factory=list, description="Names of the source objects, when known.")
+    legal_basis: str = Field(default="", description="Short reference to the rule that defines the zone.")
+
+
+class ConstraintExtensionSchema(BaseModel):
+    """Constraint extension of an evaluation."""
+
+    base_score: float = Field(description="Score of the multi-criteria breakdown before the constraints.")
+    prohibited: bool = Field(default=False, description="Whether a constraint bars the scenario on the parcel.")
+    applied_constraints: list[AppliedConstraintSchema] = Field(default_factory=list)
 
 
 class EvaluationMetadataSchema(BaseModel):
@@ -191,6 +205,7 @@ __all__ = (
     "AnalysisEvaluationSchema",
     "AnalysisMetricSchema",
     "AnalysisResponse",
+    "AppliedConstraintSchema",
     "ClusterScoreSchema",
     "ConstraintExtensionSchema",
     "EngineSchema",

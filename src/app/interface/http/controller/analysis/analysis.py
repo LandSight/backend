@@ -12,6 +12,7 @@ from app.interface.http.schema.analysis import (
     AnalysisEvaluationSchema,
     AnalysisMetricSchema,
     AnalysisResponse,
+    AppliedConstraintSchema,
     ClusterScoreSchema,
     ConstraintExtensionSchema,
     EvaluationMetadataSchema,
@@ -218,7 +219,20 @@ class AnalysisController(Controller):
                 applied_rules=[dict(rule) for rule in extension.applied_rules],
             )
         return ConstraintExtensionSchema(
-            applied_constraints=[dict(constraint) for constraint in extension.applied_constraints],
+            base_score=extension.base_score,
+            prohibited=extension.prohibited,
+            applied_constraints=[
+                AppliedConstraintSchema(
+                    kind=constraint.kind,
+                    effect=constraint.effect,
+                    factor=constraint.factor,
+                    overlap_share=constraint.overlap_share,
+                    overlap_area_m2=constraint.overlap_area_m2,
+                    zone_names=list(constraint.zone_names),
+                    legal_basis=constraint.legal_basis,
+                )
+                for constraint in extension.applied_constraints
+            ],
         )
 
     @classmethod
