@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-    from app.module.analysis.domain.value_object import AnalysisId, AnalysisMetricRef, RestrictionCheckRef
+    from app.module.analysis.domain.value_object.analysis import AnalysisId
+    from app.module.analysis.domain.value_object.metric import AnalysisMetricRef
+    from app.module.analysis.domain.value_object.restriction import RestrictionCheckRef
 
 
 class AnalysisRepository(ABC):

@@ -10,29 +10,29 @@ from sqlalchemy import delete, select
 
 from app.module.analysis.application.port import AnalysisRepository
 from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    AnalysisEvaluationId,
+from app.module.analysis.domain.value_object.analysis import (
     AnalysisId,
-    AnalysisKey,
-    AnalysisMetricRef,
     AnalysisName,
-    AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
     AnalysisStatusReason,
     AnalysisType,
-    AppliedConstraint,
+    ParcelId,
+)
+from app.module.analysis.domain.value_object.constraint import AppliedConstraint, ConstraintEffect
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
+from app.module.analysis.domain.value_object.evaluation import (
+    AnalysisEvaluationId,
+    AnalysisKey,
+    AnalysisScore,
     ClusterScore,
-    ConstraintEffect,
     Contribution,
     MetricContribution,
-    MetricType,
     NormalizedScore,
-    ParcelId,
-    RestrictionCheckRef,
     Weight,
 )
+from app.module.analysis.domain.value_object.metric import AnalysisMetricRef, MetricType
+from app.module.analysis.domain.value_object.restriction import RestrictionCheckRef
 from app.module.analysis.infrastructure.model import (
     AnalysisAppliedConstraintModel,
     AnalysisClusterScoreModel,

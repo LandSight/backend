@@ -9,9 +9,9 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object.analysis_profile_description import AnalysisProfileDescription
-    from app.module.analysis.domain.value_object.analysis_profile_name import AnalysisProfileName
-    from app.module.analysis.domain.value_object.analysis_type import AnalysisType
+    from app.module.analysis.domain.value_object.analysis.analysis_type import AnalysisType
+    from app.module.analysis.domain.value_object.profile.analysis_profile_description import AnalysisProfileDescription
+    from app.module.analysis.domain.value_object.profile.analysis_profile_name import AnalysisProfileName
 
 
 @dataclass(frozen=True, slots=True)

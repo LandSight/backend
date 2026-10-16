@@ -7,6 +7,7 @@ from .analysis_profile_provider import AnalysisProfileProvider
 from .analysis_repository import AnalysisRepository
 from .analysis_scorer import AnalysisScorer
 from .analysis_task_queue import AnalysisTaskQueue
+from .constraint_evaluator import ConstraintEvaluator
 from .engine_provider import EngineProvider
 from .interpretation_service import InterpretationService
 from .metrics_service import MetricsResponse, MetricsService
@@ -20,6 +21,7 @@ __all__ = (
     "AnalysisRepository",
     "AnalysisScorer",
     "AnalysisTaskQueue",
+    "ConstraintEvaluator",
     "EngineProvider",
     "InterpretationService",
     "MetricsResponse",

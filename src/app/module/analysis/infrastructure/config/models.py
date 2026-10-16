@@ -12,7 +12,9 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.module.analysis.domain.value_object import AnalysisType  # noqa: TC001 - needed at runtime for pydantic
+from app.module.analysis.domain.value_object.analysis import (
+    AnalysisType,  # noqa: TC001 - needed at runtime for pydantic
+)
 
 
 _BUFFER_MIN_METERS = 1

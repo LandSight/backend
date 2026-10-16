@@ -12,7 +12,9 @@ from typing import TYPE_CHECKING, Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.module.analysis.domain.value_object import AnalysisType  # noqa: TC001 - needed at runtime for pydantic
+from app.module.analysis.domain.value_object.analysis import (
+    AnalysisType,  # noqa: TC001 - needed at runtime for pydantic
+)
 from app.module.analysis.infrastructure.metrics_normalizer.s_shaped import SShaped
 from app.module.analysis.infrastructure.metrics_normalizer.trapezoidal import Trapezoidal
 from app.module.analysis.infrastructure.metrics_normalizer.z_shaped import ZShaped
@@ -214,47 +216,6 @@ FuzzyFunctionConfig = Annotated[
 ]
 
 
-class ConstraintRuleConfig(BaseModel):
-    """Policy for one restriction zone kind.
-
-    Attributes
-    ----------
-    effect : Literal["prohibit", "penalty"]
-        ``prohibit`` bars the scenario once the zone covers at least
-        ``min_share`` of the parcel; ``penalty`` always lowers the score.
-    min_share : float
-        Share of the parcel the zone must cover to prohibit. A smaller overlap
-        falls back to ``penalty`` when one is set, otherwise has no effect.
-    penalty : float | None
-        Fraction the score is lowered by, in ``(0, 1)``; the score is
-        multiplied by ``1 - penalty``.
-    scale_by_share : bool
-        Scale the penalty by the share of the parcel inside the zone, for
-        zones that only rule out the covered part of the plot (strips, a
-        corner under a power line). Nuisance buffers apply in full.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    effect: Literal["prohibit", "penalty"]
-    min_share: float = Field(default=0.0, ge=0.0, le=1.0)
-    penalty: float | None = Field(default=None, gt=0.0, lt=1.0)
-    scale_by_share: bool = False
-
-    @model_validator(mode="after")
-    def _check_effect(self) -> Self:
-        if self.effect == "penalty" and self.penalty is None:
-            message = "A 'penalty' constraint must set 'penalty'."
-            raise ValueError(message)
-        if self.effect == "penalty" and self.min_share:
-            message = "'min_share' only applies to 'prohibit' constraints."
-            raise ValueError(message)
-        if self.scale_by_share and self.penalty is None:
-            message = "'scale_by_share' needs a 'penalty' to scale."
-            raise ValueError(message)
-        return self
-
-
 class ProfileConfig(BaseModel):
     """Configuration of a single analysis profile."""
 
@@ -262,7 +223,6 @@ class ProfileConfig(BaseModel):
 
     hierarchy: Hierarchy
     functions: dict[str, FuzzyFunctionConfig] = Field(min_length=1)
-    constraints: dict[str, ConstraintRuleConfig] = Field(default_factory=dict)
 
     def to_fuzzy_functions(self) -> dict[str, FuzzyFunction]:
         """Build concrete fuzzy functions keyed by metric key."""
@@ -311,7 +271,6 @@ Hierarchy.model_rebuild()
 
 
 __all__ = (
-    "ConstraintRuleConfig",
     "EngineConfig",
     "FuzzyFunctionConfig",
     "Hierarchy",

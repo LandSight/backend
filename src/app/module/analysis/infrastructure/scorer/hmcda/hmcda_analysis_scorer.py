@@ -8,26 +8,21 @@ from uuid import uuid6
 
 from app.module.analysis.application.port import AnalysisScorer
 from app.module.analysis.domain.entity import AnalysisEvaluation
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    AnalysisEvaluationId,
-    AnalysisId,
-    AnalysisScore,
-    AnalysisType,
-)
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisType
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
+from app.module.analysis.domain.value_object.evaluation import AnalysisEvaluationId, AnalysisScore
 from app.module.analysis.infrastructure.metrics_normalizer import FuzzyNormalizer
-from app.module.analysis.infrastructure.scorer.hmcda.constraint_evaluator import ConstraintEvaluator
 from app.module.analysis.infrastructure.scorer.hmcda.hierarchical_aggregator import HierarchicalAggregator
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.interface.internal import IntegerMetricValue, NumberMetricValue
 
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Mapping
     from uuid import UUID
 
     from app.module.analysis.application.port import MetricsResponse
-    from app.module.analysis.domain.value_object import ClusterScore, NormalizedMetric, RestrictionHit
+    from app.module.analysis.domain.value_object.evaluation import ClusterScore, NormalizedMetric
     from app.module.analysis.infrastructure.scorer.hmcda.config.models import EngineConfig, Hierarchy, ProfileConfig
 
 
@@ -38,7 +33,6 @@ class HmcdaProfile:
     hierarchy: Hierarchy
     normalizer: FuzzyNormalizer
     aggregator: HierarchicalAggregator
-    constraints: ConstraintEvaluator
 
 
 class HmcdaAnalysisScorer(AnalysisScorer):
@@ -64,7 +58,6 @@ class HmcdaAnalysisScorer(AnalysisScorer):
         metrics: list[MetricsResponse],
         analysis_type: AnalysisType,
         engine: AnalysisEngine,
-        restrictions: Sequence[RestrictionHit] = (),
     ) -> AnalysisEvaluation:
         """See :class:`app.module.analysis.application.port.AnalysisScorer.evaluate`."""
         if engine is not AnalysisEngine.BASELINE:
@@ -76,18 +69,14 @@ class HmcdaAnalysisScorer(AnalysisScorer):
             raise ValidationError(message)
         normalized = self._normalize(profile, self._flatten(metrics))
         clusters = profile.aggregator.aggregate(normalized)
-        base_score = self._total_score(clusters)
-        total_score, applied_constraints = profile.constraints.apply(base_score, restrictions)
         return AnalysisEvaluation(
             id=AnalysisEvaluationId(uuid6()),
             analysis_id=AnalysisId(analysis_id),
             analysis_type=analysis_type,
             engine=engine,
             model_version=self._model_version,
-            total_score=total_score,
+            total_score=self._total_score(clusters),
             clusters=clusters,
-            base_score=base_score,
-            applied_constraints=applied_constraints,
         )
 
     @staticmethod
@@ -102,7 +91,6 @@ class HmcdaAnalysisScorer(AnalysisScorer):
             hierarchy=profile.hierarchy,
             normalizer=FuzzyNormalizer(functions, profile.missing_values()),
             aggregator=HierarchicalAggregator(profile.hierarchy),
-            constraints=ConstraintEvaluator(profile.constraints),
         )
 
     @staticmethod

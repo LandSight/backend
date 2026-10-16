@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.port import MetricsService
-from app.module.analysis.domain.value_object import AnalysisMetricRef, MetricType
+from app.module.analysis.domain.value_object.metric import AnalysisMetricRef, MetricType
 from app.module.climate.interface.internal.dto import (
     CalculateMetricsInput as ClimateCalculateMetricsInput,
     DeleteMetricsInput as ClimateDeleteMetricsInput,

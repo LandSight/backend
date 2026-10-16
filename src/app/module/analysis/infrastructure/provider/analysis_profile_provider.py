@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.port import AnalysisProfileProvider
-from app.module.analysis.domain.value_object import (
+from app.module.analysis.domain.value_object.profile import (
     AnalysisProfile,
     AnalysisProfileDescription,
     AnalysisProfileName,
@@ -16,7 +16,7 @@ from app.module.shared.domain.error import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
     from app.module.analysis.infrastructure.config.models import AnalysisProfilesConfig
 
 

@@ -10,9 +10,9 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object.analysis_engine import AnalysisEngine
-    from app.module.analysis.domain.value_object.engine_description import EngineDescription
-    from app.module.analysis.domain.value_object.engine_name import EngineName
+    from app.module.analysis.domain.value_object.engine.analysis_engine import AnalysisEngine
+    from app.module.analysis.domain.value_object.engine.engine_description import EngineDescription
+    from app.module.analysis.domain.value_object.engine.engine_name import EngineName
 
 
 @dataclass(frozen=True, slots=True)

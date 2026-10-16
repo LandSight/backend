@@ -12,8 +12,8 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object.analysis_key import AnalysisKey
-    from app.module.analysis.domain.value_object.normalized_score import NormalizedScore
+    from app.module.analysis.domain.value_object.evaluation.analysis_key import AnalysisKey
+    from app.module.analysis.domain.value_object.evaluation.normalized_score import NormalizedScore
 
 
 @dataclass(frozen=True, slots=True)

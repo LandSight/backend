@@ -1,0 +1,51 @@
+# Constraint policy.
+#
+# The multi-criteria score (HMCDA or another scorer) says how good a plot is
+# from its metrics; constraints say what the law or the surroundings rule out.
+# They are applied afterwards, to the total score, from the restriction hits of
+# the parcel (see the restriction module and docs/restrictions.md):
+#   prohibit  total score 0 once the restriction covers at least min_share of
+#             the plot; a smaller overlap falls back to the penalty, if any
+#   penalty   score multiplied by (1 - penalty); with scale_by_share the
+#             penalty is weighted by the covered share, for restrictions that
+#             only rule out the covered part of the plot
+# min_share above 0 absorbs OSM digitizing error at shared boundaries.
+#
+# Profiles are keyed by analysis type; every restriction kind must have a rule.
+profiles:
+  izhs:
+    constraints:
+      # Building is barred inside.
+      protected_area: { effect: prohibit, min_share: 0.1, penalty: 0.5, scale_by_share: true }
+      military: { effect: prohibit, min_share: 0.05, penalty: 0.5, scale_by_share: true }
+      prison: { effect: prohibit, min_share: 0.05, penalty: 0.5, scale_by_share: true }
+      airfield: { effect: prohibit, min_share: 0.05, penalty: 0.5, scale_by_share: true }
+      cemetery: { effect: prohibit, min_share: 0.05, penalty: 0.5, scale_by_share: true }
+      landfill: { effect: prohibit, min_share: 0.05, penalty: 0.5, scale_by_share: true }
+      industrial: { effect: prohibit, min_share: 0.3, penalty: 0.5, scale_by_share: true }
+      # Public land or water: the plot is drawn over it.
+      road_body: { effect: prohibit, min_share: 0.1, penalty: 0.5, scale_by_share: true }
+      railway_strip: { effect: prohibit, min_share: 0.1, penalty: 0.5, scale_by_share: true }
+      water_body: { effect: prohibit, min_share: 0.3, penalty: 0.6, scale_by_share: true }
+      # Protection zones of networks: no house inside; a covered corner only
+      # shrinks the buildable area.
+      power_line_zone: { effect: prohibit, min_share: 0.5, penalty: 0.6, scale_by_share: true }
+      trunk_pipeline_zone: { effect: prohibit, min_share: 0.3, penalty: 0.6, scale_by_share: true }
+      gas_distribution_zone: { effect: prohibit, min_share: 0.5, penalty: 0.4, scale_by_share: true }
+      # Parts of the plot that cannot be built on or fenced.
+      shore_strip: { effect: penalty, penalty: 0.3, scale_by_share: true }
+      coastal_protection_strip: { effect: penalty, penalty: 0.2, scale_by_share: true }
+      wetland: { effect: penalty, penalty: 0.5, scale_by_share: true }
+      # Nuisance and sanitary buffers: they affect the whole plot.
+      landfill_szz: { effect: penalty, penalty: 0.5 }
+      cemetery_szz: { effect: penalty, penalty: 0.3 }
+      trunk_pipeline_min_distance: { effect: penalty, penalty: 0.3 }
+      railway_sanitary_gap: { effect: penalty, penalty: 0.25 }
+      wastewater_szz: { effect: penalty, penalty: 0.25 }
+      industrial_buffer: { effect: penalty, penalty: 0.15 }
+      airfield_vicinity: { effect: penalty, penalty: 0.15 }
+      roadside_strip: { effect: penalty, penalty: 0.1 }
+      protected_area_buffer: { effect: penalty, penalty: 0.1 }
+      prison_buffer: { effect: penalty, penalty: 0.1 }
+      # Building is allowed, but only with a sewage treatment system.
+      water_protection_zone: { effect: penalty, penalty: 0.05 }

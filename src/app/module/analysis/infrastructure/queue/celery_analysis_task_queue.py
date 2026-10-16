@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from celery import Celery
 
-    from app.module.analysis.domain.value_object import AnalysisId
+    from app.module.analysis.domain.value_object.analysis import AnalysisId
 
 
 PROCESS_ANALYSIS_TASK_NAME = "analysis.process_analysis"

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.module.analysis.application.port import (
     AnalysisProfileProvider,
     AnalysisScorer,
+    ConstraintEvaluator,
     InterpretationService,
     MetricsService,
     ParcelsService,
@@ -30,6 +31,8 @@ from app.module.analysis.application.use_case import (
     StartAnalysisUseCase,
 )
 from app.module.analysis.infrastructure.config import load_analysis_profiles
+from app.module.analysis.infrastructure.constrainer import PolicyConstraintEvaluator
+from app.module.analysis.infrastructure.constrainer.config import load_constraints_config
 from app.module.analysis.infrastructure.gateway import (
     InterpretationServiceImpl,
     MetricsServiceImpl,
@@ -80,6 +83,10 @@ def provide_parcels_service(
 # ----- Scoring -----
 def provide_analysis_scorer() -> HmcdaAnalysisScorer:
     return HmcdaAnalysisScorer(load_engine_config())
+
+
+def provide_constraint_evaluator() -> PolicyConstraintEvaluator:
+    return PolicyConstraintEvaluator(load_constraints_config())
 
 
 def provide_engine_provider() -> EngineProviderImpl:
@@ -217,6 +224,7 @@ def provide_score_analysis_use_case(
     unit_of_work: NamedDependency[UnitOfWork],
     interpretation_service: NamedDependency[InterpretationService],
     restriction_service: NamedDependency[RestrictionService],
+    constraint_evaluator: NamedDependency[ConstraintEvaluator],
 ) -> ScoreAnalysisUseCase:
     return ScoreAnalysisUseCase(
         analysis_repository,
@@ -225,6 +233,7 @@ def provide_score_analysis_use_case(
         unit_of_work,
         interpretation_service,
         restriction_service,
+        constraint_evaluator,
     )
 
 
@@ -235,6 +244,7 @@ analysis_dependencies = {
     "metrics_service": Provide(provide_metrics_service, sync_to_thread=False),
     "restriction_service": Provide(provide_restriction_service, sync_to_thread=False),
     "analysis_scorer": Provide(provide_analysis_scorer, use_cache=True, sync_to_thread=False),
+    "constraint_evaluator": Provide(provide_constraint_evaluator, use_cache=True, sync_to_thread=False),
     "engine_provider": Provide(provide_engine_provider, use_cache=True, sync_to_thread=False),
     "analysis_profiles": Provide(provide_analysis_profiles, use_cache=True, sync_to_thread=False),
     "analysis_task_queue": Provide(provide_analysis_task_queue, sync_to_thread=False),

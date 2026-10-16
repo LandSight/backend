@@ -9,7 +9,7 @@ from app.module.analysis.application.dto.command import StartAnalysisCommand
 from app.module.analysis.application.dto.response import AnalysisResponse
 from app.module.analysis.domain.entity import Analysis
 from app.module.analysis.domain.event import ANALYSIS_QUEUED_EVENT, AnalysisQueuedEvent
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisName, ParcelId
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisName, ParcelId
 from app.module.shared.application.error import ForbiddenError
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger

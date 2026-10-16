@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import AnalysisProfile, AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
+    from app.module.analysis.domain.value_object.profile import AnalysisProfile
 
 
 class AnalysisProfileProvider(ABC):

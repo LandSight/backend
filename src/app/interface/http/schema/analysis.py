@@ -8,7 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
+from app.module.analysis.domain.value_object.analysis import AnalysisType
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
 
 
 class StartAnalysisRequest(BaseModel):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from app.module.analysis.domain.value_object import (
+from app.module.analysis.domain.value_object.evaluation import (
     AnalysisKey,
     ClusterScore,
     Contribution,

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from app.module.analysis.domain.value_object.constraint_effect import ConstraintEffect
+from app.module.analysis.domain.value_object.constraint.constraint_effect import ConstraintEffect
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.domain.value_object import BaseCompositeValueObject
 

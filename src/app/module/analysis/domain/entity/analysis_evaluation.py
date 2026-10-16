@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, override
 
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    AnalysisEvaluationId,
-    AnalysisId,
-    AnalysisScore,
-    AnalysisType,
-    AppliedConstraint,
-    ClusterScore,
-    ConstraintEffect,
-)
+from app.module.analysis.domain.value_object.constraint import AppliedConstraint, ConstraintEffect
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
+from app.module.analysis.domain.value_object.evaluation import AnalysisEvaluationId, AnalysisScore, ClusterScore
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
 
 
 if TYPE_CHECKING:
     import datetime
+
+    from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisType
 
 
 class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
@@ -124,6 +120,17 @@ class AnalysisEvaluation(BaseEntity[AnalysisEvaluationId]):
     def clusters(self) -> tuple[ClusterScore, ...]:
         """Per-cluster breakdown."""
         return self._clusters
+
+    def apply_constraints(self, constraints: tuple[AppliedConstraint, ...]) -> None:
+        """Apply constraints to the multi-criteria score.
+
+        The total becomes the base score times the factors of the constraints,
+        so a prohibition (factor 0) zeroes it. Applying again replaces the
+        previous constraints rather than compounding them.
+        """
+        self._applied_constraints = constraints
+        self._total_score = AnalysisScore(self._base_score.unwrap() * math.prod(c.factor for c in constraints))
+        self._validate()
 
     @property
     def base_score(self) -> AnalysisScore:

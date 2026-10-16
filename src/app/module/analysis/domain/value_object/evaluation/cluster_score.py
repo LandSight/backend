@@ -10,11 +10,11 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object.analysis_key import AnalysisKey
-    from app.module.analysis.domain.value_object.contribution import Contribution
-    from app.module.analysis.domain.value_object.metric_contribution import MetricContribution
-    from app.module.analysis.domain.value_object.normalized_score import NormalizedScore
-    from app.module.analysis.domain.value_object.weight import Weight
+    from app.module.analysis.domain.value_object.evaluation.analysis_key import AnalysisKey
+    from app.module.analysis.domain.value_object.evaluation.contribution import Contribution
+    from app.module.analysis.domain.value_object.evaluation.metric_contribution import MetricContribution
+    from app.module.analysis.domain.value_object.evaluation.normalized_score import NormalizedScore
+    from app.module.analysis.domain.value_object.evaluation.weight import Weight
 
 
 @dataclass(frozen=True, slots=True)

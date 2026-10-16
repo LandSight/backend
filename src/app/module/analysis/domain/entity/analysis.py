@@ -3,21 +3,24 @@
 from __future__ import annotations
 
 import datetime
-from typing import NoReturn, override
+from typing import TYPE_CHECKING, NoReturn, override
 
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
+from app.module.analysis.domain.value_object.analysis import (
     AnalysisId,
     AnalysisName,
-    AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
     AnalysisStatusReason,
     AnalysisType,
     ParcelId,
 )
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
+
+
+if TYPE_CHECKING:
+    from app.module.analysis.domain.value_object.evaluation import AnalysisScore
 
 
 class Analysis(BaseEntity[AnalysisId]):

@@ -10,7 +10,7 @@ from app.module.analysis.application.error import (
     AnalysisNotFoundError,
 )
 from app.module.analysis.domain.event import ANALYSIS_DELETED_EVENT, AnalysisDeletedEvent
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 

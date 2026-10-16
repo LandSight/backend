@@ -9,7 +9,7 @@ from app.module.shared.domain.value_object import BaseValueObject
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object.metric_type import MetricType
+    from app.module.analysis.domain.value_object.metric.metric_type import MetricType
 
 
 class AnalysisStatusReason(BaseValueObject[str]):

@@ -18,7 +18,7 @@ from app.module.analysis.application.error import (
     AnalysisEvaluationNotAvailableError,
     AnalysisNotFoundError,
 )
-from app.module.analysis.domain.value_object import AnalysisId
+from app.module.analysis.domain.value_object.analysis import AnalysisId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
         AnalysisRepository,
     )
     from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-    from app.module.analysis.domain.value_object import ClusterScore, MetricContribution
+    from app.module.analysis.domain.value_object.evaluation import ClusterScore, MetricContribution
 
 
 class GetAnalysisEvaluationUseCase(

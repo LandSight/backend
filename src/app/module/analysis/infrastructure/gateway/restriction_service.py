@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.port import RestrictionService
-from app.module.analysis.domain.value_object import RestrictionCheck, RestrictionCheckRef, RestrictionHit
+from app.module.analysis.domain.value_object.restriction import RestrictionCheck, RestrictionCheckRef, RestrictionHit
 from app.module.restriction.interface.internal.dto import (
     CalculateCheckInput,
     DeleteChecksInput,

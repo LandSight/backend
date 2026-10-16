@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 from app.module.analysis.application.dto.command import GetAnalysisCommand
 from app.module.analysis.application.dto.response import AnalysisResponse
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.value_object import AnalysisId
+from app.module.analysis.domain.value_object.analysis import AnalysisId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 

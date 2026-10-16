@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.analysis.domain.value_object import RestrictionCheck, RestrictionCheckRef
+    from app.module.analysis.domain.value_object.restriction import RestrictionCheck, RestrictionCheckRef
 
 
 class RestrictionService(ABC):

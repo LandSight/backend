@@ -10,8 +10,8 @@ from app.module.shared.domain.value_object import BaseCompositeValueObject
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object.restriction_check_ref import RestrictionCheckRef
-    from app.module.analysis.domain.value_object.restriction_hit import RestrictionHit
+    from app.module.analysis.domain.value_object.restriction.restriction_check_ref import RestrictionCheckRef
+    from app.module.analysis.domain.value_object.restriction.restriction_hit import RestrictionHit
 
 
 @dataclass(frozen=True, slots=True)

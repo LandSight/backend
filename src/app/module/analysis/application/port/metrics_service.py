@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from uuid import UUID
 
-    from app.module.analysis.domain.value_object import AnalysisMetricRef
+    from app.module.analysis.domain.value_object.metric import AnalysisMetricRef
 
 
 class MetricsService(ABC):

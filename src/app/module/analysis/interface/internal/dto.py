@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
+from app.module.analysis.domain.value_object.analysis import AnalysisType
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
 
 
 if TYPE_CHECKING:

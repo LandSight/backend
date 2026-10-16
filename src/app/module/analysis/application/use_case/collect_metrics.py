@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.dto.command import CollectMetricsCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus, AnalysisStatusReason, MetricType
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisStatus, AnalysisStatusReason
+from app.module.analysis.domain.value_object.metric import MetricType
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -20,7 +21,8 @@ if TYPE_CHECKING:
         AnalysisRepository,
         MetricsService,
     )
-    from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
+    from app.module.analysis.domain.value_object.metric import AnalysisMetricRef
     from app.module.shared.application.port import UnitOfWork
 
 
