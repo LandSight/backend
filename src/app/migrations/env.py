@@ -110,9 +110,29 @@ elif service == "climate":
     schema_name = "climate"
     include_schema = "climate"
 
+elif service == "restriction":
+    # Restriction FK: checks.parcel_id -> parcel.parcels.id
+    # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
+    from app.module.restriction.infrastructure.model import (
+        RestrictionCheckHitModel,
+        RestrictionCheckModel,
+        ZoneModel,
+    )
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "restriction"
+    schema_name = "restriction"
+    include_schema = "restriction"
+
 elif service == "analysis":
     # Analysis FK: analyses.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.analysis.infrastructure.model.analysis_applied_constraint_model import (
+        AnalysisAppliedConstraintModel,
+    )
     from app.module.analysis.infrastructure.model.analysis_cluster_score_model import (
         AnalysisClusterScoreModel,
     )
@@ -150,7 +170,8 @@ elif service == "interpretation":
 else:
     message = (
         f"Unknown Alembic service target: '{service}'. "
-        "Expected one of: platform, identity, parcel, topography, infrastructure, climate, analysis, interpretation."
+        "Expected one of: platform, identity, parcel, topography, infrastructure, climate, restriction, analysis, "
+        "interpretation."
     )
     raise ValueError(message)
 
