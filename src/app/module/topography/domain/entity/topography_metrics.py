@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, override
 from app.module.shared.domain.entity import BaseEntity
 from app.module.shared.domain.error import InvariantViolationError
 from app.module.topography.domain.value_object.metric import (
-    Area,
     AspectDirection,
     CompactnessIndex,
     Elevation,
@@ -23,6 +22,8 @@ from app.module.topography.domain.value_object.metric import (
 
 if TYPE_CHECKING:
     import datetime
+
+    from app.module.shared.domain.value_object import Area
 
 
 class TopographyMetrics(BaseEntity[TopographyMetricsId]):
@@ -49,7 +50,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
     max_slope : Slope
         Maximum slope in degrees.
     slope_percentiles : SlopePercentiles
-        Slope values at key percentiles (25, 50, 75, 90).
+        Slope values at key percentiles (75, 90).
     aspect : AspectDirection
         Dominant slope aspect direction.
     south_aspect_percentage : Percentage
@@ -157,7 +158,7 @@ class TopographyMetrics(BaseEntity[TopographyMetricsId]):
 
     @property
     def slope_percentiles(self) -> SlopePercentiles:
-        """Slope values at key percentiles (25, 50, 75, 90)."""
+        """Slope values at key percentiles (75, 90)."""
         return self._slope_percentiles
 
     @property

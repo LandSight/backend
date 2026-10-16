@@ -15,7 +15,7 @@ class Distance(BaseValueObject[float]):
     - Must be a non-negative number (>= 0)
     """
 
-    _MIN_VALUE = 0.0
+    _MIN_VALUE = 0
 
     @override
     def _normalize(self, value: float) -> float:

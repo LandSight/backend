@@ -13,11 +13,10 @@ if TYPE_CHECKING:
     from app.module.infrastructure.domain.value_object import (
         BufferZone,
         Count,
-        CoverageRatio,
         Density,
         Distance,
     )
-    from app.module.shared.domain.value_object import Polygon
+    from app.module.shared.domain.value_object import Polygon, Share
 
 
 class InfrastructureMetricsService(ABC):
@@ -92,7 +91,7 @@ class InfrastructureMetricsService(ABC):
         self,
         objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
-    ) -> CoverageRatio:
+    ) -> Share:
         """Compute the coverage ratio of an objects in buffer zone."""
         raise NotImplementedError
 

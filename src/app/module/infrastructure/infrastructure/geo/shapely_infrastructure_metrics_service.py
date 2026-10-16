@@ -20,11 +20,10 @@ from app.module.infrastructure.domain.entity import InfrastructureObject
 from app.module.infrastructure.domain.value_object import (
     BufferZone,
     Count,
-    CoverageRatio,
     Density,
     Distance,
 )
-from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon
+from app.module.shared.domain.value_object import GeoPoint, LineString, MultiPolygon, Polygon, Share
 from app.module.shared.infrastructure.geo.projection import reproject_to, to_local_utm
 
 
@@ -166,7 +165,7 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         self,
         objects: list[InfrastructureObject],
         buffer_zone: BufferZone,
-    ) -> CoverageRatio:
+    ) -> Share:
         """See :class:`app.module.infrastructure.application.port.InfrastructureMetricsService.coverage_ratio`.
 
         Computes the fraction of the buffer ring covered by the objects. The
@@ -176,12 +175,12 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
         """
         ring = self._ring(buffer_zone)
         if ring is None:
-            return CoverageRatio(0.0)
+            return Share(0.0)
 
         ring_utm, epsg = to_local_utm(ring)
         ring_area = ring_utm.area
         if ring_area <= 0:
-            return CoverageRatio(0.0)
+            return Share(0.0)
 
         intersections = []
         for obj in objects:
@@ -191,10 +190,10 @@ class ShapelyInfrastructureMetricsService(InfrastructureMetricsService):
                 intersections.append(intersection)
 
         if not intersections:
-            return CoverageRatio(0.0)
+            return Share(0.0)
 
         covered_area = unary_union(intersections).area
-        return CoverageRatio(min(covered_area / ring_area, 1.0))
+        return Share(min(covered_area / ring_area, 1.0))
 
     @override
     def line_density(

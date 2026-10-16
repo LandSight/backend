@@ -125,7 +125,7 @@ class TopographyInternal(TopographyInternalAPI):
 
 
 def _ordinal(number: int) -> str:
-    """Return ``number`` with its English ordinal suffix (``25th``, ``1st``)."""
+    """Return ``number`` with its English ordinal suffix (``75th``, ``1st``)."""
     teens = range(10, 21)
     suffix = "th" if number % 100 in teens else {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
     return f"{number}{suffix}"

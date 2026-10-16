@@ -18,7 +18,6 @@ from app.module.infrastructure.domain.value_object import (
     Buffer,
     Category,
     Count,
-    CoverageRatio,
     Density,
     Distance,
     InfrastructureMetricsId,
@@ -31,6 +30,7 @@ from app.module.infrastructure.infrastructure.model import (
     RoadAccessibilityMetricsModel,
     UtilityMetricsModel,
 )
+from app.module.shared.domain.value_object import Share
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -440,7 +440,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             parcel_id=ParcelId(model.parcel_id),
             buffer=Buffer(model.buffer),
             object_type=Category(model.object_type),
-            coverage_ratio=CoverageRatio(model.coverage_ratio),
+            coverage_ratio=Share(model.coverage_ratio),
             count=Count(model.count),
             min_distance_to=Distance(model.min_distance_to) if model.min_distance_to is not None else None,
             distance_to_large_object=(

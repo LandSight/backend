@@ -36,7 +36,7 @@ class TopographyMetricsResponse:
     max_slope : float
         Maximum slope in degrees.
     slope_percentiles : dict[int, float]
-        Slope values at percentiles 25, 50, 75, 90.
+        Slope values at percentiles 75 and 90.
     aspect : str
         Dominant slope aspect direction (N/NE/E/SE/S/SW/W/NW/FLAT).
     south_aspect_percentage : float

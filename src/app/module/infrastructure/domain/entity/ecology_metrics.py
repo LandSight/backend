@@ -14,12 +14,12 @@ if TYPE_CHECKING:
         Buffer,
         Category,
         Count,
-        CoverageRatio,
         Density,
         Distance,
         InfrastructureMetricsId,
         ParcelId,
     )
+    from app.module.shared.domain.value_object import Share
 
 
 class EcologyMetrics(InfrastructureMetrics):
@@ -39,14 +39,14 @@ class EcologyMetrics(InfrastructureMetrics):
         parcel_id: ParcelId,
         buffer: Buffer,
         object_type: Category,
-        coverage_ratio: CoverageRatio,
+        coverage_ratio: Share,
         count: Count,
         min_distance_to: Distance | None,
         distance_to_large_object: Distance | None,
         river_density: Density | None,
     ) -> None:
         self._object_type: Category = object_type
-        self._coverage_ratio: CoverageRatio = coverage_ratio
+        self._coverage_ratio: Share = coverage_ratio
         self._count: Count = count
         self._min_distance_to: Distance | None = min_distance_to
         self._distance_to_large_object: Distance | None = distance_to_large_object
@@ -60,7 +60,7 @@ class EcologyMetrics(InfrastructureMetrics):
         return self._object_type
 
     @property
-    def coverage_ratio(self) -> CoverageRatio:
+    def coverage_ratio(self) -> Share:
         """Fraction of the buffer zone covered by the objects."""
         return self._coverage_ratio
 

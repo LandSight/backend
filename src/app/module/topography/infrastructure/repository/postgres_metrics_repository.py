@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, override
 
 from sqlalchemy import delete, select
 
+from app.module.shared.domain.value_object import Area
 from app.module.topography.application.port import MetricsRepository
 from app.module.topography.domain.entity import TopographyMetrics
 from app.module.topography.domain.value_object.metric import (
-    Area,
     AspectDirection,
     CompactnessIndex,
     Elevation,
@@ -112,8 +112,14 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             elevation_std=Elevation(model.elevation_std),
             mean_slope=Slope(model.mean_slope),
             max_slope=Slope(model.max_slope),
+            # Snapshots taken before the lower percentiles were dropped still
+            # carry P25 and P50, so only the current ones are read back.
             slope_percentiles=SlopePercentiles(
-                {Percentage(float(k)): Slope(v) for k, v in model.slope_percentiles.items()},
+                {
+                    Percentage(float(k)): Slope(v)
+                    for k, v in model.slope_percentiles.items()
+                    if int(float(k)) in SlopePercentiles.PERCENTILES
+                },
             ),
             aspect=AspectDirection(model.aspect),
             south_aspect_percentage=Percentage(model.south_aspect_percentage),

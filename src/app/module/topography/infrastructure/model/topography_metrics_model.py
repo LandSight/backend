@@ -64,7 +64,7 @@ class TopographyMetricsModel(TimestampedModel):
     slope_percentiles: Mapped[dict] = mapped_column(
         JSONB,
         nullable=False,
-        comment="Slope values at percentiles 25, 50, 75, 90 as JSON dict",
+        comment="Slope values at percentiles 75 and 90 as JSON dict",
     )
     aspect: Mapped[str] = mapped_column(
         String(4),

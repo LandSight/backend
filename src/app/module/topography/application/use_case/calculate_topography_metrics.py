@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING, override
 from uuid import uuid6
 
 from app.module.shared.application.use_case import BaseUseCase
-from app.module.shared.domain.value_object import BoundingBox
+from app.module.shared.domain.value_object import Area, BoundingBox
 from app.module.topography.application.dto.command import CalculateTopographyMetricsCommand
 from app.module.topography.application.dto.response import TopographyMetricsResponse
 from app.module.topography.application.error import DemNotFoundError
 from app.module.topography.domain.entity import TopographyMetrics
 from app.module.topography.domain.value_object.metric import (
-    Area,
     CompactnessIndex,
     Elevation,
     ElongationIndex,
