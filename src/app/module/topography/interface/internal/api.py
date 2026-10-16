@@ -110,7 +110,7 @@ class TopographyInternal(TopographyInternalAPI):
         metrics.extend(
             NumberMetricValue(
                 key=f"slope_p{percentile}",
-                label=f"Slope p{percentile}",
+                label=f"Slope, {_ordinal(percentile)} percentile",
                 unit="deg",
                 value=value,
             )
@@ -122,6 +122,13 @@ class TopographyInternal(TopographyInternalAPI):
             id=result.id,
             metrics=metrics,
         )
+
+
+def _ordinal(number: int) -> str:
+    """Return ``number`` with its English ordinal suffix (``75th``, ``1st``)."""
+    teens = range(10, 21)
+    suffix = "th" if number % 100 in teens else {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
+    return f"{number}{suffix}"
 
 
 __all__ = ("TopographyInternal",)

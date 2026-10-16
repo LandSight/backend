@@ -38,6 +38,17 @@ class UtilityMetricsModel(TimestampedModel):
         nullable=True,
         comment="Distance to the nearest utility network in meters, or NULL if none found",
     )
+    transmission_line_clearance: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Gap between the parcel and the nearest transmission line protection zone in meters, "
+        "0 inside the zone, or NULL if none found",
+    )
+    distance_to_distribution_line: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+        comment="Distance to the nearest distribution power line in meters, or NULL if none found",
+    )
 
 
 __all__ = ("UtilityMetricsModel",)

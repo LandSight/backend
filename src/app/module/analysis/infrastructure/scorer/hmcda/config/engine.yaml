@@ -7,57 +7,64 @@ engine: hmcda
 key: baseline
 name: Fuzzy Hierarchical MCDA
 description: Baseline engine based on fuzzy hierarchical multi-criteria analysis
-model_version: v1.0
+model_version: v2.0
 
 profiles:
   izhs:
     hierarchy:
       clusters:
         - key: relief
+          name: Relief
           weight: 0.20
           components:
             - key: slope
-              weight: 0.45
+              name: Slope
+              weight: 0.50
               components:
-                - { key: mean_slope, weight: 0.25 }
-                - { key: max_slope, weight: 0.15 }
-                # Higher percentiles describe the worst terrain of the parcel,
-                # so their weight grows towards the outlier.
-                - { key: slope_p25, weight: 0.05 }
-                - { key: slope_p50, weight: 0.10 }
-                - { key: slope_p75, weight: 0.15 }
+                - { key: mean_slope, weight: 0.30 }
+                - { key: max_slope, weight: 0.20 }
+                # Upper percentiles describe the worst terrain of the parcel;
+                # lower ones repeat the mean and are not collected.
+                - { key: slope_p75, weight: 0.20 }
                 - { key: slope_p90, weight: 0.30 }
+            # Elevation spread only: the range repeats the slope picture.
             - key: elevation
+              name: Elevation
               weight: 0.15
               components:
-                - { key: elevation_range, weight: 0.60 }
-                - { key: elevation_std, weight: 0.40 }
+                - { key: elevation_std, weight: 1.0 }
             - key: shape
-              weight: 0.30
+              name: Plot shape
+              weight: 0.35
               components:
                 - { key: area, weight: 0.30 }
                 - { key: compactness_index, weight: 0.40 }
                 - { key: elongation_index, weight: 0.30 }
 
         - key: climate
-          weight: 0.10
+          name: Climate
+          weight: 0.08
           components:
             - key: temperature
+              name: Temperature
               weight: 0.50
               components:
                 - { key: mean_annual_temperature, weight: 0.30 }
                 - { key: min_temperature_coldest_month, weight: 0.40 }
                 - { key: max_temperature_warmest_month, weight: 0.30 }
             - key: precipitation
+              name: Precipitation
               weight: 0.50
               components:
                 - { key: annual_precipitation, weight: 0.50 }
                 - { key: precipitation_driest_month, weight: 0.50 }
 
         - key: infrastructure
-          weight: 0.40
+          name: Infrastructure
+          weight: 0.35
           components:
             - key: facility
+              name: Facilities and services
               weight: 0.45
               components:
                 - { key: "hospital:min_distance_to", weight: 0.15 }
@@ -70,10 +77,17 @@ profiles:
                 - { key: "police:min_distance_to", weight: 0.05 }
                 - { key: "fire_station:min_distance_to", weight: 0.05 }
             - key: utility
+              name: Utility networks
               weight: 0.10
               components:
-                - { key: "power_line:min_distance_to", weight: 1.0 }
+                # Distribution lines are a connection opportunity. Transmission
+                # lines are a building constraint, handled by the restriction
+                # zones rather than scored here.
+                - { key: "power_line:distance_to_distribution_line", weight: 0.50 }
+                - { key: "water_source:min_distance_to", weight: 0.30 }
+                - { key: "water_source:count", weight: 0.20 }
             - key: road_accessibility
+              name: Road accessibility
               weight: 0.45
               components:
                 - { key: "road_accessibility:distance_to_paved_road", weight: 0.40 }
@@ -81,16 +95,23 @@ profiles:
                 - { key: "road_accessibility:distance_to_any_road", weight: 0.20 }
                 - { key: "road_accessibility:road_density_1km", weight: 0.20 }
 
+        # Weighted up so that a plot near a forest, a lake or a river stands out
+        # from one in the middle of a built-up area.
         - key: ecology_recreation
-          weight: 0.15
+          name: Ecology and Recreation
+          weight: 0.25
           components:
-            - { key: "water_body:coverage_ratio", weight: 0.35 }
-            - { key: "water_body:min_distance_to", weight: 0.25 }
             - { key: "forest:coverage_ratio", weight: 0.25 }
+            - { key: "forest:min_distance_to", weight: 0.10 }
+            - { key: "water_body:coverage_ratio", weight: 0.15 }
+            - { key: "water_body:river_density", weight: 0.10 }
+            - { key: "water_body:min_distance_to", weight: 0.10 }
+            - { key: "water_body:distance_to_large_object", weight: 0.15 }
             - { key: "protected_area:min_distance_to", weight: 0.15 }
 
         - key: geographic_position
-          weight: 0.15
+          name: Geographical location
+          weight: 0.12
           components:
             - { key: "geographic_position:distance_to_settlement", weight: 0.50 }
             - { key: "geographic_position:distance_to_district_center", weight: 0.30 }
@@ -106,14 +127,6 @@ profiles:
         type: z_shaped
         params: { optimal_max: 5, acceptable_max: 25 }
         unit: deg
-      slope_p25:
-        type: z_shaped
-        params: { optimal_max: 1, acceptable_max: 10 }
-        unit: deg
-      slope_p50:
-        type: z_shaped
-        params: { optimal_max: 2, acceptable_max: 12 }
-        unit: deg
       slope_p75:
         type: z_shaped
         params: { optimal_max: 3, acceptable_max: 15 }
@@ -123,10 +136,6 @@ profiles:
         params: { optimal_max: 5, acceptable_max: 20 }
         unit: deg
       # Relief - elevation
-      elevation_range:
-        type: z_shaped
-        params: { optimal_max: 2, acceptable_max: 20 }
-        unit: m
       elevation_std:
         type: z_shaped
         params: { optimal_max: 1, acceptable_max: 10 }
@@ -136,12 +145,14 @@ profiles:
         type: trapezoidal
         params: { low: 200, optimal_min: 600, optimal_max: 2000, high: 5000 }
         unit: m2
+      # Compactness relative to a square: 1 = square, 0.89 = 1:2 rectangle.
       compactness_index:
         type: s_shaped
-        params: { min: 0, max: 1 }
+        params: { min: 0.5, max: 0.85 }
+      # Width to length ratio: 1:2 or squarer is optimal, 1:5 is unusable.
       elongation_index:
-        type: z_shaped
-        params: { optimal_max: 2, acceptable_max: 5 }
+        type: s_shaped
+        params: { min: 0.2, max: 0.5 }
       # Climate - temperature
       mean_annual_temperature:
         type: trapezoidal
@@ -202,36 +213,65 @@ profiles:
         type: z_shaped
         params: { optimal_max: 2000, acceptable_max: 10000 }
         unit: m
-      # Ecology - water
+      # Ecology - water. Area densities are hectares of the objects per square
+      # kilometre of the 2 km ring around the parcel.
       "water_body:coverage_ratio":
         type: s_shaped
-        params: { min: 0.01, max: 0.10 }
+        params: { min: 1, max: 10 }
+        unit: ha/km2
+      # One river crossing the 2 km ring is about 0.3 km/km2.
+      "water_body:river_density":
+        type: s_shaped
+        params: { min: 0, max: 0.3 }
+        unit: km/km2
+      # Closer is better: the Water Code allows houses in the water protection
+      # zone, only the 20 m shore strip (5 m for small rivers) is public.
       "water_body:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }
         unit: m
+        missing_value: 2000
+      # Lake or reservoir of 100 ha and more, within the 2 km search buffer.
       "water_body:distance_to_large_object":
         type: z_shaped
-        params: { optimal_max: 1000, acceptable_max: 5000 }
+        params: { optimal_max: 1000, acceptable_max: 2000 }
         unit: m
+        missing_value: 2000
       # Ecology - forest
       "forest:coverage_ratio":
         type: s_shaped
-        params: { min: 0.05, max: 0.30 }
+        params: { min: 5, max: 30 }
+        unit: ha/km2
       "forest:min_distance_to":
         type: z_shaped
         params: { optimal_max: 500, acceptable_max: 2000 }
         unit: m
-      # Ecology - protected areas
+        missing_value: 2000
+      # Ecology - protected areas. Up to 3 km is optimal (nature nearby,
+      # nothing will be built there), farther fades out, none within 10 km
+      # scores 0. Building inside one is barred by its regime; that is the
+      # protected_area restriction, so the edge itself is not penalised here.
       "protected_area:min_distance_to":
-        type: s_shaped
-        params: { min: 0, max: 5000 }
-        unit: m
-      # Utility
-      "power_line:min_distance_to":
         type: z_shaped
-        params: { optimal_max: 100, acceptable_max: 1000 }
+        params: { optimal_max: 3000, acceptable_max: 10000 }
         unit: m
+        missing_value: 10000
+      # Distribution lines (below 35 kV): a grid connection at the discounted
+      # rate needs one within 300 m in towns and 500 m in rural areas. Sparse
+      # in OSM, so a missing line stays unscored.
+      "power_line:distance_to_distribution_line":
+        type: z_shaped
+        params: { optimal_max: 300, acceptable_max: 1000 }
+        unit: m
+      # Water sources (wells, springs, taps). Sparse in OSM, so a missing
+      # source stays unscored instead of counting against the plot.
+      "water_source:min_distance_to":
+        type: z_shaped
+        params: { optimal_max: 300, acceptable_max: 1500 }
+        unit: m
+      "water_source:count":
+        type: s_shaped
+        params: { min: 0, max: 3 }
       # Roads
       "road_accessibility:distance_to_paved_road":
         type: z_shaped

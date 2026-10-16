@@ -18,7 +18,6 @@ from app.module.infrastructure.domain.value_object import (
     Buffer,
     Category,
     Count,
-    CoverageRatio,
     Density,
     Distance,
     InfrastructureMetricsId,
@@ -31,6 +30,7 @@ from app.module.infrastructure.infrastructure.model import (
     RoadAccessibilityMetricsModel,
     UtilityMetricsModel,
 )
+from app.module.shared.domain.value_object import Share
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -130,6 +130,7 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             distance_to_large_object=(
                 metrics.distance_to_large_object.unwrap() if metrics.distance_to_large_object is not None else None
             ),
+            river_density=metrics.river_density.unwrap() if metrics.river_density is not None else None,
         )
         await self._insert(model)
 
@@ -181,6 +182,16 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             buffer=metrics.buffer.unwrap(),
             utility_type=metrics.utility_type.value,
             min_distance_to=metrics.min_distance_to.unwrap() if metrics.min_distance_to is not None else None,
+            transmission_line_clearance=(
+                metrics.transmission_line_clearance.unwrap()
+                if metrics.transmission_line_clearance is not None
+                else None
+            ),
+            distance_to_distribution_line=(
+                metrics.distance_to_distribution_line.unwrap()
+                if metrics.distance_to_distribution_line is not None
+                else None
+            ),
         )
         await self._insert(model)
 
@@ -429,12 +440,13 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             parcel_id=ParcelId(model.parcel_id),
             buffer=Buffer(model.buffer),
             object_type=Category(model.object_type),
-            coverage_ratio=CoverageRatio(model.coverage_ratio),
+            coverage_ratio=Share(model.coverage_ratio),
             count=Count(model.count),
             min_distance_to=Distance(model.min_distance_to) if model.min_distance_to is not None else None,
             distance_to_large_object=(
                 Distance(model.distance_to_large_object) if model.distance_to_large_object is not None else None
             ),
+            river_density=Density(model.river_density) if model.river_density is not None else None,
         )
 
     @staticmethod
@@ -446,6 +458,14 @@ class PostgresMetricsRepository(BaseSQLAlchemyRepository, MetricsRepository):
             buffer=Buffer(model.buffer),
             utility_type=Category(model.utility_type),
             min_distance_to=Distance(model.min_distance_to) if model.min_distance_to is not None else None,
+            transmission_line_clearance=(
+                Distance(model.transmission_line_clearance) if model.transmission_line_clearance is not None else None
+            ),
+            distance_to_distribution_line=(
+                Distance(model.distance_to_distribution_line)
+                if model.distance_to_distribution_line is not None
+                else None
+            ),
         )
 
     @staticmethod

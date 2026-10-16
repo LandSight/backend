@@ -125,7 +125,7 @@ class DemMetricsService(ABC):
 
     @abstractmethod
     def calculate_slope_percentiles(self, raster: RasterData) -> SlopePercentiles:
-        """Calculate slope percentiles (25, 50, 75, 90).
+        """Calculate slope percentiles (75, 90).
 
         Parameters
         ----------

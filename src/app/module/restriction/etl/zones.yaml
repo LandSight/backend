@@ -1,0 +1,413 @@
+# Restriction zone rules.
+#
+# Each rule turns OSM objects of one osm2pgsql layer into zones of one kind:
+# the object itself (width_m: 0) or a buffer around it. Widths follow Russian
+# regulations; where OSM lacks the attribute the regulation depends on (road
+# category, sanitary class, bank slope), the closest reasonable value is used
+# and marked as an approximation. The full table with quotes and links is in
+# docs/restrictions.md; keep both in sync.
+#
+# Whether a kind bars a house or lowers the score is not decided here: that is
+# the "constraints" policy of the analysis profile (engine.yaml).
+#
+# Bump the version on every change (it is recorded on each zone and each
+# restriction check): MAJOR when a kind is removed or renamed, MINOR when a
+# kind or rule is added, PATCH when a width or legal basis is corrected.
+# Rebuild the zones afterwards (build_osm_zones).
+#
+# Rule fields:
+#   id           unique rule name
+#   kind         RestrictionKind value
+#   layer        point | line | polygon
+#   match        tag set (or list of alternative sets); "*" = any value
+#   exclude      tags that drop the object
+#   min_area_ha  skip smaller polygons
+#   extra_sql    extra trusted condition over the hstore column "tags"
+#   width_m      constant width, or
+#   width        {by: voltage_kv | area_ha | river_length_km, steps: [{max, width_m}, ..., {width_m}]}
+#                {by: tag, tag: <key>, values: {<value>: <width>}, default: <width>}
+#   legal_basis  short reference shown in reports
+
+version: 1.0.0
+
+zones:
+  # --- Protected areas (33-FZ) -------------------------------------------------
+  # Same selection as the infrastructure protected_area category: nature
+  # reserves only, without classes 21-29 (non-nature) and World Heritage.
+  - id: protected_area
+    kind: protected_area
+    layer: polygon
+    match:
+      - { boundary: [protected_area] }
+      - { leisure: [nature_reserve] }
+    exclude: { protect_class: ["21", "22", "23", "24", "25", "26", "27", "28", "29"] }
+    extra_sql: "coalesce(tags -> 'protection_title', '') NOT ILIKE '%world heritage%'"
+    width_m: 0
+    legal_basis: "33-ФЗ «Об ООПТ», ст. 9 п. 1, ст. 15 п. 2 «д»; ст. 24, 27 — по положению об ООПТ"
+
+  # Buffer zones are set individually for each area; 500 m approximates the
+  # common regional practice.
+  - id: protected_area_buffer
+    kind: protected_area_buffer
+    layer: polygon
+    match:
+      - { boundary: [protected_area] }
+      - { leisure: [nature_reserve] }
+    exclude: { protect_class: ["21", "22", "23", "24", "25", "26", "27", "28", "29"] }
+    extra_sql: "coalesce(tags -> 'protection_title', '') NOT ILIKE '%world heritage%'"
+    width_m: 500
+    legal_basis: "33-ФЗ, ст. 2 п. 10; ЗК РФ, ст. 105 п. 11 (охранные зоны ООПТ); ширина — приближение"
+
+  # --- Power lines (Government Decree No. 160 of 24.02.2009) --------------------
+  # The decree measures from the outermost wire: up to 1 kV 2 m, 1-20 kV 10 m,
+  # 35 kV 15 m, 110 kV 20 m, 150-220 kV 25 m, 300-500 kV 30 m, 750 kV 40 m,
+  # 1150 kV 55 m. OSM maps the axis, so half a typical crossarm span is added.
+  # Untagged voltage: line 110 kV, minor_line 10 kV.
+  - id: power_line_zone
+    kind: power_line_zone
+    layer: line
+    match: { power: [line, minor_line] }
+    width:
+      by: voltage_kv
+      default_kv: { line: 110, minor_line: 10 }
+      steps:
+        - { max: 1, width_m: 3 }
+        - { max: 20, width_m: 12 }
+        - { max: 35, width_m: 18 }
+        - { max: 110, width_m: 25 }
+        - { max: 220, width_m: 30 }
+        - { max: 500, width_m: 40 }
+        - { max: 750, width_m: 55 }
+        - { width_m: 75 }
+    legal_basis: "ПП РФ № 160 от 24.02.2009, прил. «Требования к границам…», п. «а»; запрет строительства — п. 10 «а»"
+
+  # --- Pipelines ----------------------------------------------------------------
+  - id: gas_distribution_zone
+    kind: gas_distribution_zone
+    layer: line
+    match: { man_made: [pipeline], substance: [gas] }
+    exclude: { usage: [transmission] }
+    width_m: 2
+    legal_basis: "ПП РФ № 878 от 20.11.2000, Правила охраны газораспределительных сетей, п. 7 «а»; ЗК РФ, ст. 105 п. 6"
+
+  - id: trunk_pipeline_zone
+    kind: trunk_pipeline_zone
+    layer: line
+    match: { man_made: [pipeline], usage: [transmission] }
+    width_m: 25
+    legal_basis: "ПП РФ № 1083 от 08.09.2017, Правила охраны магистральных газопроводов, п. 3 «а»; запрет зданий — п. 4 «л»"
+
+  # Minimum distances to settlements depend on diameter and pressure (100-350 m
+  # for gas); the lower bound is used.
+  - id: trunk_pipeline_min_distance
+    kind: trunk_pipeline_min_distance
+    layer: line
+    match: { man_made: [pipeline], usage: [transmission] }
+    width_m: 100
+    legal_basis: "ЗК РФ, ст. 105 п. 25; ПП РФ № 1083, п. 22; СП 36.13330.2012, табл. 4 (нижняя граница)"
+
+  # --- Railways -------------------------------------------------------------------
+  # The right-of-way is set by project; 25 m from the axis for running lines and
+  # 10 m for service tracks approximate it.
+  - id: railway_strip
+    kind: railway_strip
+    layer: line
+    match: { railway: [rail] }
+    exclude: { tunnel: ["*"] }
+    width:
+      by: tag
+      tag: service
+      values: { spur: 10, siding: 10, yard: 10, crossover: 10 }
+      default: 25
+    legal_basis: "ПП РФ № 611 от 12.10.2006 (полоса отвода); ширина — приближение"
+
+  - id: railway_sanitary_gap
+    kind: railway_sanitary_gap
+    layer: line
+    match: { railway: [rail] }
+    exclude: { service: ["*"], tunnel: ["*"] }
+    width_m: 100
+    legal_basis: "СП 42.13330.2016, п. 8.20 (разрыв по расчёту); 100 м — прежняя норма СП 42.13330.2011; СанПиН 2.2.1/2.1.1.1200-03, п. 2.6"
+
+  # --- Roads ------------------------------------------------------------------------
+  # Half of the carriageway with shoulders, by road class.
+  - id: road_body
+    kind: road_body
+    layer: line
+    match: { highway: [motorway, trunk, primary, secondary, tertiary, unclassified, residential, living_street] }
+    exclude: { tunnel: ["*"] }
+    width:
+      by: tag
+      tag: highway
+      values:
+        motorway: 15
+        trunk: 12
+        primary: 10
+        secondary: 8
+        tertiary: 6
+        unclassified: 4
+        residential: 4
+        living_street: 3
+    legal_basis: "ЗК РФ, ст. 85 п. 12 (земли общего пользования); ширина — приближение"
+
+  # Roadside strips are set outside settlements by road category: I-II 75 m,
+  # III-IV 50 m, V 25 m, counted from the right-of-way. The OSM class stands
+  # in for the category.
+  - id: roadside_strip
+    kind: roadside_strip
+    layer: line
+    match: { highway: [motorway, trunk, primary, secondary, tertiary] }
+    exclude: { tunnel: ["*"] }
+    width:
+      by: tag
+      tag: highway
+      values: { motorway: 75, trunk: 75, primary: 50, secondary: 50, tertiary: 25 }
+    legal_basis: "257-ФЗ «Об автомобильных дорогах», ст. 26 ч. 2; ЗК РФ, ст. 105 п. 5"
+
+  # --- Water (Water Code) -----------------------------------------------------------
+  # Lakes, reservoirs and river areas themselves. Ponds and technical basins
+  # are included: no house can stand in water either way.
+  - id: water_body
+    kind: water_body
+    layer: polygon
+    match:
+      - { natural: [water] }
+      - { landuse: [reservoir] }
+    width_m: 0
+    legal_basis: "ВК РФ, ст. 5 (водные объекты)"
+
+  # Shore strip for public use: 20 m, 5 m for rivers and streams up to 10 km
+  # and canals. Private ponds and technical basins have none.
+  - id: shore_strip_rivers
+    kind: shore_strip
+    layer: line
+    match: { waterway: [river] }
+    exclude: { tunnel: ["*"] }
+    width:
+      by: river_length_km
+      steps:
+        - { max: 10, width_m: 5 }
+        - { width_m: 20 }
+    legal_basis: "ВК РФ, ст. 6 ч. 6 (ширина), ч. 8 (общее пользование)"
+
+  - id: shore_strip_streams
+    kind: shore_strip
+    layer: line
+    match: { waterway: [stream, canal] }
+    exclude: { tunnel: ["*"] }
+    width_m: 5
+    legal_basis: "ВК РФ, ст. 6 ч. 6 (ширина), ч. 8 (общее пользование)"
+
+  - id: shore_strip_lakes
+    kind: shore_strip
+    layer: polygon
+    match:
+      - { natural: [water] }
+      - { landuse: [reservoir] }
+    exclude: { water: [pond, wastewater, basin, reflecting_pool, fountain, moat] }
+    width_m: 20
+    legal_basis: "ВК РФ, ст. 6 ч. 6 (ширина), ч. 8 (общее пользование)"
+
+  # Coastal protection strip: 30 m for a reverse or zero slope, 40 m up to 3
+  # degrees, 50 m from 3 degrees. Bank slope is unknown; 40 m fits the flat
+  # Leningrad oblast. Small lakes (< 0.5 km2) have no water protection zone,
+  # hence no strip.
+  - id: coastal_protection_strip_rivers
+    kind: coastal_protection_strip
+    layer: line
+    match: { waterway: [river, stream] }
+    exclude: { tunnel: ["*"] }
+    width_m: 40
+    legal_basis: "ВК РФ, ст. 65 ч. 11, 17; ЗК РФ, ст. 105 п. 14 (уклон берега неизвестен, принято 40 м)"
+
+  - id: coastal_protection_strip_lakes
+    kind: coastal_protection_strip
+    layer: polygon
+    match:
+      - { natural: [water] }
+      - { landuse: [reservoir] }
+    exclude: { water: [pond, wastewater, basin, reflecting_pool, fountain, moat] }
+    min_area_ha: 50
+    width_m: 40
+    legal_basis: "ВК РФ, ст. 65 ч. 11, 17; ЗК РФ, ст. 105 п. 14 (уклон берега неизвестен, принято 40 м)"
+
+  # Water protection zone: rivers up to 10 km 50 m, 10-50 km 100 m, 50 km and
+  # more 200 m; lakes and reservoirs of 0.5 km2 and more 50 m. River length is
+  # the chained length of same-named ways within the oblast (a lower bound
+  # for rivers that start outside it).
+  - id: water_protection_zone_rivers
+    kind: water_protection_zone
+    layer: line
+    match: { waterway: [river] }
+    exclude: { tunnel: ["*"] }
+    width:
+      by: river_length_km
+      steps:
+        - { max: 10, width_m: 50 }
+        - { max: 50, width_m: 100 }
+        - { width_m: 200 }
+    legal_basis: "ВК РФ, ст. 65 ч. 4; ЗК РФ, ст. 105 п. 13"
+
+  - id: water_protection_zone_streams
+    kind: water_protection_zone
+    layer: line
+    match: { waterway: [stream] }
+    exclude: { tunnel: ["*"] }
+    width_m: 50
+    legal_basis: "ВК РФ, ст. 65 ч. 4; ЗК РФ, ст. 105 п. 13"
+
+  - id: water_protection_zone_lakes
+    kind: water_protection_zone
+    layer: polygon
+    match:
+      - { natural: [water], water: [lake, reservoir, oxbow, lagoon] }
+      - { natural: [water], water: [river] }
+      - { landuse: [reservoir] }
+    min_area_ha: 50
+    width_m: 50
+    legal_basis: "ВК РФ, ст. 65 ч. 6; ЗК РФ, ст. 105 п. 13"
+
+  # Untagged water areas are mostly lakes; the same 0.5 km2 threshold applies.
+  - id: water_protection_zone_untagged_lakes
+    kind: water_protection_zone
+    layer: polygon
+    match: { natural: [water] }
+    exclude: { water: ["*"] }
+    min_area_ha: 50
+    width_m: 50
+    legal_basis: "ВК РФ, ст. 65 ч. 6; ЗК РФ, ст. 105 п. 13"
+
+  # --- Wetlands (proxy for waterlogging; no flood zones in open data) ---------------
+  - id: wetland
+    kind: wetland
+    layer: polygon
+    match: { natural: [wetland] }
+    width_m: 0
+    legal_basis: "Приближение зоны подтопления (ВК РФ, ст. 67.1; ЗК РФ, ст. 105 п. 17); по данным OSM"
+
+  # --- Cemeteries (SanPiN 2.2.1/2.1.1.1200-03, 7.1.12) -------------------------------
+  - id: cemetery
+    kind: cemetery
+    layer: polygon
+    match:
+      - { landuse: [cemetery] }
+      - { amenity: [grave_yard] }
+    width_m: 0
+    legal_basis: "Территория кладбища"
+
+  # 20-40 ha 500 m (class II), 10-20 ha 300 m (class III), up to 10 ha 100 m
+  # (class IV); closed and rural cemeteries 50 m (class V). Status is not in
+  # OSM, so cemeteries under 1 ha are taken as rural.
+  - id: cemetery_szz
+    kind: cemetery_szz
+    layer: polygon
+    match:
+      - { landuse: [cemetery] }
+      - { amenity: [grave_yard] }
+    width:
+      by: area_ha
+      steps:
+        - { max: 1, width_m: 50 }
+        - { max: 10, width_m: 100 }
+        - { max: 20, width_m: 300 }
+        - { width_m: 500 }
+    legal_basis: "СанПиН 2.2.1/2.1.1.1200-03, п. 7.1.12 (классы II–V); ЗК РФ, ст. 105 п. 18"
+
+  # --- Waste ---------------------------------------------------------------------------
+  - id: landfill
+    kind: landfill
+    layer: polygon
+    match: { landuse: [landfill] }
+    width_m: 0
+    legal_basis: "Территория полигона отходов"
+
+  # Improved landfills of municipal waste are class I (1000 m). Small mapped
+  # dumps are taken as class II (500 m).
+  - id: landfill_szz
+    kind: landfill_szz
+    layer: polygon
+    match: { landuse: [landfill] }
+    width:
+      by: area_ha
+      steps:
+        - { max: 1, width_m: 500 }
+        - { width_m: 1000 }
+    legal_basis: "СанПиН 2.2.1/2.1.1.1200-03, п. 7.1.12 (класс I — 1000 м, класс II — 500 м); ЗК РФ, ст. 105 п. 18"
+
+  # Treatment plants with sludge beds: 150 m up to 0.2, 200 m up to 5, 400 m up
+  # to 50 thousand m3/day. Capacity is not in OSM; 200 m is used.
+  - id: wastewater_szz_area
+    kind: wastewater_szz
+    layer: polygon
+    match: { man_made: [wastewater_plant] }
+    width_m: 200
+    legal_basis: "СанПиН 2.2.1/2.1.1.1200-03, п. 7.1.13, табл. 7.1.2; ЗК РФ, ст. 105 п. 18"
+
+  - id: wastewater_szz_point
+    kind: wastewater_szz
+    layer: point
+    match: { man_made: [wastewater_plant] }
+    width_m: 200
+    legal_basis: "СанПиН 2.2.1/2.1.1.1200-03, п. 7.1.13, табл. 7.1.2; ЗК РФ, ст. 105 п. 18"
+
+  # --- Industry ------------------------------------------------------------------------
+  - id: industrial
+    kind: industrial
+    layer: polygon
+    match: { landuse: [industrial] }
+    width_m: 0
+    legal_basis: "Производственная территория"
+
+  # Sanitary class is not in OSM; 100 m is class IV.
+  - id: industrial_buffer
+    kind: industrial_buffer
+    layer: polygon
+    match: { landuse: [industrial] }
+    width_m: 100
+    legal_basis: "СанПиН 2.2.1/2.1.1.1200-03, гл. 7 (класс IV — 100 м, приближение); ЗК РФ, ст. 105 п. 18"
+
+  # --- Airfields -----------------------------------------------------------------------
+  - id: airfield
+    kind: airfield
+    layer: polygon
+    match: { aeroway: [aerodrome] }
+    width_m: 0
+    legal_basis: "Территория аэродрома"
+
+  # The aerodrome vicinity has seven subzones set individually; 3 km stands in
+  # for the noise subzone.
+  - id: airfield_vicinity_area
+    kind: airfield_vicinity
+    layer: polygon
+    match: { aeroway: [aerodrome] }
+    width_m: 3000
+    legal_basis: "ВзК РФ, ст. 47 ч. 3 (седьмая подзона); ЗК РФ, ст. 105 п. 8; СанПиН 2.2.1/2.1.1.1200-03, п. 2.9; ширина — приближение"
+
+  - id: airfield_vicinity_point
+    kind: airfield_vicinity
+    layer: point
+    match: { aeroway: [aerodrome] }
+    width_m: 3000
+    legal_basis: "ВзК РФ, ст. 47 ч. 3 (седьмая подзона); ЗК РФ, ст. 105 п. 8; СанПиН 2.2.1/2.1.1.1200-03, п. 2.9; ширина — приближение"
+
+  # --- Restricted sites ----------------------------------------------------------------
+  - id: military
+    kind: military
+    layer: polygon
+    match: { landuse: [military] }
+    width_m: 0
+    legal_basis: "ПП РФ № 405 от 05.05.2014 (запретные зоны военных объектов)"
+
+  - id: prison
+    kind: prison
+    layer: polygon
+    match: { amenity: [prison] }
+    width_m: 0
+    legal_basis: "Территория исправительного учреждения"
+
+  - id: prison_buffer
+    kind: prison_buffer
+    layer: polygon
+    match: { amenity: [prison] }
+    width_m: 300
+    legal_basis: "Режимная территория вокруг учреждения; ширина — приближение"

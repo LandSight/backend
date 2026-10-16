@@ -2,13 +2,9 @@ x-backend: &backend
   build:
     context: .
   image: landsight-backend:latest
-  env_file: .env
-  environment:
-    DATABASE_HOST: postgres
-    DATABASE_PORT: "5432"
-    REDIS_HOST: redis
-    REDIS_PORT: "6379"
-    S3_ENDPOINT: http://minio:9000
+  env_file:
+    - .env
+    - .env.docker
   networks:
     - landsight-network
 
@@ -103,12 +99,43 @@ services:
       - sh
       - -c
       - >-
-        for module in platform identity parcel topography infrastructure climate analysis; do
+        for module in platform identity parcel topography infrastructure climate restriction analysis interpretation; do
         echo "Migrating $$module..."; uv run alembic -n $$module upgrade head || exit 1; done
     depends_on:
       postgres:
         condition: service_healthy
     restart: "no"
+
+  llama-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: landsight-llama
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./models:/models
+    command: >
+      --host 0.0.0.0
+      --port 8081
+      --model /models/gemma-4-E4B-it-Q4_K_M.gguf
+      --alias gemma-4-e4b-it
+      --ctx-size 8192
+      --parallel 2
+      --n-gpu-layers 99
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - landsight-network
 
   app:
     <<: *backend
@@ -122,10 +149,14 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      llama-server:
+        condition: service_healthy
 
-  worker:
+  # Analyses and interpretation reports run on separate queues, so a long LLM
+  # report never blocks an analysis; both workers also relay the outbox.
+  worker-analysis:
     <<: *backend
-    container_name: landsight-worker
+    container_name: landsight-worker-analysis
     command:
       - uv
       - run
@@ -134,13 +165,38 @@ services:
       - app.worker.celery_app:celery_app
       - worker
       - --loglevel=INFO
-      - --concurrency=${CELERY_CONCURRENCY:-1}
+      - --hostname=analysis@%h
+      - --queues=analysis,default
+      - --concurrency=${ANALYSIS_WORKER_CONCURRENCY:-2}
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
       minio:
+        condition: service_healthy
+
+  # Concurrency must match the llama-server --parallel slots.
+  worker-interpretation:
+    <<: *backend
+    container_name: landsight-worker-interpretation
+    command:
+      - uv
+      - run
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --hostname=interpretation@%h
+      - --queues=interpretation,default
+      - --concurrency=${INTERPRETATION_WORKER_CONCURRENCY:-2}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      llama-server:
         condition: service_healthy
 
   beat:

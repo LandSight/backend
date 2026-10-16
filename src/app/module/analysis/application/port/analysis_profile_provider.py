@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import AnalysisProfile, AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
+    from app.module.analysis.domain.value_object.profile import AnalysisProfile
 
 
 class AnalysisProfileProvider(ABC):
@@ -30,6 +31,22 @@ class AnalysisProfileProvider(ABC):
         -------
         tuple[AnalysisProfile, ...]
             Profiles in configuration order.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def description(self, analysis_type: AnalysisType) -> str:
+        """Return the human-readable description of the profile.
+
+        Parameters
+        ----------
+        analysis_type : AnalysisType
+            Evaluation profile whose description is requested.
+
+        Returns
+        -------
+        str
+            Description of what the profile evaluates.
         """
         raise NotImplementedError
 

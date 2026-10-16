@@ -291,6 +291,61 @@ class S3Config(BaseConfig):
         return self.endpoint.replace("http://", "").replace("https://", "")
 
 
+class LLMConfig(BaseConfig):
+    """LLM server configuration for the interpretation module.
+
+    Attributes
+    ----------
+    base_url : str
+        OpenAI-compatible base URL, without the trailing ``/chat/completions``.
+    model : str
+        Model name passed to the server.
+    device : str
+        Device the model runs on; reported in the interpretation metadata.
+    timeout_seconds : float
+        Per-request timeout.
+    temperature : float
+        Sampling temperature.
+    max_tokens : int
+        Maximum tokens per answer.
+    """
+
+    model_config = SettingsConfigDict(
+        env_prefix="LLM_",
+    )
+    base_url: str = Field(
+        default="http://llama-server:8081/v1",
+        description="OpenAI-compatible LLM base URL",
+        min_length=1,
+    )
+    model: str = Field(
+        default="gemma-4-e4b-it",
+        description="LLM model name",
+        min_length=1,
+    )
+    device: str = Field(
+        default="gpu",
+        description="Device the LLM runs on",
+        min_length=1,
+    )
+    timeout_seconds: float = Field(
+        default=120.0,
+        description="Per-request timeout in seconds",
+        gt=0,
+    )
+    temperature: float = Field(
+        default=0.2,
+        description="Sampling temperature",
+        ge=0,
+    )
+    max_tokens: int = Field(
+        default=4096,
+        description="Maximum tokens per answer; reasoning models also consume "
+        "tokens for their chain-of-thought before the visible answer begins",
+        gt=0,
+    )
+
+
 class AppConfig(BaseConfig):
     """Application configuration — root config."""
 
@@ -299,3 +354,4 @@ class AppConfig(BaseConfig):
     redis: RedisConfig = Field(default_factory=RedisConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     s3: S3Config = Field(default_factory=S3Config)
+    llm: LLMConfig = Field(default_factory=LLMConfig)

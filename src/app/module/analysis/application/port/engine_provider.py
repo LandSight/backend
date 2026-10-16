@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.domain.value_object import Engine
+    from app.module.analysis.domain.value_object.engine import Engine
 
 
 class EngineProvider(ABC):

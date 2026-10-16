@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING, override
 from app.module.analysis.application.dto.command import GetAnalysisEvaluationCommand
 from app.module.analysis.application.dto.response import (
     AnalysisEvaluationResponse,
+    AppliedConstraintResponse,
     ClusterScoreResponse,
+    ConstraintExtensionResponse,
     EvaluationMetadataResponse,
     HierarchicalExtensionResponse,
     MetricContributionResponse,
@@ -16,7 +18,7 @@ from app.module.analysis.application.error import (
     AnalysisEvaluationNotAvailableError,
     AnalysisNotFoundError,
 )
-from app.module.analysis.domain.value_object import AnalysisId
+from app.module.analysis.domain.value_object.analysis import AnalysisId
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -27,10 +29,11 @@ if TYPE_CHECKING:
 
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
+        AnalysisProfileProvider,
         AnalysisRepository,
     )
     from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-    from app.module.analysis.domain.value_object import ClusterScore, MetricContribution
+    from app.module.analysis.domain.value_object.evaluation import ClusterScore, MetricContribution
 
 
 class GetAnalysisEvaluationUseCase(
@@ -45,9 +48,11 @@ class GetAnalysisEvaluationUseCase(
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
+        profile_provider: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
+        self._profile_provider = profile_provider
         self._logger = get_logger("app.analysis.use_case.get_analysis_evaluation")
 
     @override
@@ -80,24 +85,40 @@ class GetAnalysisEvaluationUseCase(
         """Raise a not-found error for the given analysis ID."""
         raise AnalysisNotFoundError(str(analysis_id))
 
-    @classmethod
-    def _to_response(cls, analysis: Analysis, evaluation: AnalysisEvaluation) -> AnalysisEvaluationResponse:
+    def _to_response(self, analysis: Analysis, evaluation: AnalysisEvaluation) -> AnalysisEvaluationResponse:
         """Map a domain evaluation to the universal response DTO."""
         return AnalysisEvaluationResponse(
             scenario=evaluation.analysis_type.value,
             engine=evaluation.engine.value,
             model_version=evaluation.model_version,
             total_score=evaluation.total_score.unwrap(),
-            scale=evaluation.total_score.scale,
+            scale_max=evaluation.total_score.scale_max,
             metadata=EvaluationMetadataResponse(
                 evaluated_at=evaluation.created_at,
                 parcel_id=str(analysis.parcel_id.unwrap()),
             ),
             extensions={
                 "hierarchical": HierarchicalExtensionResponse(
-                    clusters=tuple(cls._to_cluster(cluster) for cluster in evaluation.clusters),
+                    clusters=tuple(self._to_cluster(cluster) for cluster in evaluation.clusters),
+                ),
+                "constraint": ConstraintExtensionResponse(
+                    base_score=evaluation.base_score.unwrap(),
+                    prohibited=evaluation.prohibited,
+                    applied_constraints=tuple(
+                        AppliedConstraintResponse(
+                            kind=constraint.kind,
+                            effect=constraint.effect.value,
+                            factor=constraint.factor,
+                            overlap_share=constraint.overlap_share.unwrap(),
+                            overlap_area_m2=constraint.overlap_area.unwrap(),
+                            zone_names=constraint.zone_names,
+                            legal_basis=constraint.legal_basis,
+                        )
+                        for constraint in evaluation.applied_constraints
+                    ),
                 ),
             },
+            scenario_description=self._profile_provider.description(evaluation.analysis_type),
         )
 
     @classmethod
@@ -110,6 +131,7 @@ class GetAnalysisEvaluationUseCase(
             contribution=cluster.contribution.unwrap(),
             subclusters=tuple(cls._to_cluster(subcluster) for subcluster in cluster.subclusters),
             metrics=tuple(cls._to_metric(metric) for metric in cluster.metrics),
+            name=cluster.name,
         )
 
     @classmethod
@@ -125,6 +147,7 @@ class GetAnalysisEvaluationUseCase(
             data_available=metric.data_available,
             membership_function=metric.membership_function,
             membership_params=metric.membership_params,
+            label=metric.label,
         )
 
 

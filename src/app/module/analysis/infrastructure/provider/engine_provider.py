@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.port import EngineProvider
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    Engine,
-    EngineDescription,
-    EngineName,
-)
+from app.module.analysis.domain.value_object.engine import AnalysisEngine, Engine, EngineDescription, EngineName
 
 
 if TYPE_CHECKING:

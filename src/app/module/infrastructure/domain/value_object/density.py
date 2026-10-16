@@ -18,6 +18,7 @@ class Density(BaseValueObject[float]):
     - Must be non-negative (>= 0)
     """
 
+    _MIN_VALUE = 0
     _DECIMAL_PLACES = 4
 
     @override
@@ -26,7 +27,7 @@ class Density(BaseValueObject[float]):
 
     @override
     def _validate(self) -> None:
-        if self._value < 0:
+        if self._value < self._MIN_VALUE:
             message = f"Density must be non-negative, got {self._value}."
             raise ValidationError(message)
 

@@ -10,7 +10,7 @@ from app.module.analysis.application.error import (
     AnalysisNotFoundError,
 )
 from app.module.analysis.domain.event import ANALYSIS_DELETED_EVENT, AnalysisDeletedEvent
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisStatus
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -64,10 +64,16 @@ class DeleteAnalysisUseCase(BaseUseCase[DeleteAnalysisCommand, None]):
             raise AnalysisNotDeletableError(analysis.status.value)
 
         refs = await self._analysis_repository.get_metrics(analysis.id)
-        if refs:
+        restriction_check = await self._analysis_repository.get_restriction_check(analysis.id)
+        if refs or restriction_check is not None:
             await self._event_publisher.publish(
                 ANALYSIS_DELETED_EVENT,
-                AnalysisDeletedEvent(analysis_id=analysis.id, metrics=tuple(refs)).to_payload(),
+                AnalysisDeletedEvent(
+                    analysis_id=analysis.id,
+                    metrics=tuple(refs),
+                    current_user_id=command.current_user_id,
+                    restriction_check=restriction_check,
+                ).to_payload(),
             )
 
         await self._analysis_repository.delete(analysis.id)

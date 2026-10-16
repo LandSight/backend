@@ -43,7 +43,7 @@ service: str = config.config_ini_section
 # Upstream modules must be imported so that Alembic can resolve FK chains.
 if service == "platform":
     from app.platform.database.base import BaseModel
-    from app.platform.outbox.models import OutboxEventModel  # noqa: F401
+    from app.platform.outbox.models import OutboxEventModel
 
     target_metadata = BaseModel.metadata
     version_table_schema: str | None = None
@@ -76,7 +76,7 @@ elif service == "topography":
     # Parcel FK: parcels.owner_id -> identity.users.id
     from app.module.identity.infrastructure.model.user_model import UserModel
     from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
-    from app.module.topography.infrastructure.model import TopographyMetricsModel  # noqa: F401
+    from app.module.topography.infrastructure.model import TopographyMetricsModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -100,7 +100,7 @@ elif service == "infrastructure":
 elif service == "climate":
     # Climate FK: metrics.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
-    from app.module.climate.infrastructure.model import ClimateMetricsModel  # noqa: F401
+    from app.module.climate.infrastructure.model import ClimateMetricsModel
     from app.module.identity.infrastructure.model.user_model import UserModel
     from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel
@@ -110,22 +110,45 @@ elif service == "climate":
     schema_name = "climate"
     include_schema = "climate"
 
+elif service == "restriction":
+    # Restriction FK: checks.parcel_id -> parcel.parcels.id
+    # Parcel FK: parcels.owner_id -> identity.users.id
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
+    from app.module.restriction.infrastructure.model import (
+        RestrictionCheckHitModel,
+        RestrictionCheckModel,
+        ZoneModel,
+    )
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "restriction"
+    schema_name = "restriction"
+    include_schema = "restriction"
+
 elif service == "analysis":
     # Analysis FK: analyses.parcel_id -> parcel.parcels.id
     # Parcel FK: parcels.owner_id -> identity.users.id
-    from app.module.analysis.infrastructure.model.analysis_cluster_score_model import (  # noqa: F401
+    from app.module.analysis.infrastructure.model.analysis_applied_constraint_model import (
+        AnalysisAppliedConstraintModel,
+    )
+    from app.module.analysis.infrastructure.model.analysis_cluster_score_model import (
         AnalysisClusterScoreModel,
     )
-    from app.module.analysis.infrastructure.model.analysis_evaluation_model import (  # noqa: F401
+    from app.module.analysis.infrastructure.model.analysis_evaluation_model import (
         AnalysisEvaluationModel,
     )
-    from app.module.analysis.infrastructure.model.analysis_metric_contribution_model import (  # noqa: F401
+    from app.module.analysis.infrastructure.model.analysis_metric_contribution_model import (
         AnalysisMetricContributionModel,
     )
-    from app.module.analysis.infrastructure.model.analysis_metric_model import AnalysisMetricModel  # noqa: F401
-    from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel  # noqa: F401
-    from app.module.identity.infrastructure.model.user_model import UserModel  # noqa: F401
-    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel  # noqa: F401
+    from app.module.analysis.infrastructure.model.analysis_metric_model import AnalysisMetricModel
+    from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel
+    from app.module.analysis.infrastructure.model.analysis_restriction_check_model import (
+        AnalysisRestrictionCheckModel,
+    )
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
     from app.platform.database.base import BaseModel
 
     target_metadata = BaseModel.metadata
@@ -133,10 +156,25 @@ elif service == "analysis":
     schema_name = "analysis"
     include_schema = "analysis"
 
+elif service == "interpretation":
+    # Interpretation FK: interpretations.analysis_id -> analysis.analyses.id
+    # Upstream modules are imported so that the FK chain can be resolved.
+    from app.module.analysis.infrastructure.model.analysis_model import AnalysisModel
+    from app.module.identity.infrastructure.model.user_model import UserModel
+    from app.module.interpretation.infrastructure.model import InterpretationModel
+    from app.module.parcel.infrastructure.model.parcel_model import ParcelModel
+    from app.platform.database.base import BaseModel
+
+    target_metadata = BaseModel.metadata
+    version_table_schema = "interpretation"
+    schema_name = "interpretation"
+    include_schema = "interpretation"
+
 else:
     message = (
         f"Unknown Alembic service target: '{service}'. "
-        "Expected one of: platform, identity, parcel, topography, infrastructure, climate, analysis."
+        "Expected one of: platform, identity, parcel, topography, infrastructure, climate, restriction, analysis, "
+        "interpretation."
     )
     raise ValueError(message)
 

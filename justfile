@@ -12,7 +12,8 @@ DOCS_HOST := env("DOCS_HOST", "127.0.0.1")
 DOCS_PORT := env("DOCS_PORT", "8008")
 
 COMPOSE_CMD := env("COMPOSE_CMD", "docker compose")
-CELERY_CONCURRENCY := env("CELERY_CONCURRENCY", "1")
+ANALYSIS_WORKER_CONCURRENCY := env("ANALYSIS_WORKER_CONCURRENCY", "2")
+INTERPRETATION_WORKER_CONCURRENCY := env("INTERPRETATION_WORKER_CONCURRENCY", "2")
 
 
 default:
@@ -82,13 +83,29 @@ changelog-fragment:
 
 # ── Docker / Podman ──────────────────────────────────────────────────
 
-# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery worker, beat)
+# Start the full stack (PostgreSQL, Redis, MinIO, migrations, API, Celery workers, beat)
 up:
     @{{ COMPOSE_CMD }} up --detach --wait --build
 
-# Start only infrastructure services (PostgreSQL, Redis, MinIO)
+# Note: llama-server needs an NVIDIA GPU and a GGUF model in ./models.
+# Start only infrastructure services (PostgreSQL, Redis, MinIO, llama.cpp LLM)
 infra-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis llama-server
+
+# Start only the CPU-safe infrastructure services (PostgreSQL, Redis, MinIO)
+infra-up-lite:
     @{{ COMPOSE_CMD }} up --detach --wait --build postgres minio minio-init redis
+
+# Download the default llama.cpp GGUF model into ./models (about 5.0 GB)
+model-download:
+    @mkdir -p models
+    @curl -L --fail --progress-bar \
+        -o models/gemma-4-E4B-it-Q4_K_M.gguf \
+        https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q4_K_M.gguf
+
+# Start only the llama.cpp LLM server (run `just model-download` first)
+llm-up:
+    @{{ COMPOSE_CMD }} up --detach --wait --build llama-server
 
 # Stop all services
 down:
@@ -112,7 +129,7 @@ migration-upgrade module:
 
 # Apply migrations for every module (in dependency order)
 migration-upgrade-all:
-    for module in platform identity parcel topography infrastructure climate analysis; do echo "Upgrading $module..."; uv run alembic -n $module upgrade head || exit 1; done
+    for module in platform identity parcel topography infrastructure climate restriction analysis interpretation; do echo "Upgrading $module..."; uv run alembic -n $module upgrade head || exit 1; done
 
 migration-downgrade module steps:
     @uv run alembic -n {{ module }} downgrade -{{ steps }}
@@ -136,11 +153,22 @@ app-serve:
         --reload-paths="{{ SRC_DIR }}" \
         app.interface.http.asgi:create_asgi_application
 
-# Run the Celery worker that processes analyses
-worker:
+# Run the analysis workers (analysis pipeline + outbox relay)
+worker-analysis:
     @uv run celery -A app.worker.celery_app:celery_app worker \
         --loglevel="INFO" \
-        --concurrency="{{ CELERY_CONCURRENCY }}"
+        --hostname="analysis@%h" \
+        --queues="analysis,default" \
+        --concurrency="{{ ANALYSIS_WORKER_CONCURRENCY }}"
+
+# Keep INTERPRETATION_WORKER_CONCURRENCY equal to the llama-server --parallel slots.
+# Run the interpretation workers (LLM reports + outbox relay)
+worker-interpretation:
+    @uv run celery -A app.worker.celery_app:celery_app worker \
+        --loglevel="INFO" \
+        --hostname="interpretation@%h" \
+        --queues="interpretation,default" \
+        --concurrency="{{ INTERPRETATION_WORKER_CONCURRENCY }}"
 
 # Run the Celery beat scheduler that relays the transactional outbox
 beat:

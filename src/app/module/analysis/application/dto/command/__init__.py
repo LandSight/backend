@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from .collect_metrics import CollectMetricsCommand
+from .collect_restrictions import CollectRestrictionsCommand
 from .delete_analysis import DeleteAnalysisCommand
-from .fail_analysis import FailAnalysisCommand
 from .get_analysis import GetAnalysisCommand
 from .get_analysis_evaluation import GetAnalysisEvaluationCommand
 from .get_analysis_metrics import GetAnalysisMetricsCommand
@@ -15,8 +15,8 @@ from .start_analysis import StartAnalysisCommand
 
 __all__ = (
     "CollectMetricsCommand",
+    "CollectRestrictionsCommand",
     "DeleteAnalysisCommand",
-    "FailAnalysisCommand",
     "GetAnalysisCommand",
     "GetAnalysisEvaluationCommand",
     "GetAnalysisMetricsCommand",

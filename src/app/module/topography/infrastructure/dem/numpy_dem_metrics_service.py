@@ -47,7 +47,7 @@ class NumpyDemMetricsService(DemMetricsService):
 
     _SOUTH_ASPECT_MIN_SLOPE = 5.0
     _FLAT_SLOPE_THRESHOLD = 1e-10
-    _SLOPE_PERCENTILES = (25, 50, 75, 90)
+    _SLOPE_PERCENTILES = SlopePercentiles.PERCENTILES
 
     @override
     def calculate_mean_elevation(self, raster: RasterData) -> Elevation:

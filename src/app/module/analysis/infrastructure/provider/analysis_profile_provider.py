@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from app.module.analysis.application.port import AnalysisProfileProvider
-from app.module.analysis.domain.value_object import (
+from app.module.analysis.domain.value_object.profile import (
     AnalysisProfile,
     AnalysisProfileDescription,
     AnalysisProfileName,
@@ -16,7 +16,7 @@ from app.module.shared.domain.error import ValidationError
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.domain.value_object import AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
     from app.module.analysis.infrastructure.config.models import AnalysisProfilesConfig
 
 
@@ -37,6 +37,15 @@ class AnalysisProfileProviderImpl(AnalysisProfileProvider):
             )
             for key, profile in self._profiles.items()
         )
+
+    @override
+    def description(self, analysis_type: AnalysisType) -> str:
+        """See :class:`app.module.analysis.application.port.AnalysisProfileProvider.description`."""
+        profile = self._profiles.get(analysis_type)
+        if profile is None:
+            message = f"No analysis profile configured for analysis type '{analysis_type}'."
+            raise ValidationError(message)
+        return AnalysisProfileDescription(profile.description).unwrap()
 
     @override
     def infrastructure_buffers(self, analysis_type: AnalysisType) -> Mapping[str, int]:

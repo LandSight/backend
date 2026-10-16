@@ -43,12 +43,19 @@ class ClimateVariableSpec:
 
 
 #: Registry of external metadata for every supported climate variable.
+#
+# NOTE on temperature scaling: the COGs uploaded to the S3 bucket store the
+# monthly-mean variables (BIO1/BIO5/BIO6) already in physical degrees Celsius
+# (floats), so their scale is 1. BIO4 (temperature seasonality) keeps the raw
+# WorldClim convention of degrees Celsius times 100 (e.g. ~900 for a ~9 °C
+# standard deviation), hence scale=100. If the bucket is ever re-seeded with
+# different data, verify the actual pixel ranges first.
 CLIMATE_VARIABLE_SPECS: dict[ClimateVariable, ClimateVariableSpec] = {
     ClimateVariable.MEAN_ANNUAL_TEMPERATURE: ClimateVariableSpec(
         variable=ClimateVariable.MEAN_ANNUAL_TEMPERATURE,
         code="BIO1",
         object_key="bio_1.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.TEMPERATURE_SEASONALITY: ClimateVariableSpec(
@@ -62,14 +69,14 @@ CLIMATE_VARIABLE_SPECS: dict[ClimateVariable, ClimateVariableSpec] = {
         variable=ClimateVariable.MAX_TEMPERATURE_WARMEST_MONTH,
         code="BIO5",
         object_key="bio_5.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.MIN_TEMPERATURE_COLDEST_MONTH: ClimateVariableSpec(
         variable=ClimateVariable.MIN_TEMPERATURE_COLDEST_MONTH,
         code="BIO6",
         object_key="bio_6.tif",
-        scale=10,
+        scale=1,
         unit="°C",
     ),
     ClimateVariable.ANNUAL_PRECIPITATION: ClimateVariableSpec(

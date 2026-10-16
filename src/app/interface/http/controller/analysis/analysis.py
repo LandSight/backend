@@ -12,6 +12,7 @@ from app.interface.http.schema.analysis import (
     AnalysisEvaluationSchema,
     AnalysisMetricSchema,
     AnalysisResponse,
+    AppliedConstraintSchema,
     ClusterScoreSchema,
     ConstraintExtensionSchema,
     EvaluationMetadataSchema,
@@ -194,7 +195,7 @@ class AnalysisController(Controller):
             engine=result.engine,
             model_version=result.model_version,
             total_score=result.total_score,
-            scale=result.scale,
+            scale_max=result.scale_max,
             metadata=EvaluationMetadataSchema(
                 evaluated_at=result.metadata.evaluated_at,
                 parcel_id=UUID(result.metadata.parcel_id),
@@ -218,7 +219,20 @@ class AnalysisController(Controller):
                 applied_rules=[dict(rule) for rule in extension.applied_rules],
             )
         return ConstraintExtensionSchema(
-            applied_constraints=[dict(constraint) for constraint in extension.applied_constraints],
+            base_score=extension.base_score,
+            prohibited=extension.prohibited,
+            applied_constraints=[
+                AppliedConstraintSchema(
+                    kind=constraint.kind,
+                    effect=constraint.effect,
+                    factor=constraint.factor,
+                    overlap_share=constraint.overlap_share,
+                    overlap_area_m2=constraint.overlap_area_m2,
+                    zone_names=list(constraint.zone_names),
+                    legal_basis=constraint.legal_basis,
+                )
+                for constraint in extension.applied_constraints
+            ],
         )
 
     @classmethod
@@ -231,6 +245,7 @@ class AnalysisController(Controller):
             contribution=cluster.contribution,
             subclusters=[cls._to_cluster_schema(subcluster) for subcluster in cluster.subclusters],
             metrics=[cls._to_metric_schema(metric) for metric in cluster.metrics],
+            name=cluster.name,
         )
 
     @classmethod
@@ -246,6 +261,7 @@ class AnalysisController(Controller):
             data_available=metric.data_available,
             membership_function=metric.membership_function,
             membership_params=dict(metric.membership_params) if metric.membership_params else None,
+            label=metric.label,
         )
 
 

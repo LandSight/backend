@@ -9,13 +9,14 @@ from app.module.shared.domain.value_object import BaseValueObject
 
 
 class CompactnessIndex(BaseValueObject[float]):
-    """Compactness index value object (4πA/P²).
+    """Compactness index value object, relative to a square.
 
-    Measures how compact a shape is. A perfect circle has compactness = 1.0.
-    Lower values indicate more irregular shapes.
+    The Polsby-Popper score (4πA/P²) divided by that of a square (π/4) and
+    capped at 1.0. A square has compactness = 1.0, a 1:2 rectangle about 0.89;
+    lower values indicate more elongated or irregular shapes.
 
     Invariants:
-    - Must be in range [0, 1] (by the isoperimetric inequality)
+    - Must be in range [0, 1]
     """
 
     _DECIMAL_PLACES = 4

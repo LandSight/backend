@@ -10,32 +10,39 @@ from sqlalchemy import delete, select
 
 from app.module.analysis.application.port import AnalysisRepository
 from app.module.analysis.domain.entity import Analysis, AnalysisEvaluation
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    AnalysisEvaluationId,
+from app.module.analysis.domain.value_object.analysis import (
     AnalysisId,
-    AnalysisKey,
-    AnalysisMetricRef,
     AnalysisName,
-    AnalysisScore,
     AnalysisStage,
     AnalysisStatus,
+    AnalysisStatusReason,
     AnalysisType,
+    ParcelId,
+)
+from app.module.analysis.domain.value_object.constraint import AppliedConstraint, ConstraintEffect
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
+from app.module.analysis.domain.value_object.evaluation import (
+    AnalysisEvaluationId,
+    AnalysisKey,
+    AnalysisScore,
     ClusterScore,
     Contribution,
     MetricContribution,
-    MetricType,
     NormalizedScore,
-    ParcelId,
     Weight,
 )
+from app.module.analysis.domain.value_object.metric import AnalysisMetricRef, MetricType
+from app.module.analysis.domain.value_object.restriction import RestrictionCheckRef
 from app.module.analysis.infrastructure.model import (
+    AnalysisAppliedConstraintModel,
     AnalysisClusterScoreModel,
     AnalysisEvaluationModel,
     AnalysisMetricContributionModel,
     AnalysisMetricModel,
     AnalysisModel,
+    AnalysisRestrictionCheckModel,
 )
+from app.module.shared.domain.value_object import Area, Share
 from app.platform.database.repository import BaseSQLAlchemyRepository
 
 
@@ -66,7 +73,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 stage=analysis.stage.value,
                 score=analysis.score.unwrap() if analysis.score is not None else None,
                 model_version=analysis.model_version,
-                status_reason=analysis.status_reason,
+                status_reason=analysis.status_reason.unwrap() if analysis.status_reason is not None else None,
                 completed_at=analysis.completed_at,
             )
             self._session.add(model)
@@ -78,7 +85,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             model.stage = analysis.stage.value
             model.score = analysis.score.unwrap() if analysis.score is not None else None
             model.model_version = analysis.model_version
-            model.status_reason = analysis.status_reason
+            model.status_reason = analysis.status_reason.unwrap() if analysis.status_reason is not None else None
             model.completed_at = analysis.completed_at
 
         await self._session.flush()
@@ -152,6 +159,28 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         ]
 
     @override
+    async def save_restriction_check(self, analysis_id: AnalysisId, ref: RestrictionCheckRef) -> None:
+        """See :class:`app.module.analysis.application.port.AnalysisRepository.save_restriction_check`."""
+        await self._session.execute(
+            delete(AnalysisRestrictionCheckModel).where(
+                AnalysisRestrictionCheckModel.analysis_id == analysis_id.unwrap()
+            ),
+        )
+        self._session.add(AnalysisRestrictionCheckModel(analysis_id=analysis_id.unwrap(), check_id=ref.check_id))
+        await self._session.flush()
+
+    @override
+    async def get_restriction_check(self, analysis_id: AnalysisId) -> RestrictionCheckRef | None:
+        """See :class:`app.module.analysis.application.port.AnalysisRepository.get_restriction_check`."""
+        result = await self._session.execute(
+            select(AnalysisRestrictionCheckModel.check_id).where(
+                AnalysisRestrictionCheckModel.analysis_id == analysis_id.unwrap()
+            ),
+        )
+        check_id = result.scalar_one_or_none()
+        return None if check_id is None else RestrictionCheckRef(check_id=check_id)
+
+    @override
     async def save_evaluation(self, evaluation: AnalysisEvaluation) -> None:
         """See :class:`app.module.analysis.application.port.AnalysisRepository.save_evaluation`."""
         analysis_id = evaluation.analysis_id.unwrap()
@@ -168,6 +197,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 engine=evaluation.engine.value,
                 model_version=evaluation.model_version,
                 total_score=evaluation.total_score.unwrap(),
+                base_score=evaluation.base_score.unwrap(),
             )
         )
         # Flush the root first: the child rows reference it by FK, and a single
@@ -186,6 +216,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                     evaluation_id=evaluation_id,
                     parent_id=parent_id,
                     key=node.key.unwrap(),
+                    name=node.name,
                     depth=depth,
                     score=node.score.unwrap(),
                     weight=node.weight.unwrap(),
@@ -201,6 +232,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                         evaluation_id=evaluation_id,
                         cluster_score_id=group_id,
                         metric_key=metric.key.unwrap(),
+                        label=metric.label,
                         position=metric_position,
                         raw_value=metric.raw_value,
                         normalized_value=(
@@ -222,6 +254,20 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
         self._session.add_all(group_rows)
         await self._session.flush()
         self._session.add_all(contribution_rows)
+        self._session.add_all(
+            AnalysisAppliedConstraintModel(
+                evaluation_id=evaluation_id,
+                position=position,
+                kind=constraint.kind,
+                effect=constraint.effect.value,
+                factor=constraint.factor,
+                overlap_share=constraint.overlap_share.unwrap(),
+                overlap_area_m2=constraint.overlap_area.unwrap(),
+                zone_names=list(constraint.zone_names),
+                legal_basis=constraint.legal_basis,
+            )
+            for position, constraint in enumerate(evaluation.applied_constraints)
+        )
         await self._session.flush()
 
     @override
@@ -270,9 +316,15 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
                 contribution=Contribution(group.contribution),
                 subclusters=tuple(build_group(child) for child in children_by_parent[group.id]),
                 metrics=tuple(self._to_metric(row) for row in metrics_by_group[group.id]),
+                name=group.name,
             )
 
         clusters = tuple(build_group(root) for root in roots)
+        constraint_result = await self._session.execute(
+            select(AnalysisAppliedConstraintModel)
+            .where(AnalysisAppliedConstraintModel.evaluation_id == evaluation_model.id)
+            .order_by(AnalysisAppliedConstraintModel.position),
+        )
         return AnalysisEvaluation(
             id=AnalysisEvaluationId(evaluation_model.id),
             analysis_id=AnalysisId(evaluation_model.analysis_id),
@@ -281,7 +333,22 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             model_version=evaluation_model.model_version,
             total_score=AnalysisScore(evaluation_model.total_score),
             clusters=clusters,
+            base_score=None if evaluation_model.base_score is None else AnalysisScore(evaluation_model.base_score),
+            applied_constraints=tuple(self._to_constraint(row) for row in constraint_result.scalars().all()),
             created_at=evaluation_model.created_at,
+        )
+
+    @staticmethod
+    def _to_constraint(row: AnalysisAppliedConstraintModel) -> AppliedConstraint:
+        """Rebuild one applied constraint."""
+        return AppliedConstraint(
+            kind=row.kind,
+            effect=ConstraintEffect(row.effect),
+            factor=row.factor,
+            overlap_share=Share(row.overlap_share),
+            overlap_area=Area(row.overlap_area_m2),
+            zone_names=tuple(row.zone_names),
+            legal_basis=row.legal_basis,
         )
 
     @staticmethod
@@ -294,6 +361,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             weight=Weight(row.weight),
             contribution=None if row.contribution is None else Contribution(row.contribution),
             unit=row.unit,
+            label=row.label,
             membership_function=row.membership_function,
             membership_params=row.membership_params,
         )
@@ -311,7 +379,7 @@ class PostgresAnalysisRepository(BaseSQLAlchemyRepository, AnalysisRepository):
             stage=AnalysisStage(model.stage),
             score=AnalysisScore(model.score) if model.score is not None else None,
             model_version=model.model_version,
-            status_reason=model.status_reason,
+            status_reason=AnalysisStatusReason(model.status_reason) if model.status_reason is not None else None,
             created_at=model.created_at,
             completed_at=model.completed_at,
         )

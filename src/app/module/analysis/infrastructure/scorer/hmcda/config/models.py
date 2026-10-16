@@ -12,17 +12,24 @@ from typing import TYPE_CHECKING, Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.module.analysis.domain.value_object import AnalysisType  # noqa: TC001 - needed at runtime for pydantic
-from app.module.analysis.infrastructure.fuzzy.s_shaped import SShaped
-from app.module.analysis.infrastructure.fuzzy.trapezoidal import Trapezoidal
-from app.module.analysis.infrastructure.fuzzy.z_shaped import ZShaped
+from app.module.analysis.domain.value_object.analysis import (
+    AnalysisType,  # noqa: TC001 - needed at runtime for pydantic
+)
+from app.module.analysis.infrastructure.metrics_normalizer.s_shaped import SShaped
+from app.module.analysis.infrastructure.metrics_normalizer.trapezoidal import Trapezoidal
+from app.module.analysis.infrastructure.metrics_normalizer.z_shaped import ZShaped
 
 
 if TYPE_CHECKING:
-    from app.module.analysis.infrastructure.ports import FuzzyFunction
+    from app.module.analysis.infrastructure.metrics_normalizer import FuzzyFunction
 
 
 _MAX_METRIC_DEPTH = 2
+
+_MISSING_VALUE_DESCRIPTION = (
+    "Raw reading assumed when the metric has no reading, e.g. nothing was found within the "
+    "search buffer; usually the buffer radius as a lower bound. Unset keeps the metric unavailable."
+)
 
 
 class HierarchyNode(BaseModel):
@@ -36,6 +43,8 @@ class HierarchyNode(BaseModel):
         Relative weight among siblings; must be positive.
     components : list[HierarchyNode]
         Child nodes; empty for a leaf metric.
+    name : str
+        Human-readable group name; empty for a leaf metric.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -43,6 +52,11 @@ class HierarchyNode(BaseModel):
     key: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_:.-]+$")
     weight: float = Field(gt=0)
     components: list[HierarchyNode] = Field(default_factory=list)
+    name: str = Field(
+        default="",
+        max_length=128,
+        description="Human-readable group name; empty for a leaf metric.",
+    )
 
     @model_validator(mode="after")
     def _validate_children(self) -> Self:
@@ -149,6 +163,7 @@ class ZShapedConfig(BaseModel):
     type: Literal["z_shaped"]
     params: ZShapedParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -167,6 +182,7 @@ class SShapedConfig(BaseModel):
     type: Literal["s_shaped"]
     params: SShapedParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -181,6 +197,7 @@ class TrapezoidalConfig(BaseModel):
     type: Literal["trapezoidal"]
     params: TrapezoidalParams
     unit: str = ""
+    missing_value: float | None = Field(default=None, description=_MISSING_VALUE_DESCRIPTION)
 
     def to_domain(self) -> FuzzyFunction:
         """Build the concrete fuzzy function."""
@@ -210,6 +227,14 @@ class ProfileConfig(BaseModel):
     def to_fuzzy_functions(self) -> dict[str, FuzzyFunction]:
         """Build concrete fuzzy functions keyed by metric key."""
         return {key: function.to_domain() for key, function in self.functions.items()}
+
+    def missing_values(self) -> dict[str, float]:
+        """Return the configured missing-reading substitutes keyed by metric key."""
+        return {
+            key: function.missing_value
+            for key, function in self.functions.items()
+            if function.missing_value is not None
+        }
 
 
 class EngineConfig(BaseModel):

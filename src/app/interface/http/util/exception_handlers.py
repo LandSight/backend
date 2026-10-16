@@ -171,7 +171,7 @@ def create_exception_handlers(
     if application_mappings:
         handlers[ApplicationError] = _create_application_error_handler(application_mappings)
 
-    # HTTP-исключения от Litestar
+    # HTTP exceptions raised by Litestar
     handlers[NotAuthorizedException] = cast("ExceptionHandler", not_authorized_handler)
     handlers[HTTPException] = cast("ExceptionHandler", http_exception_handler)
     handlers[SerializationException] = cast("ExceptionHandler", serialization_exception_handler)

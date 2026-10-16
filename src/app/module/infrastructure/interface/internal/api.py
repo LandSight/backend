@@ -7,6 +7,7 @@ response DTOs into the shared neutral contract, using the domain metric catalog.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, override
 
 from app.module.infrastructure.application.dto.command import (
@@ -195,13 +196,14 @@ class InfrastructureInternal(InfrastructureInternalAPI):
                     module="infrastructure",
                     category=category,
                     id=metrics.id,
-                    metrics=InfrastructureInternal._category_values(metrics, definitions),
+                    metrics=InfrastructureInternal._category_values(category, metrics, definitions),
                 )
             )
         return responses
 
     @staticmethod
     def _category_values(
+        category: str,
         metrics: object,
         definitions: tuple[MetricDefinition, ...],
     ) -> list[MetricValue]:
@@ -213,13 +215,20 @@ class InfrastructureInternal(InfrastructureInternalAPI):
             values.append(
                 build_metric_value(
                     key=definition.key,
-                    label=definition.label,
+                    label=definition.label_for(category),
                     unit=definition.unit,
                     value_type=definition.kind,
-                    raw=getattr(metrics, definition.key),
+                    raw=InfrastructureInternal._scaled(getattr(metrics, definition.key), definition.scale),
                 )
             )
         return values
+
+    @staticmethod
+    def _scaled(raw: object, scale: float) -> object:
+        """Convert a stored numeric value into the published unit of its definition."""
+        if math.isclose(scale, 1.0) or not isinstance(raw, (int, float)) or isinstance(raw, bool):
+            return raw
+        return round(raw * scale, 6)
 
 
 __all__ = ("InfrastructureInternal",)

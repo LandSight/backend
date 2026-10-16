@@ -18,7 +18,9 @@ from typing import TYPE_CHECKING, cast
 from app.module.analysis.di import analysis_dependencies, analysis_worker_dependencies
 from app.module.climate.di import climate_dependencies
 from app.module.infrastructure.di import infrastructure_dependencies
+from app.module.interpretation.di import interpretation_dependencies, interpretation_worker_dependencies
 from app.module.parcel.di import parcel_dependencies
+from app.module.restriction.di import restriction_dependencies
 from app.module.topography.di import topography_dependencies
 from app.platform.config.loaders import load_app_config
 from app.platform.database.engine import create_async_engine_from_config
@@ -40,8 +42,11 @@ _ALL_DEPENDENCIES = {
     **topography_dependencies,
     **infrastructure_dependencies,
     **climate_dependencies,
+    **restriction_dependencies,
     **analysis_dependencies,
     **analysis_worker_dependencies,
+    **interpretation_dependencies,
+    **interpretation_worker_dependencies,
 }
 
 _loop: asyncio.AbstractEventLoop | None = None

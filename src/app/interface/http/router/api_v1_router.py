@@ -11,6 +11,7 @@ from app.interface.http.router.analysis import analysis_catalog_router, analysis
 from app.interface.http.router.climate import climate_router
 from app.interface.http.router.identity import identity_router
 from app.interface.http.router.infrastructure import infrastructure_router
+from app.interface.http.router.interpretation import interpretation_router
 from app.interface.http.router.parcel import parcel_router
 from app.interface.http.router.topography import topography_router
 
@@ -25,6 +26,7 @@ api_v1_router = Router(
         climate_router,
         analysis_router,
         analysis_catalog_router,
+        interpretation_router,
     ],
 )
 

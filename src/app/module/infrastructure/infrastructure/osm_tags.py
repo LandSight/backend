@@ -34,6 +34,16 @@ RAILWAY_STATION_KINDS: Final[tuple[str, ...]] = ("station", "halt")
 # Values of ``power=*`` that count as a power line.
 POWER_LINE_KINDS: Final[tuple[str, ...]] = ("line", "minor_line")
 
+# Assumed voltage, in kV, of a power line without a usable ``voltage=*`` tag:
+# ``power=line`` is mapped for transmission lines (typically 110 kV),
+# ``power=minor_line`` for distribution lines (typically 10 kV).
+DEFAULT_POWER_LINE_VOLTAGE_KV: Final[Mapping[str, float]] = MappingProxyType(
+    {
+        "line": 110.0,
+        "minor_line": 10.0,
+    },
+)
+
 # Values of ``place=*`` that count as a settlement (all tiers).
 SETTLEMENT_PLACES: Final[tuple[str, ...]] = ("city", "town", "village", "hamlet")
 
@@ -80,11 +90,17 @@ PAVED_SURFACES: Final[tuple[str, ...]] = ("paved", "asphalt", "concrete")
 # regardless of its measured area.
 SIGNIFICANT_PROTECT_CLASSES: Final[tuple[str, ...]] = ("1", "1a", "1b", "2", "3", "4")
 
+# Values of ``protect_class=*`` that protect cultural or social values (heritage
+# sites, museum reserves, sacred places) rather than nature.
+NON_NATURE_PROTECT_CLASSES: Final[tuple[str, ...]] = tuple(str(value) for value in range(21, 30))
+
 
 __all__ = (
+    "DEFAULT_POWER_LINE_VOLTAGE_KV",
     "DRIVABLE_ROAD_CLASSES",
     "GROCERY_SHOPS",
     "MAIN_ROAD_CLASSES",
+    "NON_NATURE_PROTECT_CLASSES",
     "PAVED_ROAD_CLASSES",
     "PAVED_SURFACES",
     "PLACE_TIERS",

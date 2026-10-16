@@ -64,6 +64,10 @@ isort.lines-after-imports = 2
   "PLR6301", # allow unused self in test classes
   "PLR2004", # magic value comparison
   "S101",    # allow assert statements in tests (Bandit S101)
+  "ARG002",  # allow unused arguments in test doubles
+  "RUF001",  # allow Cyrillic strings in test fixtures
+  "RUF002",
+  "RUF003",
 ]
 "src/app/interface/http/controller/**.py" = [
   "PLR6301", # allow unused self
@@ -91,9 +95,26 @@ isort.lines-after-imports = 2
   "PLR0913", # use cases depend on several ports
   "PLR0914", # some calculations aggregate many intermediate values
   "PLR0917",
+  "RUF001",  # Russian fallback text is intentional
+  "RUF002",
+  "RUF003",
 ]
 "src/app/module/*/application/port/*.py" = [
   "PLR0904", # ports intentionally expose one method per operation
+]
+"src/app/module/*/application/service/*.py" = [
+  "PLR0913", # application services wire several collaborators
+  "PLR0917",
+  "RUF001",  # Russian prompt and fallback text is intentional
+  "RUF002",
+  "RUF003",
+]
+"src/app/module/*/infrastructure/llm/*.py" = [
+  "PLR0913", # LLM adapters wire several collaborators
+  "PLR0917",
+  "RUF001", # Russian prompt and fallback text is intentional
+  "RUF002",
+  "RUF003",
 ]
 "src/app/module/*/infrastructure/repository/*.py" = [
   "PLR0904", # repositories implement one method per port operation
@@ -101,6 +122,9 @@ isort.lines-after-imports = 2
 "src/app/module/*/interface/internal/*.py" = [
   "PLR0913", # internal APIs aggregate their use cases
   "PLR0917",
+]
+"src/app/migrations/env.py" = [
+  "F401", # models are imported so Alembic can resolve the metadata/FK chains
 ]
 "src/app/platform/database/repository.py" = [
   "B903", # repository base classes intentionally hold behavior methods

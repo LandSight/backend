@@ -8,14 +8,10 @@ from uuid import uuid6
 
 from app.module.analysis.application.port import AnalysisScorer
 from app.module.analysis.domain.entity import AnalysisEvaluation
-from app.module.analysis.domain.value_object import (
-    AnalysisEngine,
-    AnalysisEvaluationId,
-    AnalysisId,
-    AnalysisScore,
-    AnalysisType,
-)
-from app.module.analysis.infrastructure.fuzzy import FuzzyNormalizer
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisType
+from app.module.analysis.domain.value_object.engine import AnalysisEngine
+from app.module.analysis.domain.value_object.evaluation import AnalysisEvaluationId, AnalysisScore
+from app.module.analysis.infrastructure.metrics_normalizer import FuzzyNormalizer
 from app.module.analysis.infrastructure.scorer.hmcda.hierarchical_aggregator import HierarchicalAggregator
 from app.module.shared.domain.error import ValidationError
 from app.module.shared.interface.internal import IntegerMetricValue, NumberMetricValue
@@ -26,7 +22,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from app.module.analysis.application.port import MetricsResponse
-    from app.module.analysis.domain.value_object import ClusterScore, NormalizedMetric
+    from app.module.analysis.domain.value_object.evaluation import ClusterScore, NormalizedMetric
     from app.module.analysis.infrastructure.scorer.hmcda.config.models import EngineConfig, Hierarchy, ProfileConfig
 
 
@@ -93,17 +89,21 @@ class HmcdaAnalysisScorer(AnalysisScorer):
             raise ValidationError(message)
         return HmcdaProfile(
             hierarchy=profile.hierarchy,
-            normalizer=FuzzyNormalizer(functions),
+            normalizer=FuzzyNormalizer(functions, profile.missing_values()),
             aggregator=HierarchicalAggregator(profile.hierarchy),
         )
 
     @staticmethod
     def _normalize(
         profile: HmcdaProfile,
-        raw_values: Mapping[str, float | None],
+        raw_values: Mapping[str, tuple[float | None, str]],
     ) -> dict[str, NormalizedMetric]:
         """Normalize every hierarchy leaf, marking missing readings as unavailable."""
-        return {key: profile.normalizer.normalize(key, raw_values.get(key)) for key in profile.hierarchy.leaf_keys()}
+        normalized: dict[str, NormalizedMetric] = {}
+        for key in profile.hierarchy.leaf_keys():
+            value, label = raw_values.get(key, (None, ""))
+            normalized[key] = profile.normalizer.normalize(key, value, label)
+        return normalized
 
     @staticmethod
     def _total_score(clusters: tuple[ClusterScore, ...]) -> AnalysisScore:
@@ -113,14 +113,17 @@ class HmcdaAnalysisScorer(AnalysisScorer):
         return AnalysisScore(weighted * 10)
 
     @staticmethod
-    def _flatten(metrics_response: list[MetricsResponse]) -> dict[str, float | None]:
-        """Flatten neutral metrics_response into a canonical key space."""
-        values: dict[str, float | None] = {}
+    def _flatten(metrics_response: list[MetricsResponse]) -> dict[str, tuple[float | None, str]]:
+        """Flatten neutral metrics_response into a canonical key space with labels."""
+        values: dict[str, tuple[float | None, str]] = {}
         for metric_response in metrics_response:
             prefix = f"{metric_response.category}:" if metric_response.category else ""
             for metric in metric_response.metrics:
                 if isinstance(metric, (NumberMetricValue, IntegerMetricValue)):
-                    values[f"{prefix}{metric.key}"] = None if metric.value is None else float(metric.value)
+                    values[f"{prefix}{metric.key}"] = (
+                        None if metric.value is None else float(metric.value),
+                        metric.label,
+                    )
         return values
 
 

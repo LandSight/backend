@@ -64,7 +64,7 @@ class TopographyMetricsModel(TimestampedModel):
     slope_percentiles: Mapped[dict] = mapped_column(
         JSONB,
         nullable=False,
-        comment="Slope values at percentiles 25, 50, 75, 90 as JSON dict",
+        comment="Slope values at percentiles 75 and 90 as JSON dict",
     )
     aspect: Mapped[str] = mapped_column(
         String(4),
@@ -89,7 +89,7 @@ class TopographyMetricsModel(TimestampedModel):
     compactness_index: Mapped[float] = mapped_column(
         Float,
         nullable=False,
-        comment="Compactness index (4πA/P²), dimensionless",
+        comment="Compactness index relative to a square (1 = square), dimensionless",
     )
     elongation_index: Mapped[float] = mapped_column(
         Float,

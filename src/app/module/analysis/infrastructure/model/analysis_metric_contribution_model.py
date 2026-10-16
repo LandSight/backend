@@ -37,6 +37,12 @@ class AnalysisMetricContributionModel(BaseModel):
         nullable=False,
         comment="Metric key",
     )
+    label: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        server_default="",
+        comment="Human-readable metric name; empty when not available",
+    )
     position: Mapped[int] = mapped_column(
         Integer,
         nullable=False,

@@ -5,12 +5,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, override
 
-from app.module.analysis.application.dto.command import (
-    CollectMetricsCommand,
-    FailAnalysisCommand,
-)
+from app.module.analysis.application.dto.command import CollectMetricsCommand
 from app.module.analysis.application.error import AnalysisNotFoundError
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisStatus, MetricType
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisStatus, AnalysisStatusReason
+from app.module.analysis.domain.value_object.metric import MetricType
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
 
@@ -21,11 +19,11 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisProfileProvider,
         AnalysisRepository,
-        MetricsCollector,
-        UnitOfWork,
+        MetricsService,
     )
-    from app.module.analysis.application.use_case.fail_analysis import FailAnalysisUseCase
-    from app.module.analysis.domain.value_object import AnalysisMetricRef, AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
+    from app.module.analysis.domain.value_object.metric import AnalysisMetricRef
+    from app.module.shared.application.port import UnitOfWork
 
 
 class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
@@ -40,14 +38,12 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
-        metrics_collector: MetricsCollector,
-        fail_analysis_use_case: FailAnalysisUseCase,
+        metrics_service: MetricsService,
         unit_of_work: UnitOfWork,
         analysis_profiles: AnalysisProfileProvider,
     ) -> None:
         self._analysis_repository = analysis_repository
-        self._metrics_collector = metrics_collector
-        self._fail_analysis_use_case = fail_analysis_use_case
+        self._metrics_service = metrics_service
         self._unit_of_work = unit_of_work
         self._analysis_profiles = analysis_profiles
         self._logger = get_logger("app.analysis.use_case.collect_metrics")
@@ -57,7 +53,7 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         try:
             await self._execute(command)
         except Exception as exc:
-            await self._record_failure(command.analysis_id, exc)
+            await self._record_failure(command.analysis_id, command.metric_type, exc)
             raise
 
     async def _execute(self, command: CollectMetricsCommand) -> None:
@@ -97,13 +93,20 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         await self._analysis_repository.save_metrics(analysis.id, refs)
         await self._unit_of_work.commit()
 
-    async def _record_failure(self, analysis_id: UUID, error: Exception) -> None:
-        """Roll back and persist the failure in a fresh transaction."""
-        await self._unit_of_work.rollback()
-        await self._fail_analysis_use_case(
-            FailAnalysisCommand(analysis_id=analysis_id, reason=str(error)),
+    async def _record_failure(self, analysis_id: UUID, metric_type: MetricType, error: Exception) -> None:
+        """Log the error, roll back and persist a user-safe failure reason in a fresh transaction."""
+        self._logger.error(
+            "Metrics collection failed: analysis_id=%s metric_type=%s",
+            analysis_id,
+            metric_type,
+            exc_info=error,
         )
-        await self._unit_of_work.commit()
+        await self._unit_of_work.rollback()
+        analysis = await self._analysis_repository.get(AnalysisId(analysis_id))
+        if analysis is not None and analysis.status in {AnalysisStatus.PENDING, AnalysisStatus.RUNNING}:
+            analysis.fail(AnalysisStatusReason.metrics_collection_failed(metric_type))
+            await self._analysis_repository.save(analysis)
+            await self._unit_of_work.commit()
 
     async def _collect(
         self,
@@ -112,14 +115,14 @@ class CollectMetricsUseCase(BaseUseCase[CollectMetricsCommand, None]):
         parcel_id: UUID,
         user_id: UUID,
     ) -> list[AnalysisMetricRef]:
-        """Dispatch to the collector method for the requested metric module."""
+        """Dispatch to the gateway method for the requested metric module."""
         match metric_type:
             case MetricType.TOPOGRAPHY:
-                return [await self._metrics_collector.collect_topography(parcel_id, user_id)]
+                return [await self._metrics_service.collect_topography(parcel_id, user_id)]
             case MetricType.CLIMATE:
-                return [await self._metrics_collector.collect_climate(parcel_id, user_id)]
+                return [await self._metrics_service.collect_climate(parcel_id, user_id)]
             case MetricType.INFRASTRUCTURE:
-                return await self._metrics_collector.collect_infrastructure(
+                return await self._metrics_service.collect_infrastructure(
                     parcel_id,
                     user_id,
                     self._analysis_profiles.infrastructure_buffers(analysis_type),

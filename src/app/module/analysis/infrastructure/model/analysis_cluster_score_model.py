@@ -38,6 +38,12 @@ class AnalysisClusterScoreModel(BaseModel):
         nullable=False,
         comment="Group key (e.g. relief or slope)",
     )
+    name: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+        server_default="",
+        comment="Human-readable group name; empty when not configured",
+    )
     depth: Mapped[int] = mapped_column(
         Integer,
         nullable=False,

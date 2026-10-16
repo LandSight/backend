@@ -1,4 +1,3 @@
-from .area import Area
 from .aspect_direction import AspectDirection
 from .compactness_index import CompactnessIndex
 from .elevation import Elevation
@@ -12,7 +11,6 @@ from .topography_metrics_id import TopographyMetricsId
 
 
 __all__ = (
-    "Area",
     "AspectDirection",
     "CompactnessIndex",
     "Elevation",

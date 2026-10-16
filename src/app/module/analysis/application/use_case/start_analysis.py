@@ -9,7 +9,7 @@ from app.module.analysis.application.dto.command import StartAnalysisCommand
 from app.module.analysis.application.dto.response import AnalysisResponse
 from app.module.analysis.domain.entity import Analysis
 from app.module.analysis.domain.event import ANALYSIS_QUEUED_EVENT, AnalysisQueuedEvent
-from app.module.analysis.domain.value_object import AnalysisId, AnalysisName, ParcelId
+from app.module.analysis.domain.value_object.analysis import AnalysisId, AnalysisName, ParcelId
 from app.module.shared.application.error import ForbiddenError
 from app.module.shared.application.use_case import BaseUseCase
 from app.platform.logging import get_logger
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisPermissionService,
         AnalysisRepository,
-        OwnedParcelsProvider,
+        ParcelsService,
     )
     from app.module.shared.application.port import EventPublisher
 
@@ -37,12 +37,12 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
         self,
         analysis_repository: AnalysisRepository,
         permission_service: AnalysisPermissionService,
-        owned_parcels_provider: OwnedParcelsProvider,
+        parcels_service: ParcelsService,
         event_publisher: EventPublisher,
     ) -> None:
         self._analysis_repository = analysis_repository
         self._permission_service = permission_service
-        self._owned_parcels_provider = owned_parcels_provider
+        self._parcels_service = parcels_service
         self._event_publisher = event_publisher
         self._logger = get_logger("app.analysis.use_case.start_analysis")
 
@@ -54,7 +54,7 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             reason = f"User is not allowed to analyze parcel '{command.parcel_id}'"
             raise ForbiddenError(reason)
 
-        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        parcels = await self._parcels_service.list_owned_parcels(command.current_user_id)
 
         analysis = Analysis(
             id=AnalysisId(uuid6()),
@@ -90,7 +90,7 @@ class StartAnalysisUseCase(BaseUseCase[StartAnalysisCommand, AnalysisResponse]):
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
             model_version=analysis.model_version,
-            status_reason=analysis.status_reason,
+            status_reason=analysis.status_reason.unwrap() if analysis.status_reason is not None else None,
             created_at=analysis.created_at,
             completed_at=analysis.completed_at,
         )

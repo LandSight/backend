@@ -1,9 +1,10 @@
 """Celery tasks for the analysis pipeline.
 
 An analysis is processed end to end by a single task: it collects the metrics
-for every module and then scores the analysis. This keeps the pipeline of one
-analysis together, so with a single worker an earlier analysis finishes before
-the next one starts.
+for every module and then scores the analysis, so the pipeline of one analysis
+stays together. Analyses and interpretation reports run on separate queues and
+workers (``just worker-analysis`` and ``just worker-interpretation``); the
+outbox relay runs on the default queue that both kinds of workers consume.
 """
 
 from __future__ import annotations
@@ -13,18 +14,33 @@ from uuid import UUID
 
 from celery.signals import worker_process_init
 
-from app.module.analysis.application.dto.command import CollectMetricsCommand, ScoreAnalysisCommand
-from app.module.analysis.di import COLLECT_METRICS_USE_CASE_KEY, SCORE_ANALYSIS_USE_CASE_KEY
+from app.module.analysis.application.dto.command import (
+    CollectMetricsCommand,
+    CollectRestrictionsCommand,
+    ScoreAnalysisCommand,
+)
+from app.module.analysis.di import (
+    COLLECT_METRICS_USE_CASE_KEY,
+    COLLECT_RESTRICTIONS_USE_CASE_KEY,
+    SCORE_ANALYSIS_USE_CASE_KEY,
+)
 from app.module.analysis.domain.event import (
     ANALYSIS_DELETED_EVENT,
     ANALYSIS_QUEUED_EVENT,
     AnalysisDeletedEvent,
     AnalysisQueuedEvent,
 )
-from app.module.analysis.domain.value_object import MetricType
+from app.module.analysis.domain.value_object.metric import MetricType
 from app.module.analysis.infrastructure.queue.celery_analysis_task_queue import (
     PROCESS_ANALYSIS_TASK_NAME,
 )
+from app.module.interpretation.application.dto.command import GenerateInterpretationCommand
+from app.module.interpretation.di import GENERATE_INTERPRETATION_USE_CASE_KEY
+from app.module.interpretation.domain.event import (
+    INTERPRETATION_STARTED_EVENT,
+    InterpretationStartedEvent,
+)
+from app.module.interpretation.infrastructure.queue import PROCESS_INTERPRETATION_TASK_NAME
 from app.platform.config.loaders import load_logging_config
 from app.platform.logging import configure_logging, get_logger
 from app.platform.outbox import OutboxDrainer
@@ -36,7 +52,8 @@ from app.worker.container import WorkerContainer, get_session_factory, run_in_wo
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsRemover
+    from app.module.analysis.application.port import AnalysisTaskQueue, MetricsService, RestrictionService
+    from app.module.interpretation.application.port import InterpretationTaskQueue
     from app.platform.outbox.repository import OutboxRepository
 
 
@@ -63,6 +80,7 @@ async def _process(analysis_id: str, current_user_id: str) -> None:
     async with session_factory() as session:
         container = WorkerContainer(session)
         collect = container.resolve(COLLECT_METRICS_USE_CASE_KEY)
+        collect_restrictions = container.resolve(COLLECT_RESTRICTIONS_USE_CASE_KEY)
         score = container.resolve(SCORE_ANALYSIS_USE_CASE_KEY)
 
         analysis_id_value = UUID(analysis_id)
@@ -77,10 +95,41 @@ async def _process(analysis_id: str, current_user_id: str) -> None:
                 )
             )
 
+        # Restrictions are not metrics: they are checked once the inputs of the
+        # multi-criteria score are in, and applied to it when scoring.
+        await collect_restrictions(
+            CollectRestrictionsCommand(analysis_id=analysis_id_value, current_user_id=user_id_value),
+        )
+
         await score(
             ScoreAnalysisCommand(
                 analysis_id=analysis_id_value,
                 current_user_id=user_id_value,
+            )
+        )
+
+
+@celery_app.task(name=PROCESS_INTERPRETATION_TASK_NAME)
+def process_interpretation(analysis_id: str, current_user_id: str) -> None:
+    """Generate the interpretation report of one analysis."""
+    run_in_worker_loop(_process_interpretation(analysis_id, current_user_id))
+
+
+async def _process_interpretation(analysis_id: str, current_user_id: str) -> None:
+    """Run report generation for one analysis.
+
+    The use case owns the whole lifecycle (running/completed/failed transitions,
+    commits and the idempotency guard), so the task only relays the command.
+    """
+    logger.info("Processing interpretation: analysis_id=%s", analysis_id)
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        container = WorkerContainer(session)
+        generate = container.resolve(GENERATE_INTERPRETATION_USE_CASE_KEY)
+        await generate(
+            GenerateInterpretationCommand(
+                analysis_id=UUID(analysis_id),
+                current_user_id=UUID(current_user_id),
             )
         )
 
@@ -97,8 +146,10 @@ async def _drain_outbox() -> None:
     async with session_factory() as session:
         container = WorkerContainer(session)
         repository: OutboxRepository = container.resolve("outbox_repository")
-        metrics_remover: MetricsRemover = container.resolve("metrics_remover")
+        metrics_service: MetricsService = container.resolve("metrics_service")
+        restriction_service: RestrictionService = container.resolve("restriction_service")
         task_queue: AnalysisTaskQueue = container.resolve("analysis_task_queue")
+        interpretation_task_queue: InterpretationTaskQueue = container.resolve("interpretation_task_queue")
 
         async def handle_analysis_queued(payload: Mapping[str, object]) -> None:
             event = AnalysisQueuedEvent.from_payload(payload)
@@ -106,13 +157,20 @@ async def _drain_outbox() -> None:
 
         async def handle_analysis_deleted(payload: Mapping[str, object]) -> None:
             event = AnalysisDeletedEvent.from_payload(payload)
-            await metrics_remover.delete(list(event.metrics))
+            await metrics_service.delete(list(event.metrics))
+            if event.restriction_check is not None:
+                await restriction_service.delete([event.restriction_check], event.current_user_id)
+
+        async def handle_interpretation_started(payload: Mapping[str, object]) -> None:
+            event = InterpretationStartedEvent.from_payload(payload)
+            await interpretation_task_queue.enqueue(event.analysis_id, event.current_user_id)
 
         drainer = OutboxDrainer(
             repository,
             {
                 ANALYSIS_QUEUED_EVENT: handle_analysis_queued,
                 ANALYSIS_DELETED_EVENT: handle_analysis_deleted,
+                INTERPRETATION_STARTED_EVENT: handle_interpretation_started,
             },
         )
         processed = await drainer.drain()
@@ -122,4 +180,4 @@ async def _drain_outbox() -> None:
             logger.info("Outbox drained: processed=%s", processed)
 
 
-__all__ = ("drain_outbox", "process_analysis")
+__all__ = ("drain_outbox", "process_analysis", "process_interpretation")

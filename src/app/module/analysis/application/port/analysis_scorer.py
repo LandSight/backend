@@ -9,13 +9,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from app.module.analysis.application.port.metrics_reader import MetricsResponse
+    from app.module.analysis.application.port.metrics_service import MetricsResponse
     from app.module.analysis.domain.entity import AnalysisEvaluation
-    from app.module.analysis.domain.value_object import AnalysisEngine, AnalysisType
+    from app.module.analysis.domain.value_object.analysis import AnalysisType
+    from app.module.analysis.domain.value_object.engine import AnalysisEngine
 
 
 class AnalysisScorer(ABC):
     """Port for evaluating collected metrics into a universal result.
+
+    A scorer only rates the metrics; restrictions are applied to its score
+    afterwards by the :class:`ConstraintEvaluator`.
 
     Implementations:
     - :class:`app.module.analysis.infrastructure.scorer.hmcda.hmcda_analysis_scorer.HmcdaAnalysisScorer`
@@ -46,7 +50,8 @@ class AnalysisScorer(ABC):
         Returns
         -------
         AnalysisEvaluation
-            The full evaluation aggregate, including the total score in ``[0, 10]``.
+            The evaluation of the metrics, with the total score in ``[0, 10]``;
+            constraints are applied afterwards and separately.
         """
         raise NotImplementedError
 

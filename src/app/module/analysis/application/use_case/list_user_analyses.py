@@ -13,7 +13,7 @@ from app.platform.logging import get_logger
 if TYPE_CHECKING:
     from app.module.analysis.application.port import (
         AnalysisRepository,
-        OwnedParcelsProvider,
+        ParcelsService,
     )
     from app.module.analysis.domain.entity import Analysis
 
@@ -28,17 +28,17 @@ class ListUserAnalysesUseCase(BaseUseCase[ListUserAnalysesCommand, list[Analysis
     def __init__(
         self,
         analysis_repository: AnalysisRepository,
-        owned_parcels_provider: OwnedParcelsProvider,
+        parcels_service: ParcelsService,
     ) -> None:
         self._analysis_repository = analysis_repository
-        self._owned_parcels_provider = owned_parcels_provider
+        self._parcels_service = parcels_service
         self._logger = get_logger("app.analysis.use_case.list_user_analyses")
 
     @override
     async def __call__(self, command: ListUserAnalysesCommand) -> list[AnalysisResponse]:
         self._logger.info("Listing analyses: user_id=%s", command.current_user_id)
 
-        parcels = await self._owned_parcels_provider.list_owned_parcels(command.current_user_id)
+        parcels = await self._parcels_service.list_owned_parcels(command.current_user_id)
         analyses = await self._analysis_repository.list_by_parcel_ids(list(parcels))
 
         self._logger.info("Analyses listed: user_id=%s count=%s", command.current_user_id, len(analyses))
@@ -59,7 +59,7 @@ class ListUserAnalysesUseCase(BaseUseCase[ListUserAnalysesCommand, list[Analysis
             stage=analysis.stage.value,
             score=analysis.score.unwrap() if analysis.score is not None else None,
             model_version=analysis.model_version,
-            status_reason=analysis.status_reason,
+            status_reason=analysis.status_reason.unwrap() if analysis.status_reason is not None else None,
             created_at=analysis.created_at,
             completed_at=analysis.completed_at,
         )

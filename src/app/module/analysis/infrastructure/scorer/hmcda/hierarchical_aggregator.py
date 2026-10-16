@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from app.module.analysis.domain.value_object import (
+from app.module.analysis.domain.value_object.evaluation import (
     AnalysisKey,
     ClusterScore,
     Contribution,
@@ -83,6 +83,7 @@ class HierarchicalAggregator:
             contribution=Contribution(score.unwrap() * node.weight),
             subclusters=groups,
             metrics=contributions,
+            name=node.name,
         )
 
     @staticmethod
@@ -104,6 +105,7 @@ class HierarchicalAggregator:
                 else Contribution(normalized.normalized_value.unwrap() * node.weight)
             ),
             unit=normalized.unit,
+            label=normalized.label,
             membership_function=normalized.function_name,
             membership_params=normalized.function_params,
         )
