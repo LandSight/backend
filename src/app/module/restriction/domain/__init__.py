@@ -1,0 +1,1 @@
+"""Restriction domain layer."""
