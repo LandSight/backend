@@ -99,7 +99,7 @@ services:
       - sh
       - -c
       - >-
-        for module in platform identity parcel topography infrastructure climate analysis interpretation; do
+        for module in platform identity parcel topography infrastructure climate restriction analysis interpretation; do
         echo "Migrating $$module..."; uv run alembic -n $$module upgrade head || exit 1; done
     depends_on:
       postgres:
